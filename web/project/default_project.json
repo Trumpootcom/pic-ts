@@ -1,0 +1,13 @@
+{
+  "background": {
+    "filename": "assets/backgrounds/bg0810.jpg"
+  },
+
+  "logo": {
+    "filename": "assets/logos/logo.png",
+    "centerX": 4.0,
+    "topY": 0.5,
+    "width": 4.0,
+    "height": 2.0
+  }
+}
