@@ -1,0 +1,50 @@
+{
+    "id": "completion",
+    "name": "Completion Certificate",
+    "productType": "certificate",
+    "preview": "preview.jpg",
+    "document": {
+        "width": 11,
+        "height": 8.5,
+        "dpi": 200,
+        "output": "pdf",
+        "placement": {
+            "type": "single",
+            "maxDetailsPerPage": 1,
+            "slots": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "w": 11,
+                    "h": 8.5,
+                    "anchor": "topLeft"
+                }
+            ]
+        },
+        "elements": [
+            {
+                "type": "image",
+                "source": "background.jpg",
+                "x": 0,
+                "y": 0,
+                "w": 11,
+                "h": 8.5,
+                "anchor": "topLeft"
+            },
+            {
+                "type": "text",
+                "value": "{{date}}",
+                "x": 6,
+                "y": 6.8,
+                "w": 1.875,
+                "h": 0.4,
+                "anchor": "topLeft",
+                "align": "left",
+                "fontSize": 0.25,
+                "fontFamily": "Times New Roman",
+                "fontStyle": "italic",
+                "color": "#000000"
+            }
+        ]
+    }
+}
