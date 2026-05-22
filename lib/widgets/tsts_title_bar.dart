@@ -62,7 +62,7 @@ class TstsTitleBar extends StatelessWidget
                             fontSize: titleBarHt * 0.42*0.6,
                             fontFeatures: [FontFeature.enable('smcp')],
                             fontWeight: FontWeight.w500,
-                            letterSpacing: 0.75,
+                            letterSpacing: 2,
                             height: 0.95,
                             color: Colors.black,
                           ),

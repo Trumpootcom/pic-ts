@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-
+import 'theme_schema_builder.dart';
 import '../models/theme_pack.dart';
 
 class StoredProject {
@@ -56,7 +56,15 @@ class ProjectStorage {
     final root = await _projectsRoot();
     final projectId = _slug(projectName);
     final projectDir = Directory('${root.path}/$projectId');
-    print('CREATE PROJECT CALLED');
+    print('ABOUT TO BUILD THEME SCHEMA');
+    final schema = await ThemeSchemaBuilder().build(themePack);
+    final documentData = <String, dynamic>{};
+
+    for (final field in schema.documentFields) {
+      final key = field['key'] as String;
+      documentData[key] = field['default'] ?? '';
+    }
+
     if (await projectDir.exists()) {
       throw Exception('Project already exists: $projectName');
     }
@@ -70,8 +78,10 @@ class ProjectStorage {
       'themeName': themePack.name,
       'themePath': themePack.folderPath,
       'createdAt': DateTime.now().toIso8601String(),
-      'documentData': <String, dynamic>{},
-      'details': <Map<String, dynamic>>[],
+      'documentSchema': schema.documentFields,
+      'rosterSchema': schema.rosterFields,
+      'documentData': documentData,
+      'roster': <Map<String, dynamic>>[],
     };
 
     final file = File('${projectDir.path}/project.json');
@@ -104,6 +114,28 @@ class ProjectStorage {
     }
 
     return projects;
+  }
+
+  Future<Map<String, dynamic>> openProject(StoredProject project) async {
+    final file = File('${project.folderPath}/project.json');
+    final jsonText = await file.readAsString();
+    return jsonDecode(jsonText) as Map<String, dynamic>;
+  }
+
+  Future<void> saveProject({
+    required StoredProject project,
+    required Map<String, dynamic> data,
+  }) async {
+    final file = File('${project.folderPath}/project.json');
+    await file.writeAsString(const JsonEncoder.withIndent('  ').convert(data));
+  }
+
+  Future<void> deleteProject(StoredProject project) async {
+    final dir = Directory(project.folderPath);
+
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
   }
 
   String _slug(String value) {

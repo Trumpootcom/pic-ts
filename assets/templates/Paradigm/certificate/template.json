@@ -3,32 +3,49 @@
   "name": "Completion Certificate",
   "productType": "certificate",
   "preview": "preview.jpg",
+
   "data": {
     "document": [
       {
         "key": "date",
         "label": "Completion Date",
         "type": "text",
-        "required": true
+        "default": "June 12, 2026"
       }
     ],
-    "detail": [
-      {
-        "key": "fullName",
-        "label": "Full Name",
-        "type": "text",
-        "required": true
-      }
-    ]
+
+    "roster": {
+      "label": "Students",
+      "itemLabel": "Student",
+
+      "fields": [
+        {
+          "key": "fullName",
+          "label": "Full Name",
+          "type": "text",
+          "default": "First Last"
+        },
+
+        {
+          "key": "profilePicture",
+          "label": "Profile Picture",
+          "type": "image",
+          "default": "assets/resources/portrait.png"
+        }
+      ]
+    }
   },
+
   "document": {
     "width": 11,
     "height": 8.5,
     "dpi": 200,
     "output": "pdf",
+
     "placement": {
       "type": "single",
-      "maxDetailsPerPage": 1,
+      "maxRosterPerPage": 1,
+
       "slots": [
         {
           "x": 0,
@@ -39,6 +56,7 @@
         }
       ]
     },
+
     "elements": [
       {
         "type": "image",
@@ -49,9 +67,10 @@
         "h": 8.5,
         "anchor": "topLeft"
       },
+
       {
         "type": "text",
-        "value": "{{date}}",
+        "source": "date",
         "x": 6,
         "y": 6.8,
         "w": 1.875,
@@ -65,13 +84,15 @@
       }
     ]
   },
-  "detail": {
+
+  "roster": {
     "width": 11,
     "height": 8.5,
+
     "elements": [
       {
         "type": "text",
-        "value": "{{fullName}}",
+        "source": "fullName",
         "x": 5.5,
         "y": 4.0,
         "w": 9,
