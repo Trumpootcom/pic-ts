@@ -65,7 +65,8 @@ flutter:
     - assets/logos/
     - assets/icons/
     - assets/resources/
-    - assets/templates/Paradigm/certificate/
+    - assets/templates/Paradigm/
+    - assets/templates/Kountze/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
