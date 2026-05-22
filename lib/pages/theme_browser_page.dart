@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/theme_pack.dart';
 import '../services/theme_pack_loader.dart';
+import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
 
 class ThemeBrowserPage extends StatefulWidget {
@@ -26,9 +27,9 @@ class _ThemeBrowserPageState extends State<ThemeBrowserPage> {
     await showDialog<void>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Create New Project'),
-          content: Column(
+        return TstsDialog(
+          title: 'Create New Project',
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
@@ -54,11 +55,21 @@ class _ThemeBrowserPageState extends State<ThemeBrowserPage> {
             ],
           ),
           actions: [
-            TextButton(
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Color(0xFF7A6328), width: 2),
+                backgroundColor: const Color.fromARGB(255, 214, 193, 140),
+              ),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('CANCEL'),
             ),
+            const SizedBox(width: 12),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF7A6328),
+              ),
               onPressed: () {
                 final projectName = controller.text.trim();
 
@@ -76,7 +87,8 @@ class _ThemeBrowserPageState extends State<ThemeBrowserPage> {
                   ),
                 );
 
-                // Next: call ProjectStorage.createProject(...)
+                // TODO:
+                // ProjectStorage.createProject(...)
               },
               child: const Text('CREATE'),
             ),
@@ -132,6 +144,7 @@ class _ThemeBrowserPageState extends State<ThemeBrowserPage> {
 class _ThemePackTile extends StatelessWidget {
   final ThemePack pack;
   final VoidCallback onTap;
+
   static const double folderWidth = 120;
 
   const _ThemePackTile({required this.pack, required this.onTap});
