@@ -4,6 +4,7 @@ import '../models/theme_pack.dart';
 import '../services/theme_pack_loader.dart';
 import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
+import '../services/project_storage.dart';
 
 class ThemeBrowserPage extends StatefulWidget {
   const ThemeBrowserPage({super.key});
@@ -70,25 +71,33 @@ class _ThemeBrowserPageState extends State<ThemeBrowserPage> {
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(0xFF7A6328),
               ),
-              onPressed: () {
+              onPressed: () async {
                 final projectName = controller.text.trim();
 
                 if (projectName.isEmpty) {
                   return;
                 }
 
-                Navigator.of(context).pop();
+                try {
+                  final projectDir = await ProjectStorage().createProject(
+                    projectName: projectName,
+                    themePack: pack,
+                  );
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Create project "$projectName" from ${pack.name}',
-                    ),
-                  ),
-                );
+                  print('PROJECT CREATED AT: ${projectDir.path}');
 
-                // TODO:
-                // ProjectStorage.createProject(...)
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(content: Text('Created project "$projectName"')),
+                  );
+                } catch (error) {
+                  print('CREATE PROJECT ERROR: $error');
+
+                  ScaffoldMessenger.of(
+                    this.context,
+                  ).showSnackBar(SnackBar(content: Text(error.toString())));
+                }
               },
               child: const Text('CREATE'),
             ),
@@ -101,7 +110,7 @@ class _ThemeBrowserPageState extends State<ThemeBrowserPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const TstsTitleBar(title: 'New Project'),
+      appBar: const TstsTitleBar(title: 'PIC Tool Suite', subtitle: 'Create New Project'),
       body: FutureBuilder<List<ThemePack>>(
         future: _themePacksFuture,
         builder: (context, snapshot) {

@@ -1,31 +1,86 @@
 import 'package:flutter/material.dart';
 
+import '../services/project_storage.dart';
 import '../widgets/tsts_title_bar.dart';
 import 'theme_browser_page.dart';
 
-class ProjectBrowserPage extends StatelessWidget {
+class ProjectBrowserPage extends StatefulWidget {
   const ProjectBrowserPage({super.key});
+
+  @override
+  State<ProjectBrowserPage> createState() => _ProjectBrowserPageState();
+}
+
+class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
+  late final Future<List<StoredProject>> _projectsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _projectsFuture = ProjectStorage().listProjects();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const TstsTitleBar(title: 'Pic-ts'),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _ProjectTile(
-            projectName: 'New Project',
-            themeIconPath: null,
-            isNewProject: true,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ThemeBrowserPage(),
+      appBar: const TstsTitleBar(title: 'PIC Tool Suite', subtitle: 'Select Project'),
+      body: FutureBuilder<List<StoredProject>>(
+        future: _projectsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
+
+          final projects = snapshot.data ?? [];
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _ProjectTile(
+                projectName: 'New Project',
+                themeIconPath: null,
+                isNewProject: true,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ThemeBrowserPage(),
+                    ),
+                  );
+
+                  setState(() {
+                    _projectsFuture =
+                        ProjectStorage().listProjects();
+                  });
+                },
+              ),
+
+              for (final project in projects)
+                _ProjectTile(
+                  projectName: project.name,
+                  themeIconPath:
+                      '${project.themePath}/icon.png',
+                  isNewProject: false,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Open ${project.name}',
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -46,8 +101,9 @@ class _ProjectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double tileHeight = 110;
     const double folderSize = 64;
+    const double tileHeight = folderSize+0;
+    const double iconSize = 28*folderSize/64;
 
     return InkWell(
       onTap: onTap,
@@ -57,23 +113,27 @@ class _ProjectTile extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(
-              width: 90,
+              width: folderSize+15,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   Icon(
-                    isNewProject ? Icons.create_new_folder : Icons.folder,
+                    isNewProject
+                        ? Icons.create_new_folder
+                        : Icons.folder,
                     size: folderSize,
-                    color: isNewProject ? Colors.green : Colors.amber,
+                    color: isNewProject
+                        ? Colors.green
+                        : Colors.amber,
                   ),
                   if (themeIconPath != null)
                     Positioned(
-                      right: 10,
-                      bottom: 18,
+                      right: (folderSize+15-iconSize)/2,
+                      top: (folderSize)/3,
                       child: Image.asset(
                         themeIconPath!,
-                        width: 28,
-                        height: 28,
+                        width: iconSize,
+                        height: iconSize,
                         fit: BoxFit.contain,
                       ),
                     ),

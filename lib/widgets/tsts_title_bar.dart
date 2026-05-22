@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
-class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
-  static const double titleBarHt = 35;
+class TstsTitleBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  static const double titleBarHt = 50;
 
   final String title;
+  final String subtitle;
 
   const TstsTitleBar({
     super.key,
     required this.title,
+    this.subtitle = "Trumpoot's Sweet Tool Suite",
   });
 
   @override
@@ -45,17 +48,37 @@ class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 Padding(
                   padding: EdgeInsets.only(
-                    left: titleBarHt / 98 * 200,
+                    left: titleBarHt / 98 * 185,
                   ),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: titleBarHt / 2,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: titleBarHt * 0.42*0.6,
+                            fontFeatures: [FontFeature.enable('smcp')],
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.75,
+                            height: 0.95,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: titleBarHt * 0.42,
+                            fontWeight: FontWeight.w500,
+                            fontFeatures: [FontFeature.enable('smcp')],
+                            letterSpacing: -0.6,
+                            height: 0.95,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
