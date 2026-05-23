@@ -68,6 +68,7 @@ flutter:
     - assets/resources/
     - assets/templates/Paradigm/
     - assets/templates/Paradigm/certificate/
+    - assets/templates/Paradigm/id/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

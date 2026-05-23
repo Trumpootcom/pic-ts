@@ -261,6 +261,17 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     if (_selectedRosterIndex >= roster.length && roster.isNotEmpty) {
       _selectedRosterIndex = roster.length - 1;
     }
+    final placement = Map<String, dynamic>.from(
+      loadedTemplate.template.rawJson['document']['placement'] as Map? ?? {},
+    );
+
+    final maxRosterPerPage = placement['maxRosterPerPage'] as int? ?? 1;
+    final pageStart = _selectedRosterIndex + 1;
+
+    final pageEnd = (_selectedRosterIndex + maxRosterPerPage).clamp(
+      1,
+      roster.length,
+    );
 
     return SafeArea(
       top: false,
@@ -287,7 +298,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                   onPressed: hasRoster && _selectedRosterIndex > 0
                       ? () {
                           setState(() {
-                            _selectedRosterIndex--;
+                            _selectedRosterIndex -= maxRosterPerPage;
+
+                            if (_selectedRosterIndex < 0) {
+                              _selectedRosterIndex = 0;
+                            }
                           });
                         }
                       : null,
@@ -297,7 +312,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                 Expanded(
                   child: Text(
                     hasRoster
-                        ? 'Student ${_selectedRosterIndex + 1} of ${roster.length}'
+                        ? maxRosterPerPage > 1
+                              ? 'Students $pageStart-$pageEnd of ${roster.length}'
+                              : 'Student $pageStart of ${roster.length}'
                         : 'No students',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -313,7 +330,13 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                       hasRoster && _selectedRosterIndex < roster.length - 1
                       ? () {
                           setState(() {
-                            _selectedRosterIndex++;
+                            _selectedRosterIndex += maxRosterPerPage;
+
+                            if (_selectedRosterIndex >= roster.length) {
+                              _selectedRosterIndex =
+                                  ((roster.length - 1) ~/ maxRosterPerPage) *
+                                  maxRosterPerPage;
+                            }
                           });
                         }
                       : null,
@@ -336,7 +359,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                   child: TemplatePreview(
                     loadedTemplate: loadedTemplate,
                     documentData: documentData,
-                    rosterRow: hasRoster ? roster[_selectedRosterIndex] : null,
+                    rosterRows: roster,
+                    rosterStartIndex: hasRoster ? _selectedRosterIndex : 0,
                   ),
                 ),
               ),
