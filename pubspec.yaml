@@ -80,7 +80,69 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
+  fonts:
+    - family: Arial
+      fonts:
+        - asset: assets/fonts/arial.ttf
+        - asset: assets/fonts/ariali.ttf
+          style: italic
+        - asset: assets/fonts/arialbd.ttf
+          weight: 700
+        - asset: assets/fonts/arialbi.ttf
+          style: italic
+          weight: 700
+        - asset: assets/fonts/ariblk.ttf
+          weight: 900
+
+    - family: Calibri
+      fonts:
+        - asset: assets/fonts/calibri.ttf
+        - asset: assets/fonts/calibrii.ttf
+          style: italic
+        - asset: assets/fonts/calibrib.ttf
+          weight: 700
+        - asset: assets/fonts/calibriz.ttf
+          style: italic
+          weight: 700
+        - asset: assets/fonts/calibril.ttf
+          weight: 300
+        - asset: assets/fonts/calibrili.ttf
+          style: italic
+          weight: 300
+
+    - family: Cambria
+      fonts:
+        - asset: assets/fonts/cambria.ttc
+        - asset: assets/fonts/cambriai.ttf
+          style: italic
+        - asset: assets/fonts/cambriab.ttf
+          weight: 700
+        - asset: assets/fonts/cambriaz.ttf
+          style: italic
+          weight: 700
+
+    - family: Georgia
+      fonts:
+        - asset: assets/fonts/georgia.ttf
+        - asset: assets/fonts/georgiai.ttf
+          style: italic
+        - asset: assets/fonts/georgiab.ttf
+          weight: 700
+        - asset: assets/fonts/georgiaz.ttf
+          style: italic
+          weight: 700
+
+    - family: Times New Roman
+      fonts:
+        - asset: assets/fonts/times.ttf
+        - asset: assets/fonts/timesi.ttf
+          style: italic
+        - asset: assets/fonts/timesbd.ttf
+          weight: 700
+        - asset: assets/fonts/timesbi.ttf
+          style: italic
+          weight: 700
+            # fonts:
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf

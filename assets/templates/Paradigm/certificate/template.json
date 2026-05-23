@@ -72,12 +72,12 @@
         "type": "text",
         "source": "date",
         "x": 6,
-        "y": 6.8,
+        "y": 6.95,
         "w": 1.875,
         "h": 0.4,
         "anchor": "topLeft",
         "align": "left",
-        "fontSize": 0.25,
+        "fontSize": 0.166,
         "fontFamily": "Times New Roman",
         "fontStyle": "italic",
         "color": "#000000"
@@ -94,13 +94,14 @@
         "type": "text",
         "source": "fullName",
         "x": 5.5,
-        "y": 4.0,
+        "y": 3.875,
         "w": 9,
-        "h": 0.75,
+        "h": 1.5,
         "anchor": "topCenter",
         "align": "center",
         "fontSize": 0.75,
         "fontFamily": "Times New Roman",
+        "fontStyle": "italic",
         "color": "#275075"
       }
     ]
