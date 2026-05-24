@@ -77,7 +77,7 @@
         "h": 0.4,
         "anchor": "topLeft",
         "align": "left",
-        "fontSize": 0.166,
+        "fontSize": 0.25,
         "fontFamily": "Times New Roman",
         "fontStyle": "italic",
         "color": "#000000"
@@ -94,12 +94,12 @@
         "type": "text",
         "source": "fullName",
         "x": 5.5,
-        "y": 3.875,
+        "y": 3.75,
         "w": 9,
         "h": 1.5,
         "anchor": "topCenter",
         "align": "center",
-        "fontSize": 0.75,
+        "fontSize": 0.875,
         "fontFamily": "Times New Roman",
         "fontStyle": "italic",
         "color": "#275075"

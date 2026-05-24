@@ -130,7 +130,7 @@
         "source": "profilePicture",
         "x": 1.125,
         "y": 0.4375,
-        "w": 1.525,
+        "w": 1.42,
         "h": 1.875,
         "anchor": "topCenter",
         "fit": "cover"
@@ -141,7 +141,7 @@
         "source": "mat.png",
         "x": 1.125,
         "y": 0.375,
-        "w": 1.65,
+        "w": 1.545,
         "h": 2.0,
         "anchor": "topCenter",
         "fit": "fill"
