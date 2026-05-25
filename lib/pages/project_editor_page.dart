@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
+import 'photo_crop_page.dart';
 import 'package:flutter/material.dart';
 
 import '../models/project_data.dart';
@@ -6,11 +11,13 @@ import '../services/template_loader.dart';
 class ProjectEditorPage extends StatefulWidget {
   final LoadedTemplate loadedTemplate;
   final ProjectData project;
+  final String projectFolderPath;
 
   const ProjectEditorPage({
     super.key,
     required this.loadedTemplate,
     required this.project,
+    required this.projectFolderPath,
   });
 
   @override
@@ -54,9 +61,7 @@ class _ProjectEditorPageState extends State<ProjectEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.loadedTemplate.template.name),
-      ),
+      appBar: AppBar(title: Text(widget.loadedTemplate.template.name)),
       body: Column(
         children: [
           _DocumentFields(
@@ -69,6 +74,7 @@ class _ProjectEditorPageState extends State<ProjectEditorPage> {
             child: _DetailList(
               fields: detailFields,
               details: project.details,
+              projectFolderPath: widget.projectFolderPath,
               onAdd: addDetail,
               onDelete: deleteDetail,
               onChanged: () => setState(() {}),
@@ -115,6 +121,7 @@ class _DetailList extends StatelessWidget {
   final VoidCallback onAdd;
   final void Function(int index) onDelete;
   final VoidCallback onChanged;
+  final String projectFolderPath;
 
   const _DetailList({
     required this.fields,
@@ -122,6 +129,7 @@ class _DetailList extends StatelessWidget {
     required this.onAdd,
     required this.onDelete,
     required this.onChanged,
+    required this.projectFolderPath,
   });
 
   @override
@@ -130,10 +138,7 @@ class _DetailList extends StatelessWidget {
       children: [
         ListTile(
           title: const Text('Details'),
-          trailing: IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: onAdd,
-          ),
+          trailing: IconButton(icon: const Icon(Icons.add), onPressed: onAdd),
         ),
         Expanded(
           child: ListView.builder(
@@ -151,10 +156,48 @@ class _DetailList extends StatelessWidget {
                         child: Column(
                           children: [
                             for (final field in fields)
-                              _DynamicTextField(
-                                field: field as Map<String, dynamic>,
-                                data: row,
-                                onChanged: onChanged,
+                              Builder(
+                                builder: (context) {
+                                  final fieldMap =
+                                      field as Map<String, dynamic>;
+                                  final key = fieldMap['key'];
+                                  print('FIELD KEY = $key');
+                                  if (key == 'profilePicture') {
+                                    final photo =
+                                        row['profilePicture']
+                                            as Map<String, dynamic>?;
+
+                                    return GestureDetector(
+                                      onTap: () => _replacePhoto(context, row),
+                                      child: Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        height: 80,
+                                        width: 80,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.black26,
+                                          ),
+                                        ),
+                                        child: photo == null
+                                            ? const Icon(Icons.person, size: 40)
+                                            : Image.file(
+                                                File(
+                                                  '$projectFolderPath/${photo['imagePath']}',
+                                                ),
+                                                fit: BoxFit.cover,
+                                              ),
+                                      ),
+                                    );
+                                  }
+
+                                  return _DynamicTextField(
+                                    field: fieldMap,
+                                    data: row,
+                                    onChanged: onChanged,
+                                  );
+                                },
                               ),
                           ],
                         ),
@@ -172,6 +215,48 @@ class _DetailList extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _replacePhoto(
+    BuildContext context,
+    Map<String, dynamic> row,
+  ) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    final sourceFile = File(result.files.single.path!);
+
+    final photosDir = Directory('$projectFolderPath/photos');
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    final safeName = DateTime.now().millisecondsSinceEpoch.toString();
+    final extension = p.extension(sourceFile.path);
+    final destination = File('${photosDir.path}/$safeName$extension');
+
+    await sourceFile.copy(destination.path);
+
+    final cropResult = await Navigator.of(context).push<PhotoCropResult>(
+      MaterialPageRoute(
+        builder: (_) => PhotoCropPage(imagePath: destination.path),
+      ),
+    );
+
+    if (cropResult == null) return;
+
+    row['profilePicture'] = {
+      'imagePath': 'photos/$safeName$extension',
+      'panX': cropResult.panX,
+      'panY': cropResult.panY,
+      'zoom': cropResult.zoom,
+    };
+
+    onChanged();
   }
 }
 

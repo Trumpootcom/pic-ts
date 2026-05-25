@@ -365,7 +365,7 @@ class _TemplateTextPainter extends CustomPainter {
 
     final dy = (boxHeightPx - textHeightPx) / 2;
 
-    debugPrint(
+/*    debugPrint(
       'PAINT TEXT | '
       'template="$templateId" | '
       'product="$productType" | '
@@ -388,7 +388,7 @@ class _TemplateTextPainter extends CustomPainter {
       'dx=${dx.toStringAsFixed(2)} | '
       'dy=${dy.toStringAsFixed(2)}',
     );
-
+*/
     canvas.save();
     canvas.translate(dx, dy);
     canvas.scale(scaleX, 1.0);

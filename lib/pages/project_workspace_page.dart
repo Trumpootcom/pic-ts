@@ -1,4 +1,11 @@
+import 'dart:io';
+
+import 'package:image/image.dart' as img;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+
+import 'photo_crop_page.dart';
 
 import '../models/template_definition.dart';
 import '../rendering/template_preview.dart';
@@ -6,6 +13,8 @@ import '../services/project_storage.dart';
 import '../services/template_loader.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tsts_title_bar.dart';
+
+int defaultProfileRotationQuarterTurns = 0;
 
 class ProjectWorkspacePage extends StatefulWidget {
   final StoredProject project;
@@ -153,7 +162,83 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     );
   }
 
+  Future<void> _replacePhoto(int i) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    final sourceFile = File(result.files.single.path!);
+
+    final photosDir = Directory('${widget.project.folderPath}/photos');
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    final safeName = DateTime.now().millisecondsSinceEpoch.toString();
+    final extension = p.extension(sourceFile.path);
+    final destination = File('${photosDir.path}/$safeName$extension');
+
+    print('SOURCE FILE: ${sourceFile.path}');
+
+    final bytes = await sourceFile.readAsBytes();
+    print('SOURCE BYTES: ${bytes.length}');
+
+    final decoded = img.decodeImage(bytes);
+    print('DECODED NULL? ${decoded == null}');
+    if (decoded != null) {
+      print('DECODED SIZE: ${decoded.width} x ${decoded.height}');
+    }
+    if (decoded == null) {
+      await sourceFile.copy(destination.path);
+    } else {
+      final normalized = img.bakeOrientation(decoded);
+      print('NORMALIZED SIZE: ${normalized.width} x ${normalized.height}');
+
+      await destination.writeAsBytes(img.encodeJpg(normalized, quality: 95));
+      print('WROTE NORMALIZED JPG: ${destination.path}');
+    }
+
+    final cropResult = await Navigator.of(context).push<PhotoCropResult>(
+      MaterialPageRoute(
+        builder: (_) => PhotoCropPage(
+          imagePath: destination.path,
+          initialRotationQuarterTurns: defaultProfileRotationQuarterTurns,
+        ),
+      ),
+    );
+
+    if (cropResult == null) return;
+    defaultProfileRotationQuarterTurns = cropResult.rotationQuarterTurns;
+    setState(() {
+      roster[i]['profilePicture'] = 'photos/$safeName$extension';
+      roster[i]['profilePictureCrop'] = {
+        'panX': cropResult.panX,
+        'panY': cropResult.panY,
+        'zoom': cropResult.zoom,
+        'rotationQuarterTurns': cropResult.rotationQuarterTurns,
+      };
+    });
+  }
+
   Widget _buildRosterCard(int i) {
+    final profilePicture = roster[i]['profilePicture']?.toString();
+    final imageWidget =
+        profilePicture == null || profilePicture.startsWith('assets/')
+        ? Image.asset(
+            profilePicture ?? 'assets/resources/portrait.png',
+            width: 56,
+            height: 56,
+            fit: BoxFit.cover,
+          )
+        : Image.file(
+            File('${widget.project.folderPath}/$profilePicture'),
+            width: 56,
+            height: 56,
+            fit: BoxFit.cover,
+          );
     return Card(
       key: ValueKey(roster[i]),
       color: AppColors.medSat,
@@ -161,12 +246,12 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         padding: const EdgeInsets.all(8),
         child: Row(
           children: [
-            Image.asset(
-              roster[i]['profilePicture']?.toString() ??
-                  'assets/resources/portrait.png',
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                _replacePhoto(i);
+              },
+              child: imageWidget,
             ),
             const SizedBox(width: 8),
             Expanded(
