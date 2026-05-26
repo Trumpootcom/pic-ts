@@ -1,14 +1,13 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
-import 'dart:math' as math;
+
 import '../util/ts_print.dart';
 
 class PhotoCropResult {
-  final double centerX;
-  final double centerY;
-
   final double cropLeft;
   final double cropTop;
   final double cropWidth;
@@ -19,11 +18,10 @@ class PhotoCropResult {
 
   final double rawWidth;
   final double rawHeight;
+
   final String croppedImagePath;
 
   const PhotoCropResult({
-    required this.centerX,
-    required this.centerY,
     required this.cropLeft,
     required this.cropTop,
     required this.cropWidth,
@@ -38,12 +36,15 @@ class PhotoCropResult {
 
 class PhotoCropPage extends StatefulWidget {
   final String imagePath;
+  final String croppedImagePath;
+
   final double initialPanX;
   final double initialPanY;
   final double initialZoom;
+
   final int initialRotationQuarterTurns;
+
   final List<Map<String, dynamic>> profilePictureCrops;
-  final String croppedImagePath;
 
   const PhotoCropPage({
     super.key,
@@ -61,15 +62,26 @@ class PhotoCropPage extends StatefulWidget {
 }
 
 class _PhotoCropPageState extends State<PhotoCropPage> {
-  late int rotationQuarterTurns;
   late final TransformationController _controller;
+  late int rotationQuarterTurns;
 
-  final GlobalKey _viewerKey = GlobalKey();
-  final GlobalKey _imageKey = GlobalKey();
-  final GlobalKey _guideKey = GlobalKey();
+  img.Image? decodedImage;
 
-  double guideWidth = 1;
-  double guideHeight = 1;
+  double rawWidth = 1;
+  double rawHeight = 1;
+
+  double viewportWidth = 1;
+  double viewportHeight = 1;
+
+  double imageChildWidth = 1;
+  double imageChildHeight = 1;
+
+  int debugLeft = 0;
+  int debugRight = 0;
+  int debugTop = 0;
+  int debugBottom = 0;
+
+  double debugZoom = 1.0;
 
   @override
   void initState() {
@@ -77,266 +89,138 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
 
     rotationQuarterTurns = widget.initialRotationQuarterTurns;
 
-    _controller = TransformationController(
-      Matrix4.identity()
-        ..translate(widget.initialPanX, widget.initialPanY)
-        ..scale(widget.initialZoom),
-    );
+    _controller = TransformationController();
+    _controller.addListener(_updateDebugOverlay);
+
+    _loadImage();
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_updateDebugOverlay);
     _controller.dispose();
     super.dispose();
   }
 
-  _CropCalculation? _calculateCrop() {
-    final guideContext = _guideKey.currentContext;
-    final imageContext = _imageKey.currentContext;
-
-    if (guideContext == null || imageContext == null) {
-      tsPrint('CROP CALC FAILED: missing render context');
-      return null;
-    }
-
-    final guideBox = guideContext.findRenderObject() as RenderBox?;
-    final imageBox = imageContext.findRenderObject() as RenderBox?;
-
-    if (guideBox == null || imageBox == null) {
-      tsPrint('CROP CALC FAILED: missing render box');
-      return null;
-    }
-
-    final imageBytes = File(widget.imagePath).readAsBytesSync();
-    final decoded = img.decodeImage(imageBytes);
+  Future<void> _loadImage() async {
+    final bytes = await File(widget.imagePath).readAsBytes();
+    final decoded = img.decodeImage(bytes);
 
     if (decoded == null) {
-      tsPrint('CROP CALC FAILED: image decode failed');
-      return null;
-    }
-
-    final rawWidth = decoded.width.toDouble();
-    final rawHeight = decoded.height.toDouble();
-
-    final turns = rotationQuarterTurns % 4;
-
-    final displaySourceWidth = turns.isOdd ? rawHeight : rawWidth;
-    final displaySourceHeight = turns.isOdd ? rawWidth : rawHeight;
-
-    final guideCenterGlobal = guideBox.localToGlobal(
-      guideBox.size.center(Offset.zero),
-    );
-
-    final imageLocal = imageBox.globalToLocal(guideCenterGlobal);
-
-    final displayCenterX =
-        imageLocal.dx / imageBox.size.width * displaySourceWidth;
-
-    final displayCenterY =
-        imageLocal.dy / imageBox.size.height * displaySourceHeight;
-
-    final matrix = _controller.value;
-    final zoom = matrix.getMaxScaleOnAxis();
-
-    final displayCropWidth =
-        guideBox.size.width / (imageBox.size.width * zoom) * displaySourceWidth;
-
-    final displayCropHeight =
-        guideBox.size.height /
-        (imageBox.size.height * zoom) *
-        displaySourceHeight;
-
-    final displayLeft = displayCenterX - (displayCropWidth / 2);
-    final displayTop = displayCenterY - (displayCropHeight / 2);
-    final displayRight = displayCenterX + (displayCropWidth / 2);
-    final displayBottom = displayCenterY + (displayCropHeight / 2);
-
-    final rawCorners = [
-      _displayPointToRawPoint(
-        displayX: displayLeft,
-        displayY: displayTop,
-        rawWidth: rawWidth,
-        rawHeight: rawHeight,
-        turns: turns,
-      ),
-      _displayPointToRawPoint(
-        displayX: displayRight,
-        displayY: displayTop,
-        rawWidth: rawWidth,
-        rawHeight: rawHeight,
-        turns: turns,
-      ),
-      _displayPointToRawPoint(
-        displayX: displayRight,
-        displayY: displayBottom,
-        rawWidth: rawWidth,
-        rawHeight: rawHeight,
-        turns: turns,
-      ),
-      _displayPointToRawPoint(
-        displayX: displayLeft,
-        displayY: displayBottom,
-        rawWidth: rawWidth,
-        rawHeight: rawHeight,
-        turns: turns,
-      ),
-    ];
-
-    final rawXs = rawCorners.map((p) => p.dx).toList();
-    final rawYs = rawCorners.map((p) => p.dy).toList();
-
-    final cropLeft = rawXs.reduce(math.min);
-    final cropTop = rawYs.reduce(math.min);
-    final cropRight = rawXs.reduce(math.max);
-    final cropBottom = rawYs.reduce(math.max);
-
-    final rawCenter = _displayPointToRawPoint(
-      displayX: displayCenterX,
-      displayY: displayCenterY,
-      rawWidth: rawWidth,
-      rawHeight: rawHeight,
-      turns: turns,
-    );
-
-    return _CropCalculation(
-      matrix: matrix,
-      zoom: zoom,
-      rawWidth: rawWidth,
-      rawHeight: rawHeight,
-      guideGlobalLeft: guideBox.localToGlobal(Offset.zero).dx,
-      guideGlobalTop: guideBox.localToGlobal(Offset.zero).dy,
-      guideWidth: guideBox.size.width,
-      guideHeight: guideBox.size.height,
-      guideCenterGlobalX: guideCenterGlobal.dx,
-      guideCenterGlobalY: guideCenterGlobal.dy,
-      imageGlobalLeft: imageBox.localToGlobal(Offset.zero).dx,
-      imageGlobalTop: imageBox.localToGlobal(Offset.zero).dy,
-      imageRenderedWidth: imageBox.size.width,
-      imageRenderedHeight: imageBox.size.height,
-      imageLocalX: imageLocal.dx,
-      imageLocalY: imageLocal.dy,
-      rawPixelX: rawCenter.dx,
-      rawPixelY: rawCenter.dy,
-      cropLeft: cropLeft,
-      cropTop: cropTop,
-      cropWidth: cropRight - cropLeft,
-      cropHeight: cropBottom - cropTop,
-    );
-  }
-
-  Offset _displayPointToRawPoint({
-    required double displayX,
-    required double displayY,
-    required double rawWidth,
-    required double rawHeight,
-    required int turns,
-  }) {
-    if (turns == 1) {
-      return Offset(displayY, rawHeight - displayX);
-    }
-
-    if (turns == 2) {
-      return Offset(rawWidth - displayX, rawHeight - displayY);
-    }
-
-    if (turns == 3) {
-      return Offset(rawWidth - displayY, displayX);
-    }
-
-    return Offset(displayX, displayY);
-  }
-
-  Future<void> _save() async {
-    final crop = _calculateCrop();
-
-    if (crop == null) return;
-
-    _printCropCalculation('CROP SAVE', crop);
-
-    await _writeCroppedImage(crop);
-
-    if (!mounted) return;
-
-    Navigator.of(context).pop(
-      PhotoCropResult(
-        croppedImagePath: widget.croppedImagePath,
-        centerX: crop.rawPixelX,
-        centerY: crop.rawPixelY,
-        cropLeft: crop.cropLeft,
-        cropTop: crop.cropTop,
-        cropWidth: crop.cropWidth,
-        cropHeight: crop.cropHeight,
-        zoom: crop.zoom,
-        rotationQuarterTurns: rotationQuarterTurns,
-        rawWidth: crop.rawWidth,
-        rawHeight: crop.rawHeight,
-      ),
-    );
-  }
-
-  void _printCropDebug() {
-    final crop = _calculateCrop();
-
-    if (crop == null) return;
-
-    _printCropCalculation('CROP DEBUG BUTTON', crop);
-  }
-
-  void _printCropCalculation(String title, _CropCalculation crop) {
-    tsPrint('');
-    tsPrint('========================================');
-    tsPrint(title);
-    tsPrint('========================================');
-
-    tsPrint('RAW IMAGE SIZE: ${crop.rawWidth} x ${crop.rawHeight}');
-
-    tsPrint('');
-    tsPrint('GUIDE');
-    tsPrint('GLOBAL LEFT/TOP: ${crop.guideGlobalLeft}, ${crop.guideGlobalTop}');
-    tsPrint('SIZE: ${crop.guideWidth} x ${crop.guideHeight}');
-    tsPrint(
-      'GLOBAL CENTER: ${crop.guideCenterGlobalX}, ${crop.guideCenterGlobalY}',
-    );
-
-    tsPrint('');
-    tsPrint('IMAGE RENDER BOX');
-    tsPrint('GLOBAL LEFT/TOP: ${crop.imageGlobalLeft}, ${crop.imageGlobalTop}');
-    tsPrint('SIZE: ${crop.imageRenderedWidth} x ${crop.imageRenderedHeight}');
-
-    tsPrint('');
-    tsPrint('COORDINATES');
-    tsPrint('IMAGE LOCAL COORD: ${crop.imageLocalX}, ${crop.imageLocalY}');
-    tsPrint('RAW PIXEL COORD: ${crop.rawPixelX}, ${crop.rawPixelY}');
-    tsPrint('');
-    tsPrint('RAW CROP RECT');
-    tsPrint('LEFT: ${crop.cropLeft}');
-    tsPrint('TOP: ${crop.cropTop}');
-    tsPrint('WIDTH: ${crop.cropWidth}');
-    tsPrint('HEIGHT: ${crop.cropHeight}');
-    tsPrint('');
-    tsPrint('TRANSFORM');
-    tsPrint('ZOOM: ${crop.zoom}');
-    tsPrint('ROTATION: $rotationQuarterTurns');
-    tsPrint('MATRIX:');
-    tsPrint(crop.matrix);
-
-    tsPrint('========================================');
-    tsPrint('');
-  }
-
-  Future<void> _writeCroppedImage(_CropCalculation crop) async {
-    final sourceBytes = await File(widget.imagePath).readAsBytes();
-
-    final decoded = img.decodeImage(sourceBytes);
-
-    if (decoded == null) {
-      tsPrint('FAILED TO DECODE SOURCE IMAGE');
+      tsPrint('PHOTO CROP: failed to decode image');
       return;
     }
 
-    img.Image working = decoded;
+    decodedImage = decoded;
+    rawWidth = decoded.width.toDouble();
+    rawHeight = decoded.height.toDouble();
+
+    if (!mounted) return;
+
+    setState(() {});
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _resetTransform();
+      }
+    });
+  }
+
+  double _sourceWidth() {
+    final turns = rotationQuarterTurns % 4;
+    return turns.isOdd ? rawHeight : rawWidth;
+  }
+
+  double _sourceHeight() {
+    final turns = rotationQuarterTurns % 4;
+    return turns.isOdd ? rawWidth : rawHeight;
+  }
+
+  double _baseScale() {
+    final sourceWidth = _sourceWidth();
+    final sourceHeight = _sourceHeight();
+
+    return math.max(
+      viewportWidth / sourceWidth,
+      viewportHeight / sourceHeight,
+    );
+  }
+
+  void _resetTransform() {
+    final sourceWidth = _sourceWidth();
+    final sourceHeight = _sourceHeight();
+
+    final baseScale = _baseScale();
+    final totalScale = baseScale * widget.initialZoom;
+
+    imageChildWidth = sourceWidth;
+    imageChildHeight = sourceHeight;
+
+    final scaledWidth = sourceWidth * totalScale;
+    final scaledHeight = sourceHeight * totalScale;
+
+    final offsetX = (viewportWidth - scaledWidth) / 2;
+    final offsetY = (viewportHeight - scaledHeight) / 2;
+
+    _controller.value = Matrix4.identity()
+      ..translate(offsetX, offsetY)
+      ..scale(totalScale);
+
+    _updateDebugOverlay();
+  }
+
+  _CropRect _currentCropRect() {
+    final sourceWidth = _sourceWidth();
+    final sourceHeight = _sourceHeight();
+
+    final matrix = _controller.value;
+
+    final totalScale = matrix.getMaxScaleOnAxis();
+    final tx = matrix.storage[12];
+    final ty = matrix.storage[13];
+
+    final left = (-tx) / totalScale;
+    final top = (-ty) / totalScale;
+
+    final right = left + (viewportWidth / totalScale);
+    final bottom = top + (viewportHeight / totalScale);
+
+    final safeLeft = left.clamp(0.0, sourceWidth);
+    final safeTop = top.clamp(0.0, sourceHeight);
+    final safeRight = right.clamp(0.0, sourceWidth);
+    final safeBottom = bottom.clamp(0.0, sourceHeight);
+
+    return _CropRect(
+      left: safeLeft,
+      top: safeTop,
+      right: safeRight,
+      bottom: safeBottom,
+      zoom: totalScale / _baseScale(),
+    );
+  }
+
+  void _updateDebugOverlay() {
+    if (!mounted) return;
+
+    final crop = _currentCropRect();
+
+    setState(() {
+      debugLeft = crop.left.round();
+      debugRight = crop.right.round();
+      debugTop = crop.top.round();
+      debugBottom = crop.bottom.round();
+      debugZoom = crop.zoom;
+    });
+  }
+
+  Future<void> _save() async {
+    if (decodedImage == null) {
+      return;
+    }
 
     final turns = rotationQuarterTurns % 4;
+
+    img.Image working = decodedImage!;
 
     if (turns == 1) {
       working = img.copyRotate(working, angle: 90);
@@ -346,32 +230,54 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       working = img.copyRotate(working, angle: 270);
     }
 
-    final left = crop.cropLeft.round().clamp(0, working.width - 1);
-    final top = crop.cropTop.round().clamp(0, working.height - 1);
+    final crop = _currentCropRect();
 
-    final width = crop.cropWidth.round().clamp(1, working.width - left);
+    final cropLeft = crop.left.round().clamp(0, working.width - 1);
+    final cropTop = crop.top.round().clamp(0, working.height - 1);
 
-    final height = crop.cropHeight.round().clamp(1, working.height - top);
+    final cropRight = crop.right.round().clamp(cropLeft + 1, working.width);
+    final cropBottom = crop.bottom.round().clamp(cropTop + 1, working.height);
+
+    final cropWidth = cropRight - cropLeft;
+    final cropHeight = cropBottom - cropTop;
 
     final cropped = img.copyCrop(
       working,
-      x: left,
-      y: top,
-      width: width,
-      height: height,
+      x: cropLeft,
+      y: cropTop,
+      width: cropWidth,
+      height: cropHeight,
     );
 
     final outFile = File(widget.croppedImagePath);
 
     await outFile.parent.create(recursive: true);
-
     await outFile.writeAsBytes(img.encodeJpg(cropped, quality: 95));
 
-    tsPrint('');
+    await Gal.putImage(outFile.path, album: 'Pictures');
+
     tsPrint('CROPPED IMAGE WRITTEN');
     tsPrint(widget.croppedImagePath);
-    tsPrint('SIZE: ${cropped.width} x ${cropped.height}');
-    tsPrint('');
+    tsPrint('CROP: $cropLeft,$cropTop ${cropWidth}x$cropHeight');
+    tsPrint('ZOOM: ${crop.zoom}');
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      PhotoCropResult(
+        cropLeft: cropLeft.toDouble(),
+        cropTop: cropTop.toDouble(),
+        cropWidth: cropWidth.toDouble(),
+        cropHeight: cropHeight.toDouble(),
+        zoom: crop.zoom,
+        rotationQuarterTurns: rotationQuarterTurns,
+        rawWidth: working.width.toDouble(),
+        rawHeight: working.height.toDouble(),
+        croppedImagePath: widget.croppedImagePath,
+      ),
+    );
   }
 
   @override
@@ -382,136 +288,146 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
         title: const Text('Position Photo'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: _printCropDebug,
-          ),
-          IconButton(
             icon: const Icon(Icons.rotate_left),
             onPressed: () {
               setState(() {
                 rotationQuarterTurns = (rotationQuarterTurns + 1) % 4;
+              });
+
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _resetTransform();
+                }
               });
             },
           ),
           TextButton(onPressed: _save, child: const Text('SAVE')),
         ],
       ),
-      body: Center(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final previewAspect = widget.profilePictureCrops.isEmpty
-                ? 1.0
-                : widget.profilePictureCrops
-                      .map(
-                        (crop) =>
-                            (crop['aspectRatio'] as num?)?.toDouble() ?? 1.0,
-                      )
-                      .reduce((a, b) => a > b ? a : b);
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final previewAspect = widget.profilePictureCrops.isEmpty
+              ? 1.0
+              : widget.profilePictureCrops
+                    .map(
+                      (crop) =>
+                          (crop['aspectRatio'] as num?)?.toDouble() ?? 1.0,
+                    )
+                    .reduce((a, b) => a > b ? a : b);
 
-            final maxW = constraints.maxWidth * 0.90;
-            final maxH = constraints.maxHeight * 0.90;
+          final maxW = constraints.maxWidth * 0.90;
+          final maxH = constraints.maxHeight * 0.90;
 
-            double calculatedGuideWidth = maxW;
-            double calculatedGuideHeight = calculatedGuideWidth / previewAspect;
+          double calcWidth = maxW;
+          double calcHeight = calcWidth / previewAspect;
 
-            if (calculatedGuideHeight > maxH) {
-              calculatedGuideHeight = maxH;
-              calculatedGuideWidth = calculatedGuideHeight * previewAspect;
-            }
+          if (calcHeight > maxH) {
+            calcHeight = maxH;
+            calcWidth = calcHeight * previewAspect;
+          }
 
-            guideWidth = calculatedGuideWidth;
-            guideHeight = calculatedGuideHeight;
+          final viewportChanged =
+              viewportWidth != calcWidth || viewportHeight != calcHeight;
 
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                InteractiveViewer(
-                  key: _viewerKey,
-                  transformationController: _controller,
-                  minScale: 0.5,
-                  maxScale: 6,
-                  child: RotatedBox(
-                    quarterTurns: rotationQuarterTurns,
-                    child: Image.file(
-                      File(widget.imagePath),
-                      key: _imageKey,
-                      fit: BoxFit.contain,
+          viewportWidth = calcWidth;
+          viewportHeight = calcHeight;
+
+          if (viewportChanged && decodedImage != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _resetTransform();
+              }
+            });
+          }
+
+          return Stack(
+            children: [
+              Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: viewportWidth,
+                      height: viewportHeight,
+                      child: ClipRect(
+                        child: InteractiveViewer(
+                          transformationController: _controller,
+                          minScale: _baseScale() * 0.5,
+                          maxScale: _baseScale() * 8,
+                          boundaryMargin: EdgeInsets.zero,
+                          constrained: false,
+                          child: SizedBox(
+                            width: imageChildWidth,
+                            height: imageChildHeight,
+                            child: RotatedBox(
+                              quarterTurns: rotationQuarterTurns,
+                              child: Image.file(
+                                File(widget.imagePath),
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    IgnorePointer(
+                      child: SizedBox(
+                        width: viewportWidth,
+                        height: viewportHeight,
+                        child: CustomPaint(
+                          painter: _CropGuidePainter(
+                            crops: widget.profilePictureCrops,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                IgnorePointer(
-                  child: SizedBox(
-                    key: _guideKey,
-                    width: guideWidth,
-                    height: guideHeight,
-                    child: CustomPaint(
-                      painter: _CropGuidePainter(
-                        crops: widget.profilePictureCrops,
+              ),
+              Positioned(
+                top: 5,
+                left: 5,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    color: Colors.black.withOpacity(0.7),
+                    child: Text(
+                      'TL:($debugLeft,$debugTop) '
+                      'BR:($debugRight,$debugBottom) '
+                      'ZM:${debugZoom.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _CropCalculation {
-  final Matrix4 matrix;
+class _CropRect {
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
   final double zoom;
 
-  final double rawWidth;
-  final double rawHeight;
-
-  final double guideGlobalLeft;
-  final double guideGlobalTop;
-  final double guideWidth;
-  final double guideHeight;
-  final double guideCenterGlobalX;
-  final double guideCenterGlobalY;
-
-  final double imageGlobalLeft;
-  final double imageGlobalTop;
-  final double imageRenderedWidth;
-  final double imageRenderedHeight;
-
-  final double imageLocalX;
-  final double imageLocalY;
-
-  final double rawPixelX;
-  final double rawPixelY;
-  final double cropLeft;
-  final double cropTop;
-  final double cropWidth;
-  final double cropHeight;
-
-  const _CropCalculation({
-    required this.matrix,
+  const _CropRect({
+    required this.left,
+    required this.top,
+    required this.right,
+    required this.bottom,
     required this.zoom,
-    required this.rawWidth,
-    required this.rawHeight,
-    required this.guideGlobalLeft,
-    required this.guideGlobalTop,
-    required this.guideWidth,
-    required this.guideHeight,
-    required this.guideCenterGlobalX,
-    required this.guideCenterGlobalY,
-    required this.imageGlobalLeft,
-    required this.imageGlobalTop,
-    required this.imageRenderedWidth,
-    required this.imageRenderedHeight,
-    required this.imageLocalX,
-    required this.imageLocalY,
-    required this.rawPixelX,
-    required this.rawPixelY,
-    required this.cropLeft,
-    required this.cropTop,
-    required this.cropWidth,
-    required this.cropHeight,
   });
 }
 
@@ -540,13 +456,13 @@ class _CropGuidePainter extends CustomPainter {
 
       final shape = crop['shape']?.toString() ?? 'rect';
 
-      final guideHeight = size.height;
-      final guideWidth = guideHeight * aspectRatio;
+      final h = size.height;
+      final w = h * aspectRatio;
 
       final rect = Rect.fromCenter(
         center: size.center(Offset.zero),
-        width: guideWidth,
-        height: guideHeight,
+        width: w,
+        height: h,
       );
 
       final path = Path();
