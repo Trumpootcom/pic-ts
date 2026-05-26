@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'theme_schema_builder.dart';
 import '../models/theme_pack.dart';
+import '../util/ts_print.dart';
 
 class StoredProject {
   final String id;
@@ -56,7 +57,7 @@ class ProjectStorage {
     final root = await _projectsRoot();
     final projectId = _slug(projectName);
     final projectDir = Directory('${root.path}/$projectId');
-    print('ABOUT TO BUILD THEME SCHEMA');
+    tsPrint('ABOUT TO BUILD THEME SCHEMA');
     final schema = await ThemeSchemaBuilder().build(themePack);
     final documentData = <String, dynamic>{};
 
@@ -119,7 +120,48 @@ class ProjectStorage {
   Future<Map<String, dynamic>> openProject(StoredProject project) async {
     final file = File('${project.folderPath}/project.json');
     final jsonText = await file.readAsString();
-    return jsonDecode(jsonText) as Map<String, dynamic>;
+
+    final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
+
+    tsPrint('');
+    tsPrint('========================================');
+    tsPrint('OPEN PROJECT');
+    tsPrint('PROJECT: ${project.name}');
+    tsPrint('THEME ID: ${jsonMap['themeId']}');
+    tsPrint('THEME NAME: ${jsonMap['themeName']}');
+    tsPrint('THEME PATH: ${jsonMap['themePath']}');
+    tsPrint('========================================');
+
+    final themePack = ThemePack(
+      id: jsonMap['themeId'] as String,
+      name: jsonMap['themeName'] as String,
+      folderPath: jsonMap['themePath'] as String,
+      iconPath: '${jsonMap['themePath']}/icon.png',
+    );
+
+    final schema = await ThemeSchemaBuilder().build(themePack);
+
+    jsonMap['documentSchema'] = schema.documentFields;
+    jsonMap['rosterSchema'] = schema.rosterFields;
+
+    jsonMap['templateMetrics'] = {
+      'profilePicturePreviewAspectRatio':
+          schema.metrics.profilePicturePreviewAspectRatio,
+
+      'profilePictureCrops': schema.metrics.profilePictureCrops
+          .map((e) => e.toJson())
+          .toList(),
+    };
+
+    await file.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(jsonMap),
+    );
+
+    tsPrint('');
+    tsPrint('PROJECT TEMPLATE METRICS REFRESHED');
+    tsPrint('');
+
+    return jsonMap;
   }
 
   Future<void> saveProject({

@@ -365,7 +365,7 @@ class _TemplateTextPainter extends CustomPainter {
 
     final dy = (boxHeightPx - textHeightPx) / 2;
 
-/*    debugPrint(
+/*    debugtsPrint(
       'PAINT TEXT | '
       'template="$templateId" | '
       'product="$productType" | '

@@ -11,6 +11,7 @@ import '../models/template_definition.dart';
 import '../rendering/template_preview.dart';
 import '../services/project_storage.dart';
 import '../services/template_loader.dart';
+import '../util/ts_print.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tsts_title_bar.dart';
 
@@ -181,24 +182,24 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     final extension = p.extension(sourceFile.path);
     final destination = File('${photosDir.path}/$safeName$extension');
 
-    print('SOURCE FILE: ${sourceFile.path}');
+    tsPrint('SOURCE FILE: ${sourceFile.path}');
 
     final bytes = await sourceFile.readAsBytes();
-    print('SOURCE BYTES: ${bytes.length}');
+    tsPrint('SOURCE BYTES: ${bytes.length}');
 
     final decoded = img.decodeImage(bytes);
-    print('DECODED NULL? ${decoded == null}');
+    tsPrint('DECODED NULL? ${decoded == null}');
     if (decoded != null) {
-      print('DECODED SIZE: ${decoded.width} x ${decoded.height}');
+      tsPrint('DECODED SIZE: ${decoded.width} x ${decoded.height}');
     }
     if (decoded == null) {
       await sourceFile.copy(destination.path);
     } else {
       final normalized = img.bakeOrientation(decoded);
-      print('NORMALIZED SIZE: ${normalized.width} x ${normalized.height}');
+      tsPrint('NORMALIZED SIZE: ${normalized.width} x ${normalized.height}');
 
       await destination.writeAsBytes(img.encodeJpg(normalized, quality: 95));
-      print('WROTE NORMALIZED JPG: ${destination.path}');
+      tsPrint('WROTE NORMALIZED JPG: ${destination.path}');
     }
 
     final cropResult = await Navigator.of(context).push<PhotoCropResult>(
@@ -206,6 +207,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         builder: (_) => PhotoCropPage(
           imagePath: destination.path,
           initialRotationQuarterTurns: defaultProfileRotationQuarterTurns,
+          profilePictureCrops:
+              (projectData['templateMetrics']?['profilePictureCrops'] as List?)
+                  ?.map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList() ??
+              [],
         ),
       ),
     );
@@ -215,30 +221,53 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     setState(() {
       roster[i]['profilePicture'] = 'photos/$safeName$extension';
       roster[i]['profilePictureCrop'] = {
-        'panX': cropResult.panX,
-        'panY': cropResult.panY,
+        'centerX': cropResult.centerX,
+        'centerY': cropResult.centerY,
         'zoom': cropResult.zoom,
         'rotationQuarterTurns': cropResult.rotationQuarterTurns,
+        'guideWidth': cropResult.guideWidth,
+        'guideHeight': cropResult.guideHeight,
+        'rawWidth': decoded?.width,
+        'rawHeight': decoded?.height,
       };
     });
   }
 
   Widget _buildRosterCard(int i) {
+    final previewAspect =
+        (projectData['templateMetrics']?['profilePicturePreviewAspectRatio']
+                as num?)
+            ?.toDouble() ??
+        1.0;
+
+    const previewHeight = 74.0;
+    final previewWidth = previewHeight * previewAspect;
+
     final profilePicture = roster[i]['profilePicture']?.toString();
+    final crop = roster[i]['profilePictureCrop'] as Map<String, dynamic>?;
+
+    final rotation = crop?['rotationQuarterTurns'] as int? ?? 0;
+    final zoom = (crop?['zoom'] as num?)?.toDouble() ?? 1.0;
+    final isSideways = rotation % 2 == 1;
+
+    final imageW = isSideways ? previewHeight : previewWidth;
+    final imageH = isSideways ? previewWidth : previewHeight;
+
     final imageWidget =
         profilePicture == null || profilePicture.startsWith('assets/')
         ? Image.asset(
             profilePicture ?? 'assets/resources/portrait.png',
-            width: 56,
-            height: 56,
+            width: imageW,
+            height: imageH,
             fit: BoxFit.cover,
           )
         : Image.file(
             File('${widget.project.folderPath}/$profilePicture'),
-            width: 56,
-            height: 56,
+            width: imageW,
+            height: imageH,
             fit: BoxFit.cover,
           );
+
     return Card(
       key: ValueKey(roster[i]),
       color: AppColors.medSat,
@@ -248,10 +277,31 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           children: [
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                _replacePhoto(i);
-              },
-              child: imageWidget,
+              onTap: () => _replacePhoto(i),
+              child: SizedBox(
+                width: previewWidth,
+                height: previewHeight,
+                child: ClipRect(
+                  clipBehavior: Clip.hardEdge,
+                  child: OverflowBox(
+                    minWidth: 0,
+                    minHeight: 0,
+                    maxWidth: double.infinity,
+                    maxHeight: double.infinity,
+                    alignment: Alignment.center,
+                    child: _ProfilePreviewImage(
+                      imageWidget: imageWidget,
+                      previewWidth: previewWidth,
+                      previewHeight: previewHeight,
+                      imageW: imageW,
+                      imageH: imageH,
+                      crop: crop,
+                      rotation: rotation,
+                      zoom: zoom,
+                    ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -509,6 +559,73 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ProfilePreviewImage extends StatelessWidget {
+  final Widget imageWidget;
+  final double previewWidth;
+  final double previewHeight;
+  final double imageW;
+  final double imageH;
+  final Map<String, dynamic>? crop;
+  final int rotation;
+  final double zoom;
+
+  const _ProfilePreviewImage({
+    required this.imageWidget,
+    required this.previewWidth,
+    required this.previewHeight,
+    required this.imageW,
+    required this.imageH,
+    required this.crop,
+    required this.rotation,
+    required this.zoom,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final centerX = (crop?['centerX'] as num?)?.toDouble();
+    final centerY = (crop?['centerY'] as num?)?.toDouble();
+    final rawWidth = (crop?['rawWidth'] as num?)?.toDouble();
+    final rawHeight = (crop?['rawHeight'] as num?)?.toDouble();
+
+    if (centerX == null ||
+        centerY == null ||
+        rawWidth == null ||
+        rawHeight == null) {
+      return Center(
+        child: Transform.rotate(
+          angle: rotation * 1.57079632679,
+          child: Transform.scale(
+            scale: zoom,
+            child: imageWidget,
+          ),
+        ),
+      );
+    }
+
+    final imagePointX = (centerX / rawWidth) * imageW;
+    final imagePointY = (centerY / rawHeight) * imageH;
+
+    final imageCenterX = imageW / 2;
+    final imageCenterY = imageH / 2;
+
+    final offsetX = (imageCenterX - imagePointX) * zoom;
+    final offsetY = (imageCenterY - imagePointY) * zoom;
+
+    return Center(
+      child: Transform.rotate(
+        angle: rotation * 1.57079632679,
+        child: Transform.translate(
+          offset: Offset(offsetX, offsetY),
+          child: Transform.scale(
+            scale: zoom,
+            child: imageWidget,
+          ),
+        ),
       ),
     );
   }
