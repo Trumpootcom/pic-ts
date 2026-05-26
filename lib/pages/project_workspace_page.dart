@@ -206,6 +206,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       MaterialPageRoute(
         builder: (_) => PhotoCropPage(
           imagePath: destination.path,
+          croppedImagePath:
+              '${widget.project.folderPath}/photos/cropped_$safeName.jpg',
           initialRotationQuarterTurns: defaultProfileRotationQuarterTurns,
           profilePictureCrops:
               (projectData['templateMetrics']?['profilePictureCrops'] as List?)
@@ -219,16 +221,19 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     if (cropResult == null) return;
     defaultProfileRotationQuarterTurns = cropResult.rotationQuarterTurns;
     setState(() {
-      roster[i]['profilePicture'] = 'photos/$safeName$extension';
+      roster[i]['profilePicture'] = p.relative(
+        cropResult.croppedImagePath,
+        from: widget.project.folderPath,
+      );
+
       roster[i]['profilePictureCrop'] = {
-        'centerX': cropResult.centerX,
-        'centerY': cropResult.centerY,
-        'zoom': cropResult.zoom,
+        'cropLeft': cropResult.cropLeft,
+        'cropTop': cropResult.cropTop,
+        'cropWidth': cropResult.cropWidth,
+        'cropHeight': cropResult.cropHeight,
         'rotationQuarterTurns': cropResult.rotationQuarterTurns,
-        'guideWidth': cropResult.guideWidth,
-        'guideHeight': cropResult.guideHeight,
-        'rawWidth': decoded?.width,
-        'rawHeight': decoded?.height,
+        'rawWidth': cropResult.rawWidth,
+        'rawHeight': cropResult.rawHeight,
       };
     });
   }
@@ -244,27 +249,19 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     final previewWidth = previewHeight * previewAspect;
 
     final profilePicture = roster[i]['profilePicture']?.toString();
-    final crop = roster[i]['profilePictureCrop'] as Map<String, dynamic>?;
-
-    final rotation = crop?['rotationQuarterTurns'] as int? ?? 0;
-    final zoom = (crop?['zoom'] as num?)?.toDouble() ?? 1.0;
-    final isSideways = rotation % 2 == 1;
-
-    final imageW = isSideways ? previewHeight : previewWidth;
-    final imageH = isSideways ? previewWidth : previewHeight;
 
     final imageWidget =
         profilePicture == null || profilePicture.startsWith('assets/')
         ? Image.asset(
             profilePicture ?? 'assets/resources/portrait.png',
-            width: imageW,
-            height: imageH,
+            width: previewWidth,
+            height: previewHeight,
             fit: BoxFit.cover,
           )
         : Image.file(
             File('${widget.project.folderPath}/$profilePicture'),
-            width: imageW,
-            height: imageH,
+            width: previewWidth,
+            height: previewHeight,
             fit: BoxFit.cover,
           );
 
@@ -278,30 +275,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _replacePhoto(i),
-              child: SizedBox(
-                width: previewWidth,
-                height: previewHeight,
-                child: ClipRect(
-                  clipBehavior: Clip.hardEdge,
-                  child: OverflowBox(
-                    minWidth: 0,
-                    minHeight: 0,
-                    maxWidth: double.infinity,
-                    maxHeight: double.infinity,
-                    alignment: Alignment.center,
-                    child: _ProfilePreviewImage(
-                      imageWidget: imageWidget,
-                      previewWidth: previewWidth,
-                      previewHeight: previewHeight,
-                      imageW: imageW,
-                      imageH: imageH,
-                      crop: crop,
-                      rotation: rotation,
-                      zoom: zoom,
-                    ),
-                  ),
-                ),
-              ),
+              child: ClipRect(clipBehavior: Clip.hardEdge, child: imageWidget),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -559,73 +533,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _ProfilePreviewImage extends StatelessWidget {
-  final Widget imageWidget;
-  final double previewWidth;
-  final double previewHeight;
-  final double imageW;
-  final double imageH;
-  final Map<String, dynamic>? crop;
-  final int rotation;
-  final double zoom;
-
-  const _ProfilePreviewImage({
-    required this.imageWidget,
-    required this.previewWidth,
-    required this.previewHeight,
-    required this.imageW,
-    required this.imageH,
-    required this.crop,
-    required this.rotation,
-    required this.zoom,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final centerX = (crop?['centerX'] as num?)?.toDouble();
-    final centerY = (crop?['centerY'] as num?)?.toDouble();
-    final rawWidth = (crop?['rawWidth'] as num?)?.toDouble();
-    final rawHeight = (crop?['rawHeight'] as num?)?.toDouble();
-
-    if (centerX == null ||
-        centerY == null ||
-        rawWidth == null ||
-        rawHeight == null) {
-      return Center(
-        child: Transform.rotate(
-          angle: rotation * 1.57079632679,
-          child: Transform.scale(
-            scale: zoom,
-            child: imageWidget,
-          ),
-        ),
-      );
-    }
-
-    final imagePointX = (centerX / rawWidth) * imageW;
-    final imagePointY = (centerY / rawHeight) * imageH;
-
-    final imageCenterX = imageW / 2;
-    final imageCenterY = imageH / 2;
-
-    final offsetX = (imageCenterX - imagePointX) * zoom;
-    final offsetY = (imageCenterY - imagePointY) * zoom;
-
-    return Center(
-      child: Transform.rotate(
-        angle: rotation * 1.57079632679,
-        child: Transform.translate(
-          offset: Offset(offsetX, offsetY),
-          child: Transform.scale(
-            scale: zoom,
-            child: imageWidget,
-          ),
-        ),
       ),
     );
   }

@@ -2,25 +2,37 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
-
+import 'dart:math' as math;
 import '../util/ts_print.dart';
 
 class PhotoCropResult {
   final double centerX;
   final double centerY;
+
+  final double cropLeft;
+  final double cropTop;
+  final double cropWidth;
+  final double cropHeight;
+
   final double zoom;
   final int rotationQuarterTurns;
-  final double guideWidth;
-  final double guideHeight;
-  
+
+  final double rawWidth;
+  final double rawHeight;
+  final String croppedImagePath;
 
   const PhotoCropResult({
     required this.centerX,
     required this.centerY,
+    required this.cropLeft,
+    required this.cropTop,
+    required this.cropWidth,
+    required this.cropHeight,
     required this.zoom,
     required this.rotationQuarterTurns,
-    required this.guideWidth,
-    required this.guideHeight,
+    required this.rawWidth,
+    required this.rawHeight,
+    required this.croppedImagePath,
   });
 }
 
@@ -31,10 +43,12 @@ class PhotoCropPage extends StatefulWidget {
   final double initialZoom;
   final int initialRotationQuarterTurns;
   final List<Map<String, dynamic>> profilePictureCrops;
+  final String croppedImagePath;
 
   const PhotoCropPage({
     super.key,
     required this.imagePath,
+    required this.croppedImagePath,
     this.initialPanX = 0,
     this.initialPanY = 0,
     this.initialZoom = 1,
@@ -104,17 +118,85 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     final rawWidth = decoded.width.toDouble();
     final rawHeight = decoded.height.toDouble();
 
+    final turns = rotationQuarterTurns % 4;
+
+    final displaySourceWidth = turns.isOdd ? rawHeight : rawWidth;
+    final displaySourceHeight = turns.isOdd ? rawWidth : rawHeight;
+
     final guideCenterGlobal = guideBox.localToGlobal(
       guideBox.size.center(Offset.zero),
     );
 
     final imageLocal = imageBox.globalToLocal(guideCenterGlobal);
 
-    final rawPixelX = imageLocal.dx / imageBox.size.width * rawWidth;
-    final rawPixelY = imageLocal.dy / imageBox.size.height * rawHeight;
+    final displayCenterX =
+        imageLocal.dx / imageBox.size.width * displaySourceWidth;
+
+    final displayCenterY =
+        imageLocal.dy / imageBox.size.height * displaySourceHeight;
 
     final matrix = _controller.value;
     final zoom = matrix.getMaxScaleOnAxis();
+
+    final displayCropWidth =
+        guideBox.size.width / (imageBox.size.width * zoom) * displaySourceWidth;
+
+    final displayCropHeight =
+        guideBox.size.height /
+        (imageBox.size.height * zoom) *
+        displaySourceHeight;
+
+    final displayLeft = displayCenterX - (displayCropWidth / 2);
+    final displayTop = displayCenterY - (displayCropHeight / 2);
+    final displayRight = displayCenterX + (displayCropWidth / 2);
+    final displayBottom = displayCenterY + (displayCropHeight / 2);
+
+    final rawCorners = [
+      _displayPointToRawPoint(
+        displayX: displayLeft,
+        displayY: displayTop,
+        rawWidth: rawWidth,
+        rawHeight: rawHeight,
+        turns: turns,
+      ),
+      _displayPointToRawPoint(
+        displayX: displayRight,
+        displayY: displayTop,
+        rawWidth: rawWidth,
+        rawHeight: rawHeight,
+        turns: turns,
+      ),
+      _displayPointToRawPoint(
+        displayX: displayRight,
+        displayY: displayBottom,
+        rawWidth: rawWidth,
+        rawHeight: rawHeight,
+        turns: turns,
+      ),
+      _displayPointToRawPoint(
+        displayX: displayLeft,
+        displayY: displayBottom,
+        rawWidth: rawWidth,
+        rawHeight: rawHeight,
+        turns: turns,
+      ),
+    ];
+
+    final rawXs = rawCorners.map((p) => p.dx).toList();
+    final rawYs = rawCorners.map((p) => p.dy).toList();
+
+    final cropLeft = rawXs.reduce(math.min);
+    final cropTop = rawYs.reduce(math.min);
+    final cropRight = rawXs.reduce(math.max);
+    final cropBottom = rawYs.reduce(math.max);
+
+    final rawCenter = _displayPointToRawPoint(
+      displayX: displayCenterX,
+      displayY: displayCenterY,
+      rawWidth: rawWidth,
+      rawHeight: rawHeight,
+      turns: turns,
+    );
 
     return _CropCalculation(
       matrix: matrix,
@@ -133,26 +215,61 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       imageRenderedHeight: imageBox.size.height,
       imageLocalX: imageLocal.dx,
       imageLocalY: imageLocal.dy,
-      rawPixelX: rawPixelX,
-      rawPixelY: rawPixelY,
+      rawPixelX: rawCenter.dx,
+      rawPixelY: rawCenter.dy,
+      cropLeft: cropLeft,
+      cropTop: cropTop,
+      cropWidth: cropRight - cropLeft,
+      cropHeight: cropBottom - cropTop,
     );
   }
 
-  void _save() {
+  Offset _displayPointToRawPoint({
+    required double displayX,
+    required double displayY,
+    required double rawWidth,
+    required double rawHeight,
+    required int turns,
+  }) {
+    if (turns == 1) {
+      return Offset(displayY, rawHeight - displayX);
+    }
+
+    if (turns == 2) {
+      return Offset(rawWidth - displayX, rawHeight - displayY);
+    }
+
+    if (turns == 3) {
+      return Offset(rawWidth - displayY, displayX);
+    }
+
+    return Offset(displayX, displayY);
+  }
+
+  Future<void> _save() async {
     final crop = _calculateCrop();
 
     if (crop == null) return;
 
     _printCropCalculation('CROP SAVE', crop);
 
+    await _writeCroppedImage(crop);
+
+    if (!mounted) return;
+
     Navigator.of(context).pop(
       PhotoCropResult(
+        croppedImagePath: widget.croppedImagePath,
         centerX: crop.rawPixelX,
         centerY: crop.rawPixelY,
+        cropLeft: crop.cropLeft,
+        cropTop: crop.cropTop,
+        cropWidth: crop.cropWidth,
+        cropHeight: crop.cropHeight,
         zoom: crop.zoom,
         rotationQuarterTurns: rotationQuarterTurns,
-        guideWidth: guideWidth,
-        guideHeight: guideHeight,
+        rawWidth: crop.rawWidth,
+        rawHeight: crop.rawHeight,
       ),
     );
   }
@@ -190,7 +307,12 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     tsPrint('COORDINATES');
     tsPrint('IMAGE LOCAL COORD: ${crop.imageLocalX}, ${crop.imageLocalY}');
     tsPrint('RAW PIXEL COORD: ${crop.rawPixelX}, ${crop.rawPixelY}');
-
+    tsPrint('');
+    tsPrint('RAW CROP RECT');
+    tsPrint('LEFT: ${crop.cropLeft}');
+    tsPrint('TOP: ${crop.cropTop}');
+    tsPrint('WIDTH: ${crop.cropWidth}');
+    tsPrint('HEIGHT: ${crop.cropHeight}');
     tsPrint('');
     tsPrint('TRANSFORM');
     tsPrint('ZOOM: ${crop.zoom}');
@@ -199,6 +321,56 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     tsPrint(crop.matrix);
 
     tsPrint('========================================');
+    tsPrint('');
+  }
+
+  Future<void> _writeCroppedImage(_CropCalculation crop) async {
+    final sourceBytes = await File(widget.imagePath).readAsBytes();
+
+    final decoded = img.decodeImage(sourceBytes);
+
+    if (decoded == null) {
+      tsPrint('FAILED TO DECODE SOURCE IMAGE');
+      return;
+    }
+
+    img.Image working = decoded;
+
+    final turns = rotationQuarterTurns % 4;
+
+    if (turns == 1) {
+      working = img.copyRotate(working, angle: 90);
+    } else if (turns == 2) {
+      working = img.copyRotate(working, angle: 180);
+    } else if (turns == 3) {
+      working = img.copyRotate(working, angle: 270);
+    }
+
+    final left = crop.cropLeft.round().clamp(0, working.width - 1);
+    final top = crop.cropTop.round().clamp(0, working.height - 1);
+
+    final width = crop.cropWidth.round().clamp(1, working.width - left);
+
+    final height = crop.cropHeight.round().clamp(1, working.height - top);
+
+    final cropped = img.copyCrop(
+      working,
+      x: left,
+      y: top,
+      width: width,
+      height: height,
+    );
+
+    final outFile = File(widget.croppedImagePath);
+
+    await outFile.parent.create(recursive: true);
+
+    await outFile.writeAsBytes(img.encodeJpg(cropped, quality: 95));
+
+    tsPrint('');
+    tsPrint('CROPPED IMAGE WRITTEN');
+    tsPrint(widget.croppedImagePath);
+    tsPrint('SIZE: ${cropped.width} x ${cropped.height}');
     tsPrint('');
   }
 
@@ -221,10 +393,7 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
               });
             },
           ),
-          TextButton(
-            onPressed: _save,
-            child: const Text('SAVE'),
-          ),
+          TextButton(onPressed: _save, child: const Text('SAVE')),
         ],
       ),
       body: Center(
@@ -315,6 +484,10 @@ class _CropCalculation {
 
   final double rawPixelX;
   final double rawPixelY;
+  final double cropLeft;
+  final double cropTop;
+  final double cropWidth;
+  final double cropHeight;
 
   const _CropCalculation({
     required this.matrix,
@@ -335,15 +508,17 @@ class _CropCalculation {
     required this.imageLocalY,
     required this.rawPixelX,
     required this.rawPixelY,
+    required this.cropLeft,
+    required this.cropTop,
+    required this.cropWidth,
+    required this.cropHeight,
   });
 }
 
 class _CropGuidePainter extends CustomPainter {
   final List<Map<String, dynamic>> crops;
 
-  const _CropGuidePainter({
-    required this.crops,
-  });
+  const _CropGuidePainter({required this.crops});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -354,10 +529,7 @@ class _CropGuidePainter extends CustomPainter {
 
     final guideCrops = crops.isEmpty
         ? [
-            {
-              'aspectRatio': size.width / size.height,
-              'shape': 'rect',
-            },
+            {'aspectRatio': size.width / size.height, 'shape': 'rect'},
           ]
         : crops;
 
@@ -400,11 +572,7 @@ class _CropGuidePainter extends CustomPainter {
     }
   }
 
-  void _drawDashedPath(
-    Canvas canvas,
-    Path path,
-    Paint paint,
-  ) {
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
     const dashWidth = 8.0;
     const dashGap = 6.0;
 
@@ -412,10 +580,7 @@ class _CropGuidePainter extends CustomPainter {
       double distance = 0;
 
       while (distance < metric.length) {
-        final segment = metric.extractPath(
-          distance,
-          distance + dashWidth,
-        );
+        final segment = metric.extractPath(distance, distance + dashWidth);
 
         canvas.drawPath(segment, paint);
 
@@ -425,9 +590,7 @@ class _CropGuidePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(
-    covariant _CropGuidePainter oldDelegate,
-  ) {
+  bool shouldRepaint(covariant _CropGuidePainter oldDelegate) {
     return oldDelegate.crops != crops;
   }
 }
