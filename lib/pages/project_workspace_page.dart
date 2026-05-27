@@ -142,18 +142,22 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   Widget _buildSubtitleActionButton({
     String? label,
     IconData? icon,
+    required double iconSize,
     required VoidCallback onPressed,
   }) {
     return InkWell(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.only(right: 0, top: 0),
+        padding: EdgeInsets.zero,
         child: icon != null
-            ? Icon(icon, size: 34)
+            ? Transform.translate(
+                offset: const Offset(0, -4),
+                child: Icon(icon, size: iconSize),
+              )
             : Text(
                 label ?? '',
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: iconSize / 2,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -164,18 +168,23 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   Widget _buildSubtitleBar() {
     final pageCount = templates.length + 1;
     final title = _workspaceSubtitle();
-    const subtitleBarHt = 40.0;
+    const subtitleBarHt = 25.0;
     final leftImageW = 90 * 1.0;
 
     final Widget action = _currentPage == 0
-        ? _buildSubtitleActionButton(icon: Icons.save, onPressed: _saveProject)
+        ? _buildSubtitleActionButton(
+            icon: Icons.save_rounded,
+            onPressed: _saveProject,
+            iconSize: subtitleBarHt * 1.15,
+          )
         : _buildSubtitleActionButton(
             icon: Icons.file_present,
             onPressed: _exportCurrentTemplate,
+            iconSize: subtitleBarHt * 1.15,
           );
 
     return SizedBox(
-      height: 35,
+      height: subtitleBarHt,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -199,18 +208,23 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             child: Row(
               children: [
                 Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColors.textDark,
-                        fontSize: 18,
-                        fontFeatures: [FontFeature.enable('smcp')],
-                        fontWeight: FontWeight.w800,
-                      ),
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: subtitleBarHt - 3,
+                      fontFeatures: [FontFeature.enable('smcp')],
+                      fontWeight: FontWeight.w800,
+                    ),
+                    textHeightBehavior: const TextHeightBehavior(
+                      applyHeightToFirstAscent: false,
+                      applyHeightToLastDescent: false,
+                    ),
+                    strutStyle: const StrutStyle(
+                      forceStrutHeight: true,
+                      height: 1.5,
                     ),
                   ),
                 ),
@@ -446,8 +460,10 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                   ),
                 ),
                 _buildSubtitleActionButton(
-                  icon: Icons.add_reaction,
+                  //icon: Icons.add_reaction,
+                  icon: Icons.person_add_alt_1_rounded,
                   onPressed: _addRosterRow,
+                  iconSize: 40,
                 ),
               ],
             ),

@@ -56,6 +56,7 @@ class TstsTitleBar extends StatelessWidget
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 4,),
                         Text(
                           title,
                           style: TextStyle(
@@ -67,6 +68,7 @@ class TstsTitleBar extends StatelessWidget
                             color: Colors.black,
                           ),
                         ),
+                        const SizedBox(height: 3,),
                         Text(
                           subtitle,
                           style: TextStyle(
