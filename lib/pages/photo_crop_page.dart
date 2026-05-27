@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:gal/gal.dart';
+//import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 
 import '../util/ts_print.dart';
@@ -254,7 +254,7 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     await outFile.parent.create(recursive: true);
     await outFile.writeAsBytes(img.encodeJpg(cropped, quality: 95));
 
-    await Gal.putImage(outFile.path, album: 'Pictures');
+    //await Gal.putImage(outFile.path, album: 'Pictures');
 
     tsPrint('CROPPED IMAGE WRITTEN');
     tsPrint(widget.croppedImagePath);

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../services/template_loader.dart';
@@ -7,6 +9,7 @@ class TemplatePreview extends StatelessWidget {
   final Map<String, dynamic> documentData;
   final List<Map<String, dynamic>> rosterRows;
   final int rosterStartIndex;
+  final String projectFolderPath;
 
   const TemplatePreview({
     super.key,
@@ -14,6 +17,7 @@ class TemplatePreview extends StatelessWidget {
     required this.documentData,
     required this.rosterRows,
     required this.rosterStartIndex,
+    required this.projectFolderPath,
   });
 
   @override
@@ -69,7 +73,6 @@ class TemplatePreview extends StatelessWidget {
                     slotScaleX: 1,
                     slotScaleY: 1,
                   ),
-
                 for (int i = 0; i < slots.length && i < maxRosterPerPage; i++)
                   if (rosterStartIndex + i < rosterRows.length)
                     ..._buildRosterSlot(
@@ -170,12 +173,17 @@ class TemplatePreview extends StatelessWidget {
       final imagePath = _resolveImagePath(element, sourceData);
       final fit = _resolveBoxFit(element['fit']?.toString());
 
+      final isFileImage =
+          imagePath.startsWith('/') || imagePath.startsWith('file:');
+
       return Positioned(
         left: left,
         top: top,
         width: w,
         height: h,
-        child: Image.asset(imagePath, fit: fit),
+        child: isFileImage
+            ? Image.file(File(imagePath), fit: fit)
+            : Image.asset(imagePath, fit: fit),
       );
     }
 
@@ -242,37 +250,23 @@ class TemplatePreview extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  String _firstNameLastInitial(String value) {
-    final parts = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    if (parts.isEmpty) {
-      return '';
-    }
-
-    if (parts.length == 1) {
-      return parts.first;
-    }
-
-    final firstName = parts.first;
-    final lastInitial = parts.last[0];
-
-    return '$firstName $lastInitial.';
-  }
-
   String _resolveImagePath(
     Map<String, dynamic> element,
     Map<String, dynamic> sourceData,
   ) {
     final source = element['source']?.toString() ?? '';
-
     final value = sourceData[source]?.toString();
 
     if (value != null && value.trim().isNotEmpty) {
-      return value;
+      if (value.startsWith('assets/')) {
+        return value;
+      }
+
+      if (value.startsWith('/')) {
+        return value;
+      }
+
+      return '$projectFolderPath/$value';
     }
 
     if (source == 'profilePicture') {
@@ -298,16 +292,25 @@ class TemplatePreview extends StatelessWidget {
     return BoxFit.fill;
   }
 
-  Alignment _textAlignment(TextAlign textAlign) {
-    if (textAlign == TextAlign.center) {
-      return Alignment.center;
+  String _firstNameLastInitial(String value) {
+    final parts = value
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return '';
     }
 
-    if (textAlign == TextAlign.right) {
-      return Alignment.centerRight;
+    if (parts.length == 1) {
+      return parts.first;
     }
 
-    return Alignment.centerLeft;
+    final firstName = parts.first;
+    final lastInitial = parts.last[0];
+
+    return '$firstName $lastInitial.';
   }
 
   Color _parseColor(String value) {
@@ -348,10 +351,6 @@ class _TemplateTextPainter extends CustomPainter {
     final boxWidthPx = size.width;
     final boxHeightPx = size.height;
 
-    final textWidthIn = textWidthPx / scale;
-    final boxWidthIn = boxWidthPx / scale;
-    final boxHeightIn = boxHeightPx / scale;
-
     final scaleX = textWidthPx > boxWidthPx ? boxWidthPx / textWidthPx : 1.0;
     final paintedWidthPx = textWidthPx * scaleX;
 
@@ -365,30 +364,6 @@ class _TemplateTextPainter extends CustomPainter {
 
     final dy = (boxHeightPx - textHeightPx) / 2;
 
-/*    debugtsPrint(
-      'PAINT TEXT | '
-      'template="$templateId" | '
-      'product="$productType" | '
-      'source="$source" | '
-      'value="$value"\n'
-      '  fontSize: '
-      '${(textStyle.fontSize ?? 0).toStringAsFixed(2)} px | '
-      '${((textStyle.fontSize ?? 0) / scale).toStringAsFixed(3)} in\n'
-      '  textWidth: '
-      '${textWidthPx.toStringAsFixed(2)} px | '
-      '${textWidthIn.toStringAsFixed(3)} in\n'
-      '  boxWidth: '
-      '${boxWidthPx.toStringAsFixed(2)} px | '
-      '${boxWidthIn.toStringAsFixed(3)} in\n'
-      '  boxHeight: '
-      '${boxHeightPx.toStringAsFixed(2)} px | '
-      '${boxHeightIn.toStringAsFixed(3)} in\n'
-      '  scale: ${scale.toStringAsFixed(3)} px/in\n'
-      '  scaleX: ${scaleX.toStringAsFixed(3)} | '
-      'dx=${dx.toStringAsFixed(2)} | '
-      'dy=${dy.toStringAsFixed(2)}',
-    );
-*/
     canvas.save();
     canvas.translate(dx, dy);
     canvas.scale(scaleX, 1.0);

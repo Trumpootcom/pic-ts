@@ -206,8 +206,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       MaterialPageRoute(
         builder: (_) => PhotoCropPage(
           imagePath: destination.path,
-          //croppedImagePath: '${widget.project.folderPath}/photos/cropped_$safeName.jpg',
-          croppedImagePath: '/storage/emulated/0/Pictures/pic_ts_cropped_$safeName.jpg',
+          croppedImagePath:
+              '${widget.project.folderPath}/photos/cropped_$safeName.jpg',
           initialRotationQuarterTurns: defaultProfileRotationQuarterTurns,
           profilePictureCrops:
               (projectData['templateMetrics']?['profilePictureCrops'] as List?)
@@ -470,6 +470,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                     documentData: documentData,
                     rosterRows: roster,
                     rosterStartIndex: hasRoster ? _selectedRosterIndex : 0,
+                    projectFolderPath: widget.project.folderPath,
                   ),
                 ),
               ),
