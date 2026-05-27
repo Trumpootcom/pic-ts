@@ -9,6 +9,8 @@ import 'package:printing/printing.dart';
 import '../services/template_loader.dart';
 
 class TemplatePdfExporter {
+  final Map<String, pw.MemoryImage> _pdfImageCache = {};
+
   Future<void> exportAndShare({
     required LoadedTemplate loadedTemplate,
     required Map<String, dynamic> documentData,
@@ -171,8 +173,7 @@ class TemplatePdfExporter {
         projectFolderPath: projectFolderPath,
       );
 
-      final imageBytes = await _loadImageBytes(imagePath);
-      final image = pw.MemoryImage(imageBytes);
+      final image = await _getPdfImage(imagePath);
 
       return pw.Positioned(
         left: left * PdfPageFormat.inch,
@@ -262,6 +263,21 @@ class TemplatePdfExporter {
     }
 
     return loadedTemplate.assetPath(source);
+  }
+
+  Future<pw.MemoryImage> _getPdfImage(String imagePath) async {
+    final cached = _pdfImageCache[imagePath];
+
+    if (cached != null) {
+      return cached;
+    }
+
+    final imageBytes = await _loadImageBytes(imagePath);
+    final image = pw.MemoryImage(imageBytes);
+
+    _pdfImageCache[imagePath] = image;
+
+    return image;
   }
 
   Future<Uint8List> _loadImageBytes(String imagePath) async {
