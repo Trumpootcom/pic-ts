@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'photo_crop_page.dart';
 
 import '../models/template_definition.dart';
+import '../rendering/template_pdf_exporter.dart';
 import '../rendering/template_preview.dart';
 import '../services/project_storage.dart';
 import '../services/template_loader.dart';
@@ -150,6 +151,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       child: Row(
         children: [
           _buildMenuButton(label: 'SAVE', onPressed: _saveProject),
+          const SizedBox(width: 8),
+          _buildMenuButton(
+            label: 'EXPORT',
+            onPressed: _currentPage > 0 ? _exportCurrentTemplate : () {},
+          ),
           const Spacer(),
           Text(
             'Page ${_currentPage + 1} of $pageCount',
@@ -498,6 +504,32 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
         return _buildTemplatePage(templates[index - 1]);
       },
+    );
+  }
+
+  Future<void> _exportCurrentTemplate() async {
+    if (_currentPage <= 0) {
+      return;
+    }
+
+    final loadedTemplate = templates[_currentPage - 1];
+
+    final document = Map<String, dynamic>.from(
+      loadedTemplate.template.rawJson['document'] as Map? ?? {},
+    );
+
+    final output = document['output']?.toString() ?? '';
+
+    if (output != 'pdf') {
+      return;
+    }
+
+    await TemplatePdfExporter().exportAndShare(
+      loadedTemplate: loadedTemplate,
+      documentData: documentData,
+      rosterRows: roster,
+      projectFolderPath: widget.project.folderPath,
+      fileName: '${loadedTemplate.template.id}.pdf',
     );
   }
 
