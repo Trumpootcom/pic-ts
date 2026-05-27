@@ -1,6 +1,6 @@
 {
   "id": "completion",
-  "name": "Completion Certificate",
+  "name": "CNA Certificate",
   "productType": "certificate",
   "preview": "preview.jpg",
 
@@ -11,6 +11,34 @@
         "label": "Completion Date",
         "type": "text",
         "default": "June 12, 2026"
+      },
+
+      {
+        "key": "classroomHours",
+        "label": "Classroom Hours",
+        "type": "text",
+        "default": "60 hrs"
+      },
+
+      {
+        "key": "skillsHours",
+        "label": "Skills Hours",
+        "type": "text",
+        "default": "48 hrs"
+      },
+
+      {
+        "key": "clinicalHours",
+        "label": "Clinical Hours",
+        "type": "text",
+        "default": "40 hrs"
+      },
+
+      {
+        "key": "totalHours",
+        "label": "Total Hours",
+        "type": "text",
+        "default": "148 hrs"
       }
     ],
 
@@ -72,12 +100,72 @@
         "type": "text",
         "source": "date",
         "x": 6,
-        "y": 6.95,
+        "y": 6.93,
         "w": 1.875,
         "h": 0.4,
         "anchor": "topLeft",
         "align": "left",
-        "fontSize": 0.25,
+        "fontSize": 0.3,
+        "fontFamily": "Times New Roman",
+        "fontStyle": "italic",
+        "color": "#000000"
+      },
+
+      {
+        "type": "text",
+        "source": "classroomHours",
+        "x": 2.24,
+        "y": 6.03,
+        "w": 0.68,
+        "h": 0.25,
+        "anchor": "topLeft",
+        "align": "left",
+        "fontSize": 0.23,
+        "fontFamily": "Times New Roman",
+        "fontStyle": "italic",
+        "color": "#000000"
+      },
+
+      {
+        "type": "text",
+        "source": "skillsHours",
+        "x": 4.86,
+        "y": 6.03,
+        "w": 0.68,
+        "h": 0.25,
+        "anchor": "topLeft",
+        "align": "left",
+        "fontSize": 0.23,
+        "fontFamily": "Times New Roman",
+        "fontStyle": "italic",
+        "color": "#000000"
+      },
+
+      {
+        "type": "text",
+        "source": "clinicalHours",
+        "x": 6.75,
+        "y": 6.03,
+        "w": 0.68,
+        "h": 0.25,
+        "anchor": "topLeft",
+        "align": "left",
+        "fontSize": 0.23,
+        "fontFamily": "Times New Roman",
+        "fontStyle": "italic",
+        "color": "#000000"
+      },
+
+      {
+        "type": "text",
+        "source": "totalHours",
+        "x": 4.1,
+        "y": 6.33,
+        "w": 0.825,
+        "h": 0.25,
+        "anchor": "topLeft",
+        "align": "left",
+        "fontSize": 0.23,
         "fontFamily": "Times New Roman",
         "fontStyle": "italic",
         "color": "#000000"
@@ -94,12 +182,12 @@
         "type": "text",
         "source": "fullName",
         "x": 5.5,
-        "y": 3.75,
+        "y": 3.7,
         "w": 9,
         "h": 1.5,
         "anchor": "topCenter",
         "align": "center",
-        "fontSize": 0.875,
+        "fontSize": 0.925,
         "fontFamily": "Times New Roman",
         "fontStyle": "italic",
         "color": "#275075"

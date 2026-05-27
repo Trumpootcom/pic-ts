@@ -126,7 +126,20 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     );
   }
 
-  Widget _buildMenuButton({
+  String _workspaceSubtitle() {
+    if (_currentPage == 0) {
+      return 'Raw Data Entry';
+    }
+
+    final templateIndex = _currentPage - 1;
+    if (templateIndex < 0 || templateIndex >= templates.length) {
+      return '';
+    }
+
+    return templates[templateIndex].template.name;
+  }
+
+  Widget _buildSubtitleActionButton({
     required String label,
     required VoidCallback onPressed,
   }) {
@@ -134,34 +147,78 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.darkUnsat,
         foregroundColor: AppColors.textLight,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        minimumSize: const Size(0, 30),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
       ),
       onPressed: onPressed,
-      child: Text(label),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
-  Widget _buildMenuBar() {
+  Widget _buildSubtitleBar() {
     final pageCount = templates.length + 1;
+    final title = _workspaceSubtitle();
+    const subtitleBarHt = 40.0;
+    final leftImageW = 90 * 1.0;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      color: AppColors.medSat,
-      child: Row(
-        children: [
-          _buildMenuButton(label: 'SAVE', onPressed: _saveProject),
-          const SizedBox(width: 8),
-          _buildMenuButton(
+    final Widget action = _currentPage == 0
+        ? _buildSubtitleActionButton(label: 'SAVE', onPressed: _saveProject)
+        : _buildSubtitleActionButton(
             label: 'EXPORT',
-            onPressed: _currentPage > 0 ? _exportCurrentTemplate : () {},
+            onPressed: _exportCurrentTemplate,
+          );
+
+    return SizedBox(
+      height: 35,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/backgrounds/trumpoot_titlebar_d.png',
+            fit: BoxFit.fill,
           ),
-          const Spacer(),
-          Text(
-            'Page ${_currentPage + 1} of $pageCount',
-            style: TextStyle(
-              color: AppColors.textDark,
-              fontWeight: FontWeight.bold,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              width: leftImageW,
+              height: subtitleBarHt,
+              child: Image.asset(
+                'assets/backgrounds/trumpoot_titlebar_c.png',
+                fit: BoxFit.fill,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: leftImageW + 5),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                        fontFeatures: [FontFeature.enable('smcp')],
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: action,
+                ),
+              ],
             ),
           ),
         ],
@@ -312,16 +369,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         children: [
           Text(
-            'Raw Data Entry',
-            style: TextStyle(
-              color: AppColors.textDark,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Text(
             'Document',
             style: TextStyle(
               color: AppColors.textDark,
@@ -357,7 +404,10 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                   ),
                 ),
               ),
-              _buildMenuButton(label: 'ADD', onPressed: _addRosterRow),
+              _buildSubtitleActionButton(
+                label: 'ADD',
+                onPressed: _addRosterRow,
+              ),
             ],
           ),
 
@@ -395,17 +445,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              template.name,
-              style: TextStyle(
-                color: AppColors.textDark,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
             Row(
               children: [
                 IconButton(
@@ -561,7 +600,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
           return Column(
             children: [
-              _buildMenuBar(),
+              _buildSubtitleBar(),
               Expanded(child: _buildContentPages()),
             ],
           );
