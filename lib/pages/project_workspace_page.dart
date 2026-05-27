@@ -128,7 +128,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
   String _workspaceSubtitle() {
     if (_currentPage == 0) {
-      return 'Raw Data Entry';
+      return 'Data Entry';
     }
 
     final templateIndex = _currentPage - 1;
@@ -140,22 +140,23 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Widget _buildSubtitleActionButton({
-    required String label,
+    String? label,
+    IconData? icon,
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.darkUnsat,
-        foregroundColor: AppColors.textLight,
-        minimumSize: const Size(0, 30),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.compact,
-      ),
-      onPressed: onPressed,
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.only(right: 0, top: 0),
+        child: icon != null
+            ? Icon(icon, size: 34)
+            : Text(
+                label ?? '',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }
@@ -167,9 +168,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     final leftImageW = 90 * 1.0;
 
     final Widget action = _currentPage == 0
-        ? _buildSubtitleActionButton(label: 'SAVE', onPressed: _saveProject)
+        ? _buildSubtitleActionButton(icon: Icons.save, onPressed: _saveProject)
         : _buildSubtitleActionButton(
-            label: 'EXPORT',
+            icon: Icons.file_present,
             onPressed: _exportCurrentTemplate,
           );
 
@@ -206,7 +207,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: AppColors.textDark,
-                        fontSize: 14,
+                        fontSize: 18,
                         fontFeatures: [FontFeature.enable('smcp')],
                         fontWeight: FontWeight.w800,
                       ),
@@ -308,7 +309,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             ?.toDouble() ??
         1.0;
 
-    const previewHeight = 74.0;
+    const previewHeight = 44.0;
     final previewWidth = previewHeight * previewAspect;
 
     final profilePicture = roster[i]['profilePicture']?.toString();
@@ -331,27 +332,40 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     return Card(
       key: ValueKey(roster[i]),
       color: AppColors.medSat,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.only(top: 5, bottom: 5, left: 10, right: 5),
         child: Row(
           children: [
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _replacePhoto(i),
-              child: ClipRect(clipBehavior: Clip.hardEdge, child: imageWidget),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.darkUnsat),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: imageWidget,
+                ),
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextFormField(
                 key: ValueKey('fullName_${i}_${roster[i].hashCode}'),
                 initialValue: roster[i]['fullName']?.toString() ?? '',
-                decoration: _inputDecoration('Full Name'),
+                decoration: _inputDecoration(''), //'Full Name'
                 onChanged: (value) {
                   roster[i]['fullName'] = value;
                 },
               ),
             ),
             IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              visualDensity: VisualDensity.compact,
               color: AppColors.darkUnsat,
               icon: const Icon(Icons.close),
               onPressed: () => _deleteRosterRow(i),
@@ -365,56 +379,114 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   Widget _buildRawDataPage() {
     return SafeArea(
       top: false,
-      child: ListView(
+      child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        children: [
-          Text(
-            'Document',
-            style: TextStyle(
-              color: AppColors.textDark,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          for (final field in documentSchema)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: TextFormField(
-                initialValue: documentData[field['key']]?.toString() ?? '',
-                decoration: _inputDecoration(field['label'] as String),
-                onChanged: (value) {
-                  documentData[field['key']] = value;
-                },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Document',
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 4),
 
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Roster (${roster.length})',
-                  style: TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height / 5,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.lightSat,
+                  border: Border.all(color: AppColors.darkUnsat),
+                ),
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.only(right: 0),
+                    children: [
+                      for (final field in documentSchema)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 4),
+                          child: TextFormField(
+                            initialValue:
+                                documentData[field['key']]?.toString() ?? '',
+                            decoration: _inputDecoration(
+                              field['label'] as String,
+                            ),
+                            onChanged: (value) {
+                              documentData[field['key']] = value;
+                            },
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
-              _buildSubtitleActionButton(
-                label: 'ADD',
-                onPressed: _addRosterRow,
+            ),
+
+            const SizedBox(height: 8),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Roster (${roster.length})',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                _buildSubtitleActionButton(
+                  icon: Icons.add_reaction,
+                  onPressed: _addRosterRow,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.only(left: 4, top: 4, right: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.lightSat,
+                  border: Border.all(color: AppColors.darkUnsat),
+                ),
+                child: ScrollbarTheme(
+                  data: ScrollbarThemeData(
+                    thumbColor: WidgetStateProperty.all(AppColors.darkUnsat),
+                    trackColor: WidgetStateProperty.all(AppColors.lightUnsat),
+                    trackVisibility: WidgetStateProperty.all(true),
+                    radius: const Radius.circular(4),
+                    thickness: WidgetStateProperty.all(8),
+                  ),
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    child: ListView(
+                      padding: const EdgeInsets.only(right: 0),
+                      children: [
+                        for (int i = 0; i < roster.length; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 0),
+                            child: _buildRosterCard(i),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          for (int i = 0; i < roster.length; i++) _buildRosterCard(i),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
