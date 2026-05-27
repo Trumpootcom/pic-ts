@@ -44,7 +44,11 @@ class TemplatePdfExporter {
       marginAll: 0,
     );
 
-    for (int pageStart = 0; pageStart < rosterRows.length; pageStart += maxRosterPerPage) {
+    for (
+      int pageStart = 0;
+      pageStart < rosterRows.length;
+      pageStart += maxRosterPerPage
+    ) {
       final pageWidgets = <pw.Widget>[];
 
       for (final element in documentElements) {
@@ -107,10 +111,7 @@ class TemplatePdfExporter {
 
     final bytes = await pdf.save();
 
-    await Printing.sharePdf(
-      bytes: bytes,
-      filename: fileName,
-    );
+    await Printing.sharePdf(bytes: bytes, filename: fileName);
   }
 
   Future<pw.Widget> _buildElement({
@@ -206,12 +207,20 @@ class TemplatePdfExporter {
           child: pw.Center(
             child: pw.FittedBox(
               fit: pw.BoxFit.scaleDown,
-              child: pw.Text(
-                value,
-                maxLines: 1,
-                style: pw.TextStyle(
-                  fontSize: fontSize * PdfPageFormat.inch,
-                  fontWeight: _isBold(element) ? pw.FontWeight.bold : pw.FontWeight.normal,
+              child: pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 6),
+                child: pw.Text(
+                  value,
+                  maxLines: 1,
+                  style: pw.TextStyle(
+                    fontSize: fontSize * PdfPageFormat.inch,
+                    fontWeight: _isBold(element)
+                        ? pw.FontWeight.bold
+                        : pw.FontWeight.normal,
+                    fontStyle: _isItalic(element)
+                        ? pw.FontStyle.italic
+                        : pw.FontStyle.normal,
+                  ),
                 ),
               ),
             ),
@@ -277,8 +286,15 @@ class TemplatePdfExporter {
   }
 
   bool _isBold(Map<String, dynamic> element) {
-    final fontStyleString = element['fontStyle']?.toString().toLowerCase() ?? '';
+    final fontStyleString =
+        element['fontStyle']?.toString().toLowerCase() ?? '';
     return fontStyleString.contains('bold');
+  }
+
+  bool _isItalic(Map<String, dynamic> element) {
+    final fontStyleString =
+        element['fontStyle']?.toString().toLowerCase() ?? '';
+    return fontStyleString.contains('italic');
   }
 
   String _firstNameLastInitial(String value) {
