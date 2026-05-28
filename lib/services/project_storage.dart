@@ -148,6 +148,12 @@ class ProjectStorage {
       'profilePicturePreviewAspectRatio':
           schema.metrics.profilePicturePreviewAspectRatio,
 
+      'profilePictureMaxRenderWidthPx':
+          schema.metrics.profilePictureMaxRenderWidthPx,
+
+      'profilePictureMaxRenderHeightPx':
+          schema.metrics.profilePictureMaxRenderHeightPx,
+
       'profilePictureCrops': schema.metrics.profilePictureCrops
           .map((e) => e.toJson())
           .toList(),

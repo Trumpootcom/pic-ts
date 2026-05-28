@@ -258,7 +258,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     final safeName = DateTime.now().millisecondsSinceEpoch.toString();
     final extension = p.extension(sourceFile.path);
-    final destination = File('${photosDir.path}/$safeName$extension');
+    final destination = File('${photosDir.path}/tmp_$safeName$extension');
 
     tsPrint('SOURCE FILE: ${sourceFile.path}');
 
@@ -284,8 +284,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       MaterialPageRoute(
         builder: (_) => PhotoCropPage(
           imagePath: destination.path,
+          targetWidthPx:
+              projectData['templateMetrics']?['profilePictureMaxRenderWidthPx'] ??
+              600,
+          targetHeightPx:
+              projectData['templateMetrics']?['profilePictureMaxRenderHeightPx'] ??
+              900,
           croppedImagePath:
-              '${widget.project.folderPath}/photos/cropped_$safeName.jpg',
+              '${widget.project.folderPath}/photos/portrait_$safeName.jpg',
           initialRotationQuarterTurns: defaultProfileRotationQuarterTurns,
           profilePictureCrops:
               (projectData['templateMetrics']?['profilePictureCrops'] as List?)
@@ -296,7 +302,12 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       ),
     );
 
+    try {
+      await destination.delete();
+      tsPrint('DELETED TEMP NORMALIZED JPG');
+    } catch (_) {}
     if (cropResult == null) return;
+
     defaultProfileRotationQuarterTurns = cropResult.rotationQuarterTurns;
     setState(() {
       roster[i]['profilePicture'] = p.relative(

@@ -20,31 +20,43 @@ class ThemeSchema {
 class ThemeMetrics {
   final double profilePicturePreviewAspectRatio;
   final List<ThemeProfilePictureCrop> profilePictureCrops;
+  final int profilePictureMaxRenderWidthPx;
+  final int profilePictureMaxRenderHeightPx;
 
   const ThemeMetrics({
     required this.profilePicturePreviewAspectRatio,
     required this.profilePictureCrops,
+    required this.profilePictureMaxRenderWidthPx,
+    required this.profilePictureMaxRenderHeightPx,
   });
 }
 
 class ThemeProfilePictureCrop {
   final double aspectRatio;
   final String shape;
+  final int renderWidthPx;
+  final int renderHeightPx;
 
   const ThemeProfilePictureCrop({
     required this.aspectRatio,
     required this.shape,
+    required this.renderWidthPx,
+    required this.renderHeightPx,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'aspectRatio': aspectRatio,
       'shape': shape,
+      'renderWidthPx': renderWidthPx,
+      'renderHeightPx': renderHeightPx,
     };
   }
 }
 
 class ThemeSchemaBuilder {
+  static const double _defaultRenderDpi = 300.0;
+
   Future<ThemeSchema> build(ThemePack themePack) async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
 
@@ -69,6 +81,9 @@ class ThemeSchemaBuilder {
     final documentFields = <String, Map<String, dynamic>>{};
     final rosterFields = <String, Map<String, dynamic>>{};
     final profilePictureCrops = <ThemeProfilePictureCrop>[];
+
+    var maxProfileRenderWidthPx = 0;
+    var maxProfileRenderHeightPx = 0;
 
     for (final templatePath in templateFiles) {
       tsPrint('');
@@ -100,11 +115,22 @@ class ThemeSchemaBuilder {
         );
       }
 
-      _collectProfilePictureCrops(
+      final foundCrops = _collectProfilePictureCrops(
         templatePath: templatePath,
         jsonMap: jsonMap,
-        crops: profilePictureCrops,
       );
+
+      for (final crop in foundCrops) {
+        profilePictureCrops.add(crop);
+
+        if (crop.renderWidthPx > maxProfileRenderWidthPx) {
+          maxProfileRenderWidthPx = crop.renderWidthPx;
+        }
+
+        if (crop.renderHeightPx > maxProfileRenderHeightPx) {
+          maxProfileRenderHeightPx = crop.renderHeightPx;
+        }
+      }
     }
 
     final previewAspectRatio = profilePictureCrops.isEmpty
@@ -119,6 +145,8 @@ class ThemeSchemaBuilder {
     tsPrint(previewAspectRatio);
     tsPrint('PROFILE PICTURE CROP COUNT');
     tsPrint(profilePictureCrops.length);
+    tsPrint('FINAL MAX PROFILE PICTURE RENDER SIZE');
+    tsPrint('${maxProfileRenderWidthPx}x$maxProfileRenderHeightPx px');
     tsPrint('========================================');
     tsPrint('');
 
@@ -128,6 +156,8 @@ class ThemeSchemaBuilder {
       metrics: ThemeMetrics(
         profilePicturePreviewAspectRatio: previewAspectRatio,
         profilePictureCrops: profilePictureCrops,
+        profilePictureMaxRenderWidthPx: maxProfileRenderWidthPx,
+        profilePictureMaxRenderHeightPx: maxProfileRenderHeightPx,
       ),
     );
   }
@@ -144,15 +174,19 @@ class ThemeSchemaBuilder {
     }
   }
 
-  void _collectProfilePictureCrops({
+  List<ThemeProfilePictureCrop> _collectProfilePictureCrops({
     required String templatePath,
     required Map<String, dynamic> jsonMap,
-    required List<ThemeProfilePictureCrop> crops,
   }) {
     final roster = jsonMap['roster'] as Map<String, dynamic>? ?? {};
     final elements = roster['elements'] as List<dynamic>? ?? [];
 
+    final dpi = (jsonMap['dpi'] as num?)?.toDouble() ?? _defaultRenderDpi;
+
+    final crops = <ThemeProfilePictureCrop>[];
+
     tsPrint('ROSTER ELEMENT COUNT: ${elements.length}');
+    tsPrint('TEMPLATE DPI: $dpi');
 
     for (final element in elements) {
       final elementMap = Map<String, dynamic>.from(element as Map);
@@ -177,11 +211,16 @@ class ThemeSchemaBuilder {
       final shape = elementMap['shape']?.toString() ?? 'rect';
       final aspectRatio = w / h;
 
+      final renderWidthPx = (w * dpi).round();
+      final renderHeightPx = (h * dpi).round();
+
       tsPrint('');
       tsPrint('PROFILE PICTURE CROP FOUND');
       tsPrint('TEMPLATE: $templatePath');
-      tsPrint('WIDTH: $w');
-      tsPrint('HEIGHT: $h');
+      tsPrint('WIDTH IN: $w');
+      tsPrint('HEIGHT IN: $h');
+      tsPrint('DPI: $dpi');
+      tsPrint('RENDER SIZE PX: ${renderWidthPx}x$renderHeightPx');
       tsPrint('ASPECT RATIO: $aspectRatio');
       tsPrint('SHAPE: $shape');
       tsPrint('');
@@ -190,8 +229,12 @@ class ThemeSchemaBuilder {
         ThemeProfilePictureCrop(
           aspectRatio: aspectRatio,
           shape: shape,
+          renderWidthPx: renderWidthPx,
+          renderHeightPx: renderHeightPx,
         ),
       );
     }
+
+    return crops;
   }
 }

@@ -43,6 +43,8 @@ class PhotoCropPage extends StatefulWidget {
   final double initialZoom;
 
   final int initialRotationQuarterTurns;
+  final int targetWidthPx;
+  final int targetHeightPx;
 
   final List<Map<String, dynamic>> profilePictureCrops;
 
@@ -50,6 +52,8 @@ class PhotoCropPage extends StatefulWidget {
     super.key,
     required this.imagePath,
     required this.croppedImagePath,
+    required this.targetHeightPx,
+    required this.targetWidthPx,
     this.initialPanX = 0,
     this.initialPanY = 0,
     this.initialZoom = 1,
@@ -140,10 +144,7 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     final sourceWidth = _sourceWidth();
     final sourceHeight = _sourceHeight();
 
-    return math.max(
-      viewportWidth / sourceWidth,
-      viewportHeight / sourceHeight,
-    );
+    return math.max(viewportWidth / sourceWidth, viewportHeight / sourceHeight);
   }
 
   void _resetTransform() {
@@ -249,10 +250,18 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       height: cropHeight,
     );
 
+    final resized = img.copyResize(
+      cropped,
+      width: widget.targetWidthPx,
+      height: widget.targetHeightPx,
+      interpolation: img.Interpolation.cubic,
+    );
+    tsPrint('RESIZED SAVE SIZE: ${resized.width}x${resized.height}');
+
     final outFile = File(widget.croppedImagePath);
 
     await outFile.parent.create(recursive: true);
-    await outFile.writeAsBytes(img.encodeJpg(cropped, quality: 95));
+    await outFile.writeAsBytes(img.encodeJpg(resized, quality: 95));
 
     //await Gal.putImage(outFile.path, album: 'Pictures');
 
@@ -260,7 +269,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     tsPrint(widget.croppedImagePath);
     tsPrint('CROP: $cropLeft,$cropTop ${cropWidth}x$cropHeight');
     tsPrint('ZOOM: ${crop.zoom}');
-
     if (!mounted) {
       return;
     }
