@@ -285,7 +285,13 @@ class TemplatePdfExporter {
       return data.buffer.asUint8List();
     }
 
-    return File(imagePath).readAsBytes();
+    final file = File(imagePath);
+
+    if (!await file.exists()) {
+      throw Exception('PDF image file not found: $imagePath');
+    }
+
+    return file.readAsBytes();
   }
 
   pw.BoxFit _resolveBoxFit(String? value) {
