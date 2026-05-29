@@ -79,13 +79,24 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
 
                 if (projectName.isEmpty) return;
 
-                // Next milestone:
-                // Extract templateFile.path into app_flutter/projects/<projectName>/
-                debugPrint('CREATE PROJECT FROM TEMPLATE');
-                debugPrint('TEMPLATE: ${templateFile.path}');
-                debugPrint('PROJECT: $projectName');
+                try {
+                  await PictsxReader().extractToProject(
+                    pictsxFile: templateFile,
+                    projectName: projectName,
+                  );
 
-                Navigator.of(dialogContext).pop();
+                  if (!dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                } catch (error) {
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(error.toString())));
+                }
               },
               child: const Text('CREATE'),
             ),
