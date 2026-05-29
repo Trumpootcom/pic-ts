@@ -11,7 +11,7 @@ $appRoot = Split-Path -Parent $scriptDir
 $sourcePath = Join-Path $scriptDir $ProjectFolder
 $outputName = "$ProjectFolder.pictsx"
 $tempZip = Join-Path $scriptDir "$ProjectFolder.zip"
-$outputDir = Join-Path $appRoot "assets\projects"
+$outputDir = Join-Path $appRoot "assets\pic_templates"
 $outputPath = Join-Path $outputDir $outputName
 
 if (!(Test-Path $sourcePath)) {
