@@ -194,4 +194,16 @@ class ProjectStorage {
         .replaceAll(RegExp(r'_+'), '_')
         .replaceAll(RegExp(r'^_|_$'), '');
   }
+
+  File _dataJsonFile(Directory projectDir) {
+    return File('${projectDir.path}/data/data.json');
+  }
+
+  Directory _dataPhotosDir(Directory projectDir) {
+    return Directory('${projectDir.path}/data/photos');
+  }
+
+  Directory _templatesDir(Directory projectDir) {
+    return Directory('${projectDir.path}/templates');
+  }
 }
