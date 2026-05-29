@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
@@ -55,6 +56,44 @@ class TemplateLoader {
         LoadedTemplate(
           folderPath: folderPath,
           themeId: themeId,
+          productFolder: productFolder,
+          template: TemplateDefinition.fromJson(jsonMap),
+        ),
+      );
+    }
+
+    return loaded;
+  }
+
+  Future<List<LoadedTemplate>> loadProjectTemplates({
+    required String projectFolderPath,
+  }) async {
+    final templatesRoot = Directory('$projectFolderPath/templates');
+
+    if (!await templatesRoot.exists()) {
+      return [];
+    }
+
+    final templateFiles = templatesRoot
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) => file.path.endsWith('${Platform.pathSeparator}template.json'))
+        .toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+
+    final loaded = <LoadedTemplate>[];
+
+    for (final templateFile in templateFiles) {
+      final jsonText = await templateFile.readAsString();
+      final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
+
+      final folderPath = templateFile.parent.path;
+      final productFolder = folderPath.split(Platform.pathSeparator).last;
+
+      loaded.add(
+        LoadedTemplate(
+          folderPath: folderPath,
+          themeId: '',
           productFolder: productFolder,
           template: TemplateDefinition.fromJson(jsonMap),
         ),

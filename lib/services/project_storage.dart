@@ -2,24 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+
 import 'theme_schema_builder.dart';
-import '../models/theme_pack.dart';
-import '../util/ts_print.dart';
 
 class StoredProject {
   final String id;
   final String name;
-  final String themeId;
-  final String themeName;
-  final String themePath;
   final String folderPath;
 
   const StoredProject({
     required this.id,
     required this.name,
-    required this.themeId,
-    required this.themeName,
-    required this.themePath,
     required this.folderPath,
   });
 
@@ -30,67 +23,19 @@ class StoredProject {
     return StoredProject(
       id: json['id'] as String,
       name: json['name'] as String,
-      themeId: json['themeId'] as String,
-      themeName: json['themeName'] as String,
-      themePath: json['themePath'] as String,
       folderPath: folderPath,
     );
   }
+
+  String get iconPath => '$folderPath/icon.png';
+  String get dataJsonPath => '$folderPath/data/data.json';
+  String get photosPath => '$folderPath/data/photos';
+  String get templatesPath => '$folderPath/templates';
 }
 
 class ProjectStorage {
-  Future<Directory> _projectsRoot() async {
-    final docs = await getApplicationDocumentsDirectory();
-    final root = Directory('${docs.path}/projects');
-
-    if (!await root.exists()) {
-      await root.create(recursive: true);
-    }
-
-    return root;
-  }
-
-  Future<Directory> createProject({
-    required String projectName,
-    required ThemePack themePack,
-  }) async {
-    final root = await _projectsRoot();
-    final projectId = _slug(projectName);
-    final projectDir = Directory('${root.path}/$projectId');
-    tsPrint('ABOUT TO BUILD THEME SCHEMA');
-    final schema = await ThemeSchemaBuilder().build(themePack);
-    final documentData = <String, dynamic>{};
-
-    for (final field in schema.documentFields) {
-      final key = field['key'] as String;
-      documentData[key] = field['default'] ?? '';
-    }
-
-    if (await projectDir.exists()) {
-      throw Exception('Project already exists: $projectName');
-    }
-
-    await projectDir.create(recursive: true);
-
-    final projectJson = {
-      'id': projectId,
-      'name': projectName,
-      'themeId': themePack.id,
-      'themeName': themePack.name,
-      'themePath': themePack.folderPath,
-      'createdAt': DateTime.now().toIso8601String(),
-      'documentSchema': schema.documentFields,
-      'rosterSchema': schema.rosterFields,
-      'documentData': documentData,
-      'roster': <Map<String, dynamic>>[],
-    };
-
-    final file = File('${projectDir.path}/project.json');
-    await file.writeAsString(
-      const JsonEncoder.withIndent('  ').convert(projectJson),
-    );
-
-    return projectDir;
+  Future<Directory> ensureProjectsRoot() async {
+    return _projectsRoot();
   }
 
   Future<List<StoredProject>> listProjects() async {
@@ -102,7 +47,7 @@ class ProjectStorage {
     final projects = <StoredProject>[];
 
     for (final dir in dirs) {
-      final file = File('${dir.path}/project.json');
+      final file = _dataJsonFile(dir);
 
       if (!await file.exists()) {
         continue;
@@ -111,35 +56,26 @@ class ProjectStorage {
       final jsonText = await file.readAsString();
       final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
 
-      projects.add(StoredProject.fromJson(json: jsonMap, folderPath: dir.path));
+      projects.add(
+        StoredProject.fromJson(
+          json: jsonMap,
+          folderPath: dir.path,
+        ),
+      );
     }
 
     return projects;
   }
 
   Future<Map<String, dynamic>> openProject(StoredProject project) async {
-    final file = File('${project.folderPath}/project.json');
+    final file = File(project.dataJsonPath);
     final jsonText = await file.readAsString();
 
     final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
 
-    tsPrint('');
-    tsPrint('========================================');
-    tsPrint('OPEN PROJECT');
-    tsPrint('PROJECT: ${project.name}');
-    tsPrint('THEME ID: ${jsonMap['themeId']}');
-    tsPrint('THEME NAME: ${jsonMap['themeName']}');
-    tsPrint('THEME PATH: ${jsonMap['themePath']}');
-    tsPrint('========================================');
-
-    final themePack = ThemePack(
-      id: jsonMap['themeId'] as String,
-      name: jsonMap['themeName'] as String,
-      folderPath: jsonMap['themePath'] as String,
-      iconPath: '${jsonMap['themePath']}/icon.png',
+    final schema = await ThemeSchemaBuilder().buildFromProjectDirectory(
+      Directory(project.folderPath),
     );
-
-    final schema = await ThemeSchemaBuilder().build(themePack);
 
     jsonMap['documentSchema'] = schema.documentFields;
     jsonMap['rosterSchema'] = schema.rosterFields;
@@ -147,13 +83,10 @@ class ProjectStorage {
     jsonMap['templateMetrics'] = {
       'profilePicturePreviewAspectRatio':
           schema.metrics.profilePicturePreviewAspectRatio,
-
       'profilePictureMaxRenderWidthPx':
           schema.metrics.profilePictureMaxRenderWidthPx,
-
       'profilePictureMaxRenderHeightPx':
           schema.metrics.profilePictureMaxRenderHeightPx,
-
       'profilePictureCrops': schema.metrics.profilePictureCrops
           .map((e) => e.toJson())
           .toList(),
@@ -163,10 +96,6 @@ class ProjectStorage {
       const JsonEncoder.withIndent('  ').convert(jsonMap),
     );
 
-    tsPrint('');
-    tsPrint('PROJECT TEMPLATE METRICS REFRESHED');
-    tsPrint('');
-
     return jsonMap;
   }
 
@@ -174,8 +103,11 @@ class ProjectStorage {
     required StoredProject project,
     required Map<String, dynamic> data,
   }) async {
-    final file = File('${project.folderPath}/project.json');
-    await file.writeAsString(const JsonEncoder.withIndent('  ').convert(data));
+    final file = File(project.dataJsonPath);
+
+    await file.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(data),
+    );
   }
 
   Future<void> deleteProject(StoredProject project) async {
@@ -186,24 +118,18 @@ class ProjectStorage {
     }
   }
 
-  String _slug(String value) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
-        .replaceAll(RegExp(r'_+'), '_')
-        .replaceAll(RegExp(r'^_|_$'), '');
+  Future<Directory> _projectsRoot() async {
+    final docs = await getApplicationDocumentsDirectory();
+    final root = Directory('${docs.path}/projects');
+
+    if (!await root.exists()) {
+      await root.create(recursive: true);
+    }
+
+    return root;
   }
 
   File _dataJsonFile(Directory projectDir) {
     return File('${projectDir.path}/data/data.json');
-  }
-
-  Directory _dataPhotosDir(Directory projectDir) {
-    return Directory('${projectDir.path}/data/photos');
-  }
-
-  Directory _templatesDir(Directory projectDir) {
-    return Directory('${projectDir.path}/templates');
   }
 }

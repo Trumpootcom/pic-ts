@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 
 import 'photo_crop_page.dart';
 
-import '../models/template_definition.dart';
 import '../rendering/template_pdf_exporter.dart';
 import '../rendering/template_preview.dart';
 import '../services/project_storage.dart';
@@ -68,11 +67,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       ),
     );
 
-    final allTemplates = await TemplateLoader().loadTemplates();
-
-    templates = allTemplates
-        .where((template) => template.themeId == widget.project.themeId)
-        .toList();
+    templates = await TemplateLoader().loadProjectTemplates(
+      projectFolderPath: widget.project.folderPath,
+    );
   }
 
   Future<void> _saveProject() async {
@@ -166,7 +163,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Widget _buildSubtitleBar() {
-    final pageCount = templates.length + 1;
     final title = _workspaceSubtitle();
     const subtitleBarHt = 25.0;
     final leftImageW = 90 * 1.0;
@@ -251,7 +247,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     final sourceFile = File(result.files.single.path!);
 
-    final photosDir = Directory('${widget.project.folderPath}/photos');
+    final photosDir = Directory('${widget.project.folderPath}/data/photos');
     if (!await photosDir.exists()) {
       await photosDir.create(recursive: true);
     }
@@ -290,8 +286,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           targetHeightPx:
               projectData['templateMetrics']?['profilePictureMaxRenderHeightPx'] ??
               900,
-          croppedImagePath:
-              '${widget.project.folderPath}/photos/portrait_$safeName.jpg',
+          croppedImagePath: '${photosDir.path}/$safeName.jpg',
           initialRotationQuarterTurns: defaultProfileRotationQuarterTurns,
           profilePictureCrops:
               (projectData['templateMetrics']?['profilePictureCrops'] as List?)
@@ -519,7 +514,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Widget _buildTemplatePage(LoadedTemplate loadedTemplate) {
-    final TemplateDefinition template = loadedTemplate.template;
     final hasRoster = roster.isNotEmpty;
 
     if (_selectedRosterIndex >= roster.length && roster.isNotEmpty) {

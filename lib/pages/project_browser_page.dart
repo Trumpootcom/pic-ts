@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
+import 'pic_template_browser_page.dart';
+import 'project_workspace_page.dart';
 
 import '../services/project_storage.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
-import 'project_workspace_page.dart';
-import 'pic_template_browser_page.dart';
+import '../widgets/folder_list_tile.dart';
 
 class ProjectBrowserPage extends StatefulWidget {
   const ProjectBrowserPage({super.key});
@@ -159,9 +163,7 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
               return Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.darkUnsat,
-                ),
+                child: CircularProgressIndicator(color: AppColors.darkUnsat),
               );
             }
 
@@ -179,27 +181,34 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _ProjectTile(
-                  projectName: 'New Project',
-                  themeIconPath: null,
-                  isNewProject: true,
+                FolderListTile(
+                  title: 'New Project',
+                  size: 64,
+                  overlayIcon: null,
+                  isCreateTile: true,
                   onTap: () async {
-                    await Navigator.of(context).push(
+                    final created = await Navigator.of(context).push<bool>(
                       MaterialPageRoute(
                         builder: (_) => const PicTemplateBrowserPage(),
                       ),
                     );
 
-                    setState(() {
-                      _projectsFuture = ProjectStorage().listProjects();
-                    });
+                    if (created == true) {
+                      setState(() {
+                        _projectsFuture = ProjectStorage().listProjects();
+                      });
+                    }
                   },
                 ),
                 for (final project in projects)
-                  _ProjectTile(
-                    projectName: project.name,
-                    themeIconPath: '${project.themePath}/icon.png',
-                    isNewProject: false,
+                  FolderListTile(
+                    title: project.name,
+                    size: 64,
+                    overlayIcon: Image.file(
+                      File(project.iconPath),
+                      fit: BoxFit.contain,
+                    ),
+                    isCreateTile: false,
                     onTap: () async {
                       await Navigator.of(context).push(
                         MaterialPageRoute(
@@ -223,75 +232,3 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
   }
 }
 
-class _ProjectTile extends StatelessWidget {
-  final String projectName;
-  final String? themeIconPath;
-  final bool isNewProject;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-
-  const _ProjectTile({
-    required this.projectName,
-    required this.themeIconPath,
-    required this.isNewProject,
-    required this.onTap,
-    this.onLongPress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const double folderSize = 64;
-    const double tileHeight = folderSize + 0;
-    const double iconSize = 28 * folderSize / 64;
-
-    return Material(
-      color: AppColors.lightUnsat,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: tileHeight,
-          child: Row(
-            children: [
-              SizedBox(
-                width: folderSize + 15,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      isNewProject ? Icons.create_new_folder : Icons.folder,
-                      size: folderSize,
-                      color: isNewProject ? AppColors.darkSat : AppColors.medSat,
-                    ),
-                    if (themeIconPath != null)
-                      Positioned(
-                        right: (folderSize + 15 - iconSize) / 2,
-                        top: folderSize / 3,
-                        child: Image.asset(
-                          themeIconPath!,
-                          width: iconSize,
-                          height: iconSize,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  projectName,
-                  style: TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

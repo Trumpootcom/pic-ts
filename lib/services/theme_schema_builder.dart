@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
@@ -71,10 +72,45 @@ class ThemeSchemaBuilder {
             .toList()
           ..sort();
 
+    return _buildFromTemplateFiles(
+      templateFiles: templateFiles,
+      readJsonText: rootBundle.loadString,
+      label: themePack.folderPath,
+    );
+  }
+
+  Future<ThemeSchema> buildFromProjectDirectory(Directory projectDir) async {
+    final templatesDir = Directory('${projectDir.path}/templates');
+
+    final templateFiles =
+        templatesDir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where(
+              (file) => file.path.endsWith(
+                '${Platform.pathSeparator}template.json',
+              ),
+            )
+            .map((file) => file.path)
+            .toList()
+          ..sort();
+
+    return _buildFromTemplateFiles(
+      templateFiles: templateFiles,
+      readJsonText: (path) => File(path).readAsString(),
+      label: templatesDir.path,
+    );
+  }
+
+  Future<ThemeSchema> _buildFromTemplateFiles({
+    required List<String> templateFiles,
+    required Future<String> Function(String path) readJsonText,
+    required String label,
+  }) async {
     tsPrint('');
     tsPrint('========================================');
     tsPrint('THEME SCHEMA BUILD');
-    tsPrint('THEME PATH: ${themePack.folderPath}');
+    tsPrint('THEME PATH: $label');
     tsPrint('TEMPLATE COUNT: ${templateFiles.length}');
     tsPrint('========================================');
 
@@ -91,7 +127,7 @@ class ThemeSchemaBuilder {
       tsPrint('PROCESSING TEMPLATE: $templatePath');
       tsPrint('----------------------------------------');
 
-      final jsonText = await rootBundle.loadString(templatePath);
+      final jsonText = await readJsonText(templatePath);
       final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
 
       final data = jsonMap['data'] as Map<String, dynamic>? ?? {};
@@ -203,7 +239,7 @@ class ThemeSchemaBuilder {
       final w = (elementMap['w'] as num?)?.toDouble();
       final h = (elementMap['h'] as num?)?.toDouble();
 
-      if (w == null || h == null || h == 0) {
+      if (w == null || h == 0 || h == null) {
         tsPrint('PROFILE PICTURE CROP SKIPPED INVALID SIZE');
         continue;
       }

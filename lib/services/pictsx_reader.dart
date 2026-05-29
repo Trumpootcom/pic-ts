@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
+
+import 'theme_schema_builder.dart';
 
 class PictsxReader {
   Future<Uint8List?> readIconBytes(File pictsxFile) async {
@@ -60,6 +63,64 @@ class PictsxReader {
       }
     }
 
+    await _initializeProjectDataJson(
+      projectDir: projectDir,
+      projectId: projectId,
+      projectName: projectName,
+    );
     return projectDir;
+  }
+
+  Future<void> _initializeProjectDataJson({
+    required Directory projectDir,
+    required String projectId,
+    required String projectName,
+  }) async {
+    final schema = await ThemeSchemaBuilder().buildFromProjectDirectory(
+      projectDir,
+    );
+
+    final documentData = <String, dynamic>{};
+
+    for (final field in schema.documentFields) {
+      final key = field['key'] as String;
+      documentData[key] = field['default'] ?? '';
+    }
+
+    final now = DateTime.now().toIso8601String();
+
+    final dataJson = {
+      'id': projectId,
+      'name': projectName,
+      'createdAt': now,
+      'modifiedAt': now,
+      'documentSchema': schema.documentFields,
+      'rosterSchema': schema.rosterFields,
+      'documentData': documentData,
+      'roster': <Map<String, dynamic>>[],
+      'templateMetrics': {
+        'profilePicturePreviewAspectRatio':
+            schema.metrics.profilePicturePreviewAspectRatio,
+        'profilePictureMaxRenderWidthPx':
+            schema.metrics.profilePictureMaxRenderWidthPx,
+        'profilePictureMaxRenderHeightPx':
+            schema.metrics.profilePictureMaxRenderHeightPx,
+        'profilePictureCrops': schema.metrics.profilePictureCrops
+            .map((crop) => crop.toJson())
+            .toList(),
+      },
+    };
+
+    final dataDir = Directory('${projectDir.path}/data');
+
+    if (!await dataDir.exists()) {
+      await dataDir.create(recursive: true);
+    }
+
+    final dataFile = File('${dataDir.path}/data.json');
+
+    await dataFile.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(dataJson),
+    );
   }
 }

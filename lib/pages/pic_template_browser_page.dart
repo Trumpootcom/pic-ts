@@ -6,6 +6,7 @@ import '../services/pic_template_installer.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
+import '../widgets/folder_list_tile.dart';
 import '../services/pictsx_reader.dart';
 import '../util/ts_print.dart';
 
@@ -89,7 +90,7 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
                   Navigator.of(dialogContext).pop();
 
                   if (!context.mounted) return;
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(true);
                 } catch (error) {
                   if (!context.mounted) return;
 
@@ -171,24 +172,25 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
             );
           }
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(18),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 18,
-              crossAxisSpacing: 18,
-              childAspectRatio: 0.9,
-            ),
-            itemCount: templates.length,
-            itemBuilder: (context, index) {
-              final templateFile = templates[index];
-
-              return _PicTemplateTile(
-                templateFile: templateFile,
-                name: _templateName(templateFile),
-                onTap: () => _showNewProjectDialog(templateFile),
-              );
-            },
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              for (final templateFile in templates)
+                FutureBuilder<Uint8List?>(
+                  future: PictsxReader().readIconBytes(templateFile),
+                  builder: (context, snapshot) {
+                    return FolderListTile(
+                      title: _templateName(templateFile),
+                      size: 64,
+                      overlayIcon: snapshot.data == null
+                          ? null
+                          : Image.memory(snapshot.data!, fit: BoxFit.contain),
+                      isCreateTile: false,
+                      onTap: () => _showNewProjectDialog(templateFile),
+                    );
+                  },
+                ),
+            ],
           );
         },
       ),
@@ -196,49 +198,6 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
   }
 }
 
-class _PicTemplateTile extends StatelessWidget {
-  final File templateFile;
-  final String name;
-  final VoidCallback onTap;
-
-  const _PicTemplateTile({
-    required this.templateFile,
-    required this.name,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.lightUnsat,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FutureBuilder<Uint8List?>(
-              future: PictsxReader().readIconBytes(templateFile),
-              builder: (context, snapshot) {
-                return _buildTemplateIcon(snapshot.data, size: 64);
-              },
-            ),
-            const SizedBox(height: 8),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textDark,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 Widget _buildTemplateIcon(Uint8List? bytes, {double size = 64}) {
   if (bytes == null) {
