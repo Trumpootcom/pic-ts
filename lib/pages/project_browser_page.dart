@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
 import 'project_workspace_page.dart';
-import 'theme_browser_page.dart';
+import 'pic_template_browser_page.dart';
 
 class ProjectBrowserPage extends StatefulWidget {
   const ProjectBrowserPage({super.key});
@@ -186,7 +186,7 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
                   onTap: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => const ThemeBrowserPage(),
+                        builder: (_) => const PicTemplateBrowserPage(),
                       ),
                     );
 
