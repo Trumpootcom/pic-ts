@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
 import '../widgets/folder_list_tile.dart';
+import '../build_info.dart';
 
 class ProjectBrowserPage extends StatefulWidget {
   const ProjectBrowserPage({super.key});
@@ -153,7 +154,7 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
     return Scaffold(
       backgroundColor: AppColors.lightUnsat,
       appBar: const TstsTitleBar(
-        title: 'PIC Tool Suite',
+        title: 'PIC Tool Suite $buildTime',
         subtitle: 'Select Project',
       ),
       body: ColoredBox(

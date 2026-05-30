@@ -16,6 +16,8 @@ import '../theme/app_colors.dart';
 import '../widgets/tsts_title_bar.dart';
 import 'edit_document_page.dart';
 import 'edit_roster_page.dart';
+import 'workspace_page.dart';
+import '../build_info.dart';
 
 int defaultProfileRotationQuarterTurns = 0;
 
@@ -516,22 +518,28 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       itemCount: templates.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return EditDocumentPage(
-            documentSchema: documentSchema,
-            documentData: documentData,
-            inputDecoration: _inputDecoration,
+          return WorkspacePage(
+            title: 'Properties',
+            child: EditDocumentPage(
+              documentSchema: documentSchema,
+              documentData: documentData,
+              inputDecoration: _inputDecoration,
+            ),
           );
         }
         if (index == 1) {
-          return EditRosterPage(
-            roster: roster,
-            rosterSchema: rosterSchema,
-            projectData: projectData,
-            projectFolderPath: widget.project.folderPath,
-            inputDecoration: _inputDecoration,
-            onAddRosterRow: _addRosterRow,
-            onDeleteRosterRow: _deleteRosterRow,
-            onReplacePhoto: _replacePhoto,
+          return WorkspacePage(
+            title: 'Roster',
+            child: EditRosterPage(
+              roster: roster,
+              rosterSchema: rosterSchema,
+              projectData: projectData,
+              projectFolderPath: widget.project.folderPath,
+              inputDecoration: _inputDecoration,
+              onAddRosterRow: _addRosterRow,
+              onDeleteRosterRow: _deleteRosterRow,
+              onReplacePhoto: _replacePhoto,
+            ),
           );
         }
         return _buildTemplatePage(templates[index - 2]);
@@ -568,9 +576,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightSat,
+      backgroundColor: AppColors.medUnsat,
       appBar: TstsTitleBar(
-        title: 'PIC Tool Suite',
+        title: 'PIC Tool Suite $buildTime',
         subtitle: widget.project.name,
       ),
       body: FutureBuilder<void>(
@@ -593,7 +601,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
           return Column(
             children: [
-              _buildSubtitleBar(),
+              //_buildSubtitleBar(),
               Expanded(child: _buildContentPages()),
             ],
           );

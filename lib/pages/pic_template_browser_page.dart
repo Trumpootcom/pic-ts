@@ -9,6 +9,7 @@ import '../widgets/tsts_title_bar.dart';
 import '../widgets/folder_list_tile.dart';
 import '../services/pictsx_reader.dart';
 import '../util/ts_print.dart';
+import '../build_info.dart';
 
 class PicTemplateBrowserPage extends StatefulWidget {
   const PicTemplateBrowserPage({super.key});
@@ -140,7 +141,7 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
     return Scaffold(
       backgroundColor: AppColors.lightUnsat,
       appBar: const TstsTitleBar(
-        title: 'PIC Tool Suite',
+        title: 'PIC Tool Suite $buildTime',
         subtitle: 'Create New Project',
       ),
       body: FutureBuilder<List<File>>(
