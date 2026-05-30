@@ -14,6 +14,8 @@ import '../services/template_loader.dart';
 import '../util/ts_print.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tsts_title_bar.dart';
+import 'edit_document_page.dart';
+import 'edit_roster_page.dart';
 
 int defaultProfileRotationQuarterTurns = 0;
 
@@ -396,123 +398,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     );
   }
 
-  Widget _buildRawDataPage() {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Document',
-              style: TextStyle(
-                color: AppColors.textDark,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height / 5,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.lightSat,
-                  border: Border.all(color: AppColors.darkUnsat),
-                ),
-                child: Scrollbar(
-                  thumbVisibility: true,
-                  child: ListView(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.only(right: 0),
-                    children: [
-                      for (final field in documentSchema)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 4),
-                          child: TextFormField(
-                            initialValue:
-                                documentData[field['key']]?.toString() ?? '',
-                            decoration: _inputDecoration(
-                              field['label'] as String,
-                            ),
-                            onChanged: (value) {
-                              documentData[field['key']] = value;
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Roster (${roster.length})',
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                _buildSubtitleActionButton(
-                  //icon: Icons.add_reaction,
-                  icon: Icons.person_add_alt_1_rounded,
-                  onPressed: _addRosterRow,
-                  iconSize: 40,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.only(left: 4, top: 4, right: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.lightSat,
-                  border: Border.all(color: AppColors.darkUnsat),
-                ),
-                child: ScrollbarTheme(
-                  data: ScrollbarThemeData(
-                    thumbColor: WidgetStateProperty.all(AppColors.darkUnsat),
-                    trackColor: WidgetStateProperty.all(AppColors.lightUnsat),
-                    trackVisibility: WidgetStateProperty.all(true),
-                    radius: const Radius.circular(4),
-                    thickness: WidgetStateProperty.all(8),
-                  ),
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: ListView(
-                      padding: const EdgeInsets.only(right: 0),
-                      children: [
-                        for (int i = 0; i < roster.length; i++)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 0),
-                            child: _buildRosterCard(i),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTemplatePage(LoadedTemplate loadedTemplate) {
     final hasRoster = roster.isNotEmpty;
 
@@ -631,10 +516,25 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       itemCount: templates.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _buildRawDataPage();
+          return EditDocumentPage(
+            documentSchema: documentSchema,
+            documentData: documentData,
+            inputDecoration: _inputDecoration,
+          );
         }
-
-        return _buildTemplatePage(templates[index - 1]);
+        if (index == 1) {
+          return EditRosterPage(
+            roster: roster,
+            rosterSchema: rosterSchema,
+            projectData: projectData,
+            projectFolderPath: widget.project.folderPath,
+            inputDecoration: _inputDecoration,
+            onAddRosterRow: _addRosterRow,
+            onDeleteRosterRow: _deleteRosterRow,
+            onReplacePhoto: _replacePhoto,
+          );
+        }
+        return _buildTemplatePage(templates[index - 2]);
       },
     );
   }

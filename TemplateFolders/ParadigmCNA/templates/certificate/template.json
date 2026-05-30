@@ -7,7 +7,7 @@
   "data": {
     "document": [
       {
-        "key": "date",
+        "key": "compDate",
         "label": "Completion Date",
         "type": "text",
         "default": "June 12, 2026"
@@ -98,7 +98,7 @@
 
       {
         "type": "text",
-        "source": "date",
+        "source": "compDate",
         "x": 6,
         "y": 6.93,
         "w": 1.875,
