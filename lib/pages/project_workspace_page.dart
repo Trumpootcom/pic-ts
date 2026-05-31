@@ -571,18 +571,68 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         _buildTemplatePage(loadedTemplate),
     ];
 
-    return PageView.builder(
-      controller: _pageController,
-      physics: const PageScrollPhysics(),
-      onPageChanged: (value) {
-        setState(() {
-          _currentPage = value;
-        });
-      },
-      itemCount: pages.length,
-      itemBuilder: (context, index) {
-        return pages[index];
-      },
+    return Column(
+      children: [
+        Expanded(
+          child: PageView.builder(
+            controller: _pageController,
+            physics: const PageScrollPhysics(),
+            onPageChanged: (value) {
+              setState(() {
+                _currentPage = value;
+              });
+            },
+            itemCount: pages.length,
+            itemBuilder: (context, index) {
+              return pages[index];
+            },
+          ),
+        ),
+
+        SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 72,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: pages.length,
+              itemBuilder: (context, index) {
+                final selected = index == _currentPage;
+
+                return GestureDetector(
+                  onTap: () {
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  child: Container(
+                    width: 90,
+                    margin: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.darkUnsat
+                          : AppColors.medUnsat,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Page ${index + 1}',
+                      style: TextStyle(
+                        color: selected
+                            ? AppColors.textLight
+                            : AppColors.textDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 

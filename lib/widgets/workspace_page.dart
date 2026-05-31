@@ -16,58 +16,55 @@ class WorkspacePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.lightUnsat,
-            borderRadius: BorderRadius.circular(6),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x60000000),
-                blurRadius: 2,
-                spreadRadius: 2,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.darkUnsat,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(6),
-                    topRight: Radius.circular(6),
-                  ),
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.lightUnsat,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x60000000),
+              blurRadius: 2,
+              spreadRadius: 2,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.darkUnsat,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  topRight: Radius.circular(6),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColors.textLight,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            fontFeatures: [FontFeature.enable('smcp')],
-                          ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textLight,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.enable('smcp')],
                         ),
                       ),
-                      if (actions != null) actions!,
-                    ],
-                  ),
+                    ),
+                    if (actions != null) actions!,
+                  ],
                 ),
               ),
-              Expanded(child: child),
-            ],
-          ),
+            ),
+            Expanded(child: child),
+          ],
         ),
       ),
     );

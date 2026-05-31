@@ -149,40 +149,37 @@ class EditRosterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ScrollbarTheme(
-                data: ScrollbarThemeData(
-                  thumbColor: WidgetStateProperty.all(AppColors.darkUnsat),
-                  trackColor: WidgetStateProperty.all(AppColors.lightUnsat),
-                  trackVisibility: WidgetStateProperty.all(true),
-                  radius: const Radius.circular(4),
-                  thickness: WidgetStateProperty.all(8),
-                ),
-                child: Scrollbar(
-                  thumbVisibility: false,
-                  trackVisibility: false,
-                  child: ListView(
-                    padding: const EdgeInsets.only(right: 0),
-                    children: [
-                      for (int i = 0; i < roster.length; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 0),
-                          child: _buildRosterCard(i),
-                        ),
-                    ],
-                  ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ScrollbarTheme(
+              data: ScrollbarThemeData(
+                thumbColor: WidgetStateProperty.all(AppColors.darkUnsat),
+                trackColor: WidgetStateProperty.all(AppColors.lightUnsat),
+                trackVisibility: WidgetStateProperty.all(true),
+                radius: const Radius.circular(4),
+                thickness: WidgetStateProperty.all(8),
+              ),
+              child: Scrollbar(
+                thumbVisibility: false,
+                trackVisibility: false,
+                child: ListView(
+                  padding: const EdgeInsets.only(right: 0),
+                  children: [
+                    for (int i = 0; i < roster.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 0),
+                        child: _buildRosterCard(i),
+                      ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
