@@ -16,7 +16,7 @@ import '../theme/app_colors.dart';
 import '../widgets/tsts_title_bar.dart';
 import 'edit_document_page.dart';
 import 'edit_roster_page.dart';
-import 'workspace_page.dart';
+import '../widgets/workspace_page.dart';
 import '../build_info.dart';
 
 int defaultProfileRotationQuarterTurns = 0;
@@ -122,7 +122,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         borderSide: BorderSide(color: AppColors.darkUnsat),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.darkSat),
+        borderSide: BorderSide(color: AppColors.darkSat, width: 2),
       ),
     );
   }
@@ -163,6 +163,20 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _workspaceIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+      visualDensity: VisualDensity.compact,
+      color: AppColors.textLight,
+      icon: Icon(icon, size: 24),
+      onPressed: onPressed,
     );
   }
 
@@ -520,6 +534,15 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         if (index == 0) {
           return WorkspacePage(
             title: 'Properties',
+            actions: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _workspaceIconButton(
+                  icon: Icons.save_rounded,
+                  onPressed: _saveProject,
+                ),
+              ],
+            ),
             child: EditDocumentPage(
               documentSchema: documentSchema,
               documentData: documentData,
@@ -530,6 +553,19 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         if (index == 1) {
           return WorkspacePage(
             title: 'Roster',
+            actions: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _workspaceIconButton(
+                  icon: Icons.person_add_alt_1_rounded,
+                  onPressed: _addRosterRow,
+                ),
+                _workspaceIconButton(
+                  icon: Icons.save_rounded,
+                  onPressed: _saveProject,
+                ),
+              ],
+            ),
             child: EditRosterPage(
               roster: roster,
               rosterSchema: rosterSchema,
