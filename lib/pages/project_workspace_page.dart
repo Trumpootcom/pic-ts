@@ -1,25 +1,42 @@
 import 'dart:io';
 
-import 'package:image/image.dart' as img;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
+import 'edit_document_page.dart';
+import 'edit_roster_page.dart';
 import 'photo_crop_page.dart';
 
+import '../build_info.dart';
 import '../rendering/template_pdf_exporter.dart';
 import '../rendering/template_preview.dart';
 import '../services/project_storage.dart';
 import '../services/template_loader.dart';
-import '../util/ts_print.dart';
 import '../theme/app_colors.dart';
+import '../util/ts_print.dart';
 import '../widgets/tsts_title_bar.dart';
-import 'edit_document_page.dart';
-import 'edit_roster_page.dart';
+import '../widgets/workspace_filmstrip.dart';
 import '../widgets/workspace_page.dart';
-import '../build_info.dart';
 
 int defaultProfileRotationQuarterTurns = 0;
+
+class WorkspaceCarouselItem {
+  final String title;
+  final Widget thumbnail;
+  final Widget page;
+
+  const WorkspaceCarouselItem({
+    required this.title,
+    required this.thumbnail,
+    required this.page,
+  });
+
+  WorkspaceFilmstripItem get filmstripItem {
+    return WorkspaceFilmstripItem(title: title, thumbnail: thumbnail);
+  }
+}
 
 class ProjectWorkspacePage extends StatefulWidget {
   final StoredProject project;
@@ -36,6 +53,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
   int _currentPage = 0;
   int _selectedRosterIndex = 0;
+
   late Map<String, dynamic> projectData;
   late List<dynamic> documentSchema;
   late List<dynamic> rosterSchema;
@@ -115,7 +133,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     return InputDecoration(
       labelText: label,
       filled: true,
-      fillColor: Color.fromARGB(50, 255, 255, 255),
+      fillColor: const Color.fromARGB(50, 255, 255, 255),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       enabledBorder: OutlineInputBorder(
@@ -123,45 +141,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: AppColors.darkSat, width: 2),
-      ),
-    );
-  }
-
-  String _workspaceSubtitle() {
-    if (_currentPage == 0) {
-      return 'Data Entry';
-    }
-
-    final templateIndex = _currentPage - 1;
-    if (templateIndex < 0 || templateIndex >= templates.length) {
-      return '';
-    }
-
-    return templates[templateIndex].template.name;
-  }
-
-  Widget _buildSubtitleActionButton({
-    String? label,
-    IconData? icon,
-    required double iconSize,
-    required VoidCallback onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.zero,
-        child: icon != null
-            ? Transform.translate(
-                offset: const Offset(0, -4),
-                child: Icon(icon, size: iconSize),
-              )
-            : Text(
-                label ?? '',
-                style: TextStyle(
-                  fontSize: iconSize / 2,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
       ),
     );
   }
@@ -177,81 +156,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       color: AppColors.textLight,
       icon: Icon(icon, size: 24),
       onPressed: onPressed,
-    );
-  }
-
-  Widget _buildSubtitleBar() {
-    final title = _workspaceSubtitle();
-    const subtitleBarHt = 25.0;
-    final leftImageW = 90 * 1.0;
-
-    final Widget action = _currentPage == 0
-        ? _buildSubtitleActionButton(
-            icon: Icons.save_rounded,
-            onPressed: _saveProject,
-            iconSize: subtitleBarHt * 1.15,
-          )
-        : _buildSubtitleActionButton(
-            icon: Icons.file_present,
-            onPressed: _exportCurrentTemplate,
-            iconSize: subtitleBarHt * 1.15,
-          );
-
-    return SizedBox(
-      height: subtitleBarHt,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/backgrounds/trumpoot_titlebar_d.png',
-            fit: BoxFit.fill,
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(
-              width: leftImageW,
-              height: subtitleBarHt,
-              child: Image.asset(
-                'assets/backgrounds/trumpoot_titlebar_c.png',
-                fit: BoxFit.fill,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: leftImageW + 5),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: subtitleBarHt - 3,
-                      fontFeatures: [FontFeature.enable('smcp')],
-                      fontWeight: FontWeight.w800,
-                    ),
-                    textHeightBehavior: const TextHeightBehavior(
-                      applyHeightToFirstAscent: false,
-                      applyHeightToLastDescent: false,
-                    ),
-                    strutStyle: const StrutStyle(
-                      forceStrutHeight: true,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(right: 5),
-                  child: action,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -284,6 +188,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     if (decoded != null) {
       tsPrint('DECODED SIZE: ${decoded.width} x ${decoded.height}');
     }
+
     if (decoded == null) {
       await sourceFile.copy(destination.path);
     } else {
@@ -319,9 +224,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       await destination.delete();
       tsPrint('DELETED TEMP NORMALIZED JPG');
     } catch (_) {}
+
     if (cropResult == null) return;
 
     defaultProfileRotationQuarterTurns = cropResult.rotationQuarterTurns;
+
     setState(() {
       roster[i]['profilePicture'] = p.relative(
         cropResult.croppedImagePath,
@@ -340,309 +247,98 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     });
   }
 
-  Widget _buildRosterCard(int i) {
-    final previewAspect =
-        (projectData['templateMetrics']?['profilePicturePreviewAspectRatio']
-                as num?)
-            ?.toDouble() ??
-        1.0;
-
-    const previewHeight = 44.0;
-    final previewWidth = previewHeight * previewAspect;
-
-    final profilePicture = roster[i]['profilePicture']?.toString();
-
-    final imageWidget =
-        profilePicture == null || profilePicture.startsWith('assets/')
-        ? Image.asset(
-            profilePicture ?? 'assets/resources/portrait.png',
-            width: previewWidth,
-            height: previewHeight,
-            fit: BoxFit.cover,
-          )
-        : Image.file(
-            File('${widget.project.folderPath}/$profilePicture'),
-            width: previewWidth,
-            height: previewHeight,
-            fit: BoxFit.cover,
-          );
-
-    return Card(
-      key: ValueKey(roster[i]),
-      color: AppColors.medSat,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 5, bottom: 5, left: 10, right: 5),
-        child: Row(
-          children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _replacePhoto(i),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.darkUnsat),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: imageWidget,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                key: ValueKey('fullName_${i}_${roster[i].hashCode}'),
-                initialValue: roster[i]['fullName']?.toString() ?? '',
-                decoration: _inputDecoration(''), //'Full Name'
-                onChanged: (value) {
-                  roster[i]['fullName'] = value;
-                },
-              ),
-            ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              visualDensity: VisualDensity.compact,
-              color: AppColors.darkUnsat,
-              icon: const Icon(Icons.close),
-              onPressed: () => _deleteRosterRow(i),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTemplatePage(LoadedTemplate loadedTemplate) {
+  Widget _buildTemplatePreviewBody(LoadedTemplate loadedTemplate) {
     final hasRoster = roster.isNotEmpty;
 
     if (_selectedRosterIndex >= roster.length && roster.isNotEmpty) {
       _selectedRosterIndex = roster.length - 1;
     }
+
     final placement = Map<String, dynamic>.from(
       loadedTemplate.template.rawJson['document']['placement'] as Map? ?? {},
     );
 
     final maxRosterPerPage = placement['maxRosterPerPage'] as int? ?? 1;
-    final pageStart = _selectedRosterIndex + 1;
 
-    final pageEnd = (_selectedRosterIndex + maxRosterPerPage).clamp(
-      1,
-      roster.length,
-    );
+    final pageStart = roster.isEmpty ? 0 : _selectedRosterIndex + 1;
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  color: AppColors.darkUnsat,
-                  onPressed: hasRoster && _selectedRosterIndex > 0
-                      ? () {
-                          setState(() {
-                            _selectedRosterIndex -= maxRosterPerPage;
+    final pageEnd = roster.isEmpty
+        ? 0
+        : (_selectedRosterIndex + maxRosterPerPage).clamp(1, roster.length);
 
-                            if (_selectedRosterIndex < 0) {
-                              _selectedRosterIndex = 0;
-                            }
-                          });
-                        }
-                      : null,
-                  icon: const Icon(Icons.chevron_left),
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                color: AppColors.darkUnsat,
+                onPressed: hasRoster && _selectedRosterIndex > 0
+                    ? () {
+                        setState(() {
+                          _selectedRosterIndex -= maxRosterPerPage;
 
-                Expanded(
-                  child: Text(
-                    hasRoster
-                        ? maxRosterPerPage > 1
-                              ? 'Students $pageStart-$pageEnd of ${roster.length}'
-                              : 'Student $pageStart of ${roster.length}'
-                        : 'No students',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                IconButton(
-                  color: AppColors.darkUnsat,
-                  onPressed:
-                      hasRoster && _selectedRosterIndex < roster.length - 1
-                      ? () {
-                          setState(() {
-                            _selectedRosterIndex += maxRosterPerPage;
-
-                            if (_selectedRosterIndex >= roster.length) {
-                              _selectedRosterIndex =
-                                  ((roster.length - 1) ~/ maxRosterPerPage) *
-                                  maxRosterPerPage;
-                            }
-                          });
-                        }
-                      : null,
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.lightUnsat,
-                  border: Border.all(color: AppColors.darkUnsat),
-                ),
-                child: Center(
-                  child: TemplatePreview(
-                    loadedTemplate: loadedTemplate,
-                    documentData: documentData,
-                    rosterRows: roster,
-                    rosterStartIndex: hasRoster ? _selectedRosterIndex : 0,
-                    projectFolderPath: widget.project.folderPath,
+                          if (_selectedRosterIndex < 0) {
+                            _selectedRosterIndex = 0;
+                          }
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Expanded(
+                child: Text(
+                  hasRoster
+                      ? maxRosterPerPage > 1
+                            ? 'Students $pageStart-$pageEnd of ${roster.length}'
+                            : 'Student $pageStart of ${roster.length}'
+                      : 'No students',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+              IconButton(
+                color: AppColors.darkUnsat,
+                onPressed: hasRoster && _selectedRosterIndex < roster.length - 1
+                    ? () {
+                        setState(() {
+                          _selectedRosterIndex += maxRosterPerPage;
+
+                          if (_selectedRosterIndex >= roster.length) {
+                            _selectedRosterIndex =
+                                ((roster.length - 1) ~/ maxRosterPerPage) *
+                                maxRosterPerPage;
+                          }
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Center(
+              child: TemplatePreview(
+                loadedTemplate: loadedTemplate,
+                documentData: documentData,
+                rosterRows: roster,
+                rosterStartIndex: hasRoster ? _selectedRosterIndex : 0,
+                projectFolderPath: widget.project.folderPath,
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildContentPages() {
-    final pages = <Widget>[
-      WorkspacePage(
-        title: 'Properties',
-        actions: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _workspaceIconButton(
-              icon: Icons.save_rounded,
-              onPressed: _saveProject,
-            ),
-          ],
-        ),
-        child: EditDocumentPage(
-          documentSchema: documentSchema,
-          documentData: documentData,
-          inputDecoration: _inputDecoration,
-        ),
-      ),
-
-      WorkspacePage(
-        title: 'Roster',
-        actions: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _workspaceIconButton(
-              icon: Icons.person_add_alt_1_rounded,
-              onPressed: _addRosterRow,
-            ),
-            _workspaceIconButton(
-              icon: Icons.save_rounded,
-              onPressed: _saveProject,
-            ),
-          ],
-        ),
-        child: EditRosterPage(
-          roster: roster,
-          rosterSchema: rosterSchema,
-          projectData: projectData,
-          projectFolderPath: widget.project.folderPath,
-          inputDecoration: _inputDecoration,
-          onAddRosterRow: _addRosterRow,
-          onDeleteRosterRow: _deleteRosterRow,
-          onReplacePhoto: _replacePhoto,
-        ),
-      ),
-
-      for (final loadedTemplate in templates)
-        _buildTemplatePage(loadedTemplate),
-    ];
-
-    return Column(
-      children: [
-        Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            physics: const PageScrollPhysics(),
-            onPageChanged: (value) {
-              setState(() {
-                _currentPage = value;
-              });
-            },
-            itemCount: pages.length,
-            itemBuilder: (context, index) {
-              return pages[index];
-            },
-          ),
-        ),
-
-        SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 72,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: pages.length,
-              itemBuilder: (context, index) {
-                final selected = index == _currentPage;
-
-                return GestureDetector(
-                  onTap: () {
-                    _pageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOut,
-                    );
-                  },
-                  child: Container(
-                    width: 90,
-                    margin: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? AppColors.darkUnsat
-                          : AppColors.medUnsat,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Page ${index + 1}',
-                      style: TextStyle(
-                        color: selected
-                            ? AppColors.textLight
-                            : AppColors.textDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _exportCurrentTemplate() async {
-    if (_currentPage <= 0) {
-      return;
-    }
-
-    final loadedTemplate = templates[_currentPage - 1];
-
+  Future<void> _exportTemplate(LoadedTemplate loadedTemplate) async {
     final document = Map<String, dynamic>.from(
       loadedTemplate.template.rawJson['document'] as Map? ?? {},
     );
@@ -659,6 +355,124 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       rosterRows: roster,
       projectFolderPath: widget.project.folderPath,
       fileName: '${loadedTemplate.template.id}.pdf',
+    );
+  }
+
+  List<WorkspaceCarouselItem> _buildCarouselItems() {
+    return [
+      WorkspaceCarouselItem(
+        title: 'Properties',
+        thumbnail: Image.asset(
+          'assets/icons/properties.png',
+          fit: BoxFit.cover,
+        ),
+        page: WorkspacePage(
+          title: 'Properties',
+          actions: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _workspaceIconButton(
+                icon: Icons.save_rounded,
+                onPressed: _saveProject,
+              ),
+            ],
+          ),
+          child: EditDocumentPage(
+            documentSchema: documentSchema,
+            documentData: documentData,
+            inputDecoration: _inputDecoration,
+          ),
+        ),
+      ),
+      WorkspaceCarouselItem(
+        title: 'Roster',
+        thumbnail: Image.asset('assets/icons/roster.png', fit: BoxFit.cover),
+        page: WorkspacePage(
+          title: 'Roster',
+          actions: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _workspaceIconButton(
+                icon: Icons.person_add_alt_1_rounded,
+                onPressed: _addRosterRow,
+              ),
+              _workspaceIconButton(
+                icon: Icons.save_rounded,
+                onPressed: _saveProject,
+              ),
+            ],
+          ),
+          child: EditRosterPage(
+            roster: roster,
+            rosterSchema: rosterSchema,
+            projectData: projectData,
+            projectFolderPath: widget.project.folderPath,
+            inputDecoration: _inputDecoration,
+            onAddRosterRow: _addRosterRow,
+            onDeleteRosterRow: _deleteRosterRow,
+            onReplacePhoto: _replacePhoto,
+          ),
+        ),
+      ),
+      for (final loadedTemplate in templates)
+        WorkspaceCarouselItem(
+          title: loadedTemplate.template.name,
+          thumbnail: Image.file(
+            File(loadedTemplate.assetPath('preview.jpg')),
+            fit: BoxFit.cover,
+          ),
+          page: WorkspacePage(
+            title: loadedTemplate.template.name,
+            actions: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _workspaceIconButton(
+                  icon: Icons.file_present,
+                  onPressed: () => _exportTemplate(loadedTemplate),
+                ),
+              ],
+            ),
+            child: _buildTemplatePreviewBody(loadedTemplate),
+          ),
+        ),
+    ];
+  }
+
+  Widget _buildContentPages() {
+    final pages = _buildCarouselItems();
+
+    return Column(
+      children: [
+        Expanded(
+          child: PageView.builder(
+            controller: _pageController,
+            physics: const PageScrollPhysics(),
+            onPageChanged: (value) {
+              setState(() {
+                _currentPage = value;
+              });
+            },
+            itemCount: pages.length,
+            itemBuilder: (context, index) {
+              return pages[index].page;
+            },
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: WorkspaceFilmstrip(
+            items: pages.map((page) => page.filmstripItem).toList(),
+            currentIndex: _currentPage,
+            onTap: (index) {
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -688,12 +502,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             );
           }
 
-          return Column(
-            children: [
-              //_buildSubtitleBar(),
-              Expanded(child: _buildContentPages()),
-            ],
-          );
+          return _buildContentPages();
         },
       ),
     );

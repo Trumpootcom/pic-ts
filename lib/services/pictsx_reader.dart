@@ -52,8 +52,9 @@ class PictsxReader {
     final archive = ZipDecoder().decodeBytes(bytes);
 
     for (final file in archive.files) {
-      final outPath = '${projectDir.path}/${file.name}';
-
+      final safeName = file.name.replaceAll('\\', '/');
+      final outPath = '${projectDir.path}/$safeName';
+      
       if (file.isFile) {
         final outFile = File(outPath);
         await outFile.parent.create(recursive: true);
