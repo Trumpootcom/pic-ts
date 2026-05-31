@@ -166,7 +166,8 @@ class EditRosterPage extends StatelessWidget {
                   thickness: WidgetStateProperty.all(8),
                 ),
                 child: Scrollbar(
-                  thumbVisibility: true,
+                  thumbVisibility: false,
+                  trackVisibility: false,
                   child: ListView(
                     padding: const EdgeInsets.only(right: 0),
                     children: [

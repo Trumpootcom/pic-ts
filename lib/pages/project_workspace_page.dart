@@ -521,6 +521,56 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Widget _buildContentPages() {
+    final pages = <Widget>[
+      WorkspacePage(
+        title: 'Properties',
+        actions: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _workspaceIconButton(
+              icon: Icons.save_rounded,
+              onPressed: _saveProject,
+            ),
+          ],
+        ),
+        child: EditDocumentPage(
+          documentSchema: documentSchema,
+          documentData: documentData,
+          inputDecoration: _inputDecoration,
+        ),
+      ),
+
+      WorkspacePage(
+        title: 'Roster',
+        actions: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _workspaceIconButton(
+              icon: Icons.person_add_alt_1_rounded,
+              onPressed: _addRosterRow,
+            ),
+            _workspaceIconButton(
+              icon: Icons.save_rounded,
+              onPressed: _saveProject,
+            ),
+          ],
+        ),
+        child: EditRosterPage(
+          roster: roster,
+          rosterSchema: rosterSchema,
+          projectData: projectData,
+          projectFolderPath: widget.project.folderPath,
+          inputDecoration: _inputDecoration,
+          onAddRosterRow: _addRosterRow,
+          onDeleteRosterRow: _deleteRosterRow,
+          onReplacePhoto: _replacePhoto,
+        ),
+      ),
+
+      for (final loadedTemplate in templates)
+        _buildTemplatePage(loadedTemplate),
+    ];
+
     return PageView.builder(
       controller: _pageController,
       physics: const PageScrollPhysics(),
@@ -529,56 +579,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           _currentPage = value;
         });
       },
-      itemCount: templates.length + 1,
+      itemCount: pages.length,
       itemBuilder: (context, index) {
-        if (index == 0) {
-          return WorkspacePage(
-            title: 'Properties',
-            actions: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _workspaceIconButton(
-                  icon: Icons.save_rounded,
-                  onPressed: _saveProject,
-                ),
-              ],
-            ),
-            child: EditDocumentPage(
-              documentSchema: documentSchema,
-              documentData: documentData,
-              inputDecoration: _inputDecoration,
-            ),
-          );
-        }
-        if (index == 1) {
-          return WorkspacePage(
-            title: 'Roster',
-            actions: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _workspaceIconButton(
-                  icon: Icons.person_add_alt_1_rounded,
-                  onPressed: _addRosterRow,
-                ),
-                _workspaceIconButton(
-                  icon: Icons.save_rounded,
-                  onPressed: _saveProject,
-                ),
-              ],
-            ),
-            child: EditRosterPage(
-              roster: roster,
-              rosterSchema: rosterSchema,
-              projectData: projectData,
-              projectFolderPath: widget.project.folderPath,
-              inputDecoration: _inputDecoration,
-              onAddRosterRow: _addRosterRow,
-              onDeleteRosterRow: _deleteRosterRow,
-              onReplacePhoto: _replacePhoto,
-            ),
-          );
-        }
-        return _buildTemplatePage(templates[index - 2]);
+        return pages[index];
       },
     );
   }
