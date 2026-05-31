@@ -8,9 +8,11 @@ $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $appRoot = Split-Path -Parent $scriptDir
 
-$sourcePath = Join-Path $scriptDir $ProjectFolder
-$outputName = "$ProjectFolder.pictsx"
-$tempZip = Join-Path $scriptDir "$ProjectFolder.zip"
+$sourcePath = (Resolve-Path (Join-Path $scriptDir $ProjectFolder)).Path
+$projectName = Split-Path $sourcePath -Leaf
+
+$outputName = "$projectName.pictsx"
+$tempZip = Join-Path $scriptDir "$projectName.zip"
 $outputDir = Join-Path $appRoot "assets\pic_templates"
 $outputPath = Join-Path $outputDir $outputName
 
@@ -30,7 +32,14 @@ if (Test-Path $outputPath) {
     Remove-Item $outputPath -Force
 }
 
-Compress-Archive -Path (Join-Path $sourcePath "*") -DestinationPath $tempZip -Force
+Push-Location $sourcePath
+try {
+    Compress-Archive -Path * -DestinationPath $tempZip -Force
+}
+finally {
+    Pop-Location
+}
+
 Move-Item $tempZip $outputPath -Force
 
 Write-Host "Compiled:"
