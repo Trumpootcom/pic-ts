@@ -51,7 +51,7 @@ class EditRosterPage extends StatelessWidget {
             ?.toDouble() ??
         1.0;
 
-    const previewHeight = 44.0;
+    const previewHeight = 52.0;
     final previewWidth = previewHeight * previewAspect;
 
     final profilePicture = roster[i]['profilePicture']?.toString();
@@ -71,42 +71,58 @@ class EditRosterPage extends StatelessWidget {
             fit: BoxFit.cover,
           );
 
-    return Card(
+    return Container(
       key: ValueKey(roster[i]),
-      color: AppColors.medSat,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 5, bottom: 5, left: 10, right: 5),
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: AppColors.lightSat,
+        border: Border.all(color: AppColors.darkUnsat),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
         child: Row(
           children: [
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => onReplacePhoto(i),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.darkUnsat),
-                  borderRadius: BorderRadius.circular(4),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  bottomLeft: Radius.circular(4),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: imageWidget,
-                ),
+                child: imageWidget,
               ),
             ),
-            const SizedBox(width: 8),
+            Container(
+              width: 1,
+              height: previewHeight,
+              color: AppColors.darkUnsat,
+            ),
             Expanded(
-              child: TextFormField(
-                key: ValueKey('fullName_${i}_${roster[i].hashCode}'),
-                initialValue: roster[i]['fullName']?.toString() ?? '',
-                decoration: inputDecoration(''),
-                onChanged: (value) {
-                  roster[i]['fullName'] = value;
-                },
+              child: Container(
+                color: const Color.fromARGB(50, 255, 255, 255),
+                alignment: Alignment.centerLeft,
+                child: TextFormField(
+                  key: ValueKey('fullName_${i}_${roster[i].hashCode}'),
+                  initialValue: roster[i]['fullName']?.toString() ?? '',
+                  decoration: _rosterInputDecoration(),
+                  onChanged: (value) {
+                    roster[i]['fullName'] = value;
+                  },
+                ),
               ),
             ),
+
+            Container(
+              width: 1,
+              height: previewHeight,
+              color: AppColors.darkUnsat,
+            ),
+
             IconButton(
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+              constraints: const BoxConstraints.tightFor(width: 44, height: 44),
               visualDensity: VisualDensity.compact,
               color: AppColors.darkUnsat,
               icon: const Icon(Icons.close),
@@ -115,6 +131,19 @@ class EditRosterPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  InputDecoration _rosterInputDecoration() {
+    return const InputDecoration(
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      disabledBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      isDense: true,
+      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 11),
     );
   }
 
@@ -127,55 +156,26 @@ class EditRosterPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Roster (${roster.length})',
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                _buildActionButton(
-                  icon: Icons.person_add_alt_1_rounded,
-                  onPressed: onAddRosterRow,
-                  iconSize: 40,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.only(left: 4, top: 4, right: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.lightSat,
-                  border: Border.all(color: AppColors.darkUnsat),
+              child: ScrollbarTheme(
+                data: ScrollbarThemeData(
+                  thumbColor: WidgetStateProperty.all(AppColors.darkUnsat),
+                  trackColor: WidgetStateProperty.all(AppColors.lightUnsat),
+                  trackVisibility: WidgetStateProperty.all(true),
+                  radius: const Radius.circular(4),
+                  thickness: WidgetStateProperty.all(8),
                 ),
-                child: ScrollbarTheme(
-                  data: ScrollbarThemeData(
-                    thumbColor: WidgetStateProperty.all(AppColors.darkUnsat),
-                    trackColor: WidgetStateProperty.all(AppColors.lightUnsat),
-                    trackVisibility: WidgetStateProperty.all(true),
-                    radius: const Radius.circular(4),
-                    thickness: WidgetStateProperty.all(8),
-                  ),
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: ListView(
-                      padding: const EdgeInsets.only(right: 0),
-                      children: [
-                        for (int i = 0; i < roster.length; i++)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 0),
-                            child: _buildRosterCard(i),
-                          ),
-                      ],
-                    ),
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: ListView(
+                    padding: const EdgeInsets.only(right: 0),
+                    children: [
+                      for (int i = 0; i < roster.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 0),
+                          child: _buildRosterCard(i),
+                        ),
+                    ],
                   ),
                 ),
               ),

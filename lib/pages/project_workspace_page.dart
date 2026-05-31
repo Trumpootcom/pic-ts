@@ -115,14 +115,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     return InputDecoration(
       labelText: label,
       filled: true,
-      fillColor: AppColors.lightUnsat,
+      fillColor: Color.fromARGB(50, 255, 255, 255),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(color: AppColors.darkUnsat),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.darkSat, width: 2),
+        borderSide: BorderSide(color: AppColors.darkSat),
       ),
     );
   }
