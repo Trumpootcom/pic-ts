@@ -29,29 +29,28 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final hasRoster = widget.roster.isNotEmpty;
-
     if (_selectedRosterIndex >= widget.roster.length &&
         widget.roster.isNotEmpty) {
       _selectedRosterIndex = widget.roster.length - 1;
     }
 
     final placement = Map<String, dynamic>.from(
-      widget.loadedTemplate.template.rawJson['document']['placement']
-              as Map? ??
+      widget.loadedTemplate.template.rawJson['document']['placement'] as Map? ??
           {},
     );
 
     final maxRosterPerPage = placement['maxRosterPerPage'] as int? ?? 1;
+    final isSinglePage = maxRosterPerPage <= 0;
+    final effectiveRosterPerPage = isSinglePage ? 1 : maxRosterPerPage;
+    final hasRoster = !isSinglePage && widget.roster.isNotEmpty;
+    final pageStart = hasRoster ? _selectedRosterIndex + 1 : 0;
 
-    final pageStart = widget.roster.isEmpty ? 0 : _selectedRosterIndex + 1;
-
-    final pageEnd = widget.roster.isEmpty
-        ? 0
-        : (_selectedRosterIndex + maxRosterPerPage).clamp(
+    final pageEnd = hasRoster
+        ? (_selectedRosterIndex + effectiveRosterPerPage).clamp(
             1,
             widget.roster.length,
-          );
+          )
+        : 0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
@@ -65,7 +64,7 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
                 onPressed: hasRoster && _selectedRosterIndex > 0
                     ? () {
                         setState(() {
-                          _selectedRosterIndex -= maxRosterPerPage;
+                          _selectedRosterIndex -= effectiveRosterPerPage;
 
                           if (_selectedRosterIndex < 0) {
                             _selectedRosterIndex = 0;
@@ -77,8 +76,10 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
               ),
               Expanded(
                 child: Text(
-                  hasRoster
-                      ? maxRosterPerPage > 1
+                  isSinglePage
+                      ? 'Single page'
+                      : hasRoster
+                      ? effectiveRosterPerPage > 1
                             ? 'Students $pageStart-$pageEnd of ${widget.roster.length}'
                             : 'Student $pageStart of ${widget.roster.length}'
                       : 'No students',
@@ -92,11 +93,10 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
               IconButton(
                 color: AppColors.darkUnsat,
                 onPressed:
-                    hasRoster &&
-                        _selectedRosterIndex < widget.roster.length - 1
+                    hasRoster && _selectedRosterIndex < widget.roster.length - 1
                     ? () {
                         setState(() {
-                          _selectedRosterIndex += maxRosterPerPage;
+                          _selectedRosterIndex += effectiveRosterPerPage;
 
                           if (_selectedRosterIndex >= widget.roster.length) {
                             _selectedRosterIndex =
@@ -117,8 +117,8 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
               child: TemplatePreview(
                 loadedTemplate: widget.loadedTemplate,
                 documentData: widget.documentData,
-                rosterRows: widget.roster,
-                rosterStartIndex: hasRoster ? _selectedRosterIndex : 0,
+                rosterRows: isSinglePage ? const [] : widget.roster,
+                rosterStartIndex: isSinglePage ? 0 : _selectedRosterIndex,
                 projectFolderPath: widget.projectFolderPath,
               ),
             ),
