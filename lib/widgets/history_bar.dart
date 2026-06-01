@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
+const double historyBarHeight = 18;
+
 class HistoryBar extends StatelessWidget {
   final bool canUndo;
   final bool canRedo;
@@ -36,7 +38,7 @@ class HistoryBar extends StatelessWidget {
     }
 
     return Container(
-      height: 24,
+      height: historyBarHeight,
       color: AppColors.lightUnsat,
       child: Row(
         children: [
@@ -70,7 +72,7 @@ class HistoryBar extends StatelessWidget {
 }
 
 class _VerboseHistoryBar extends StatelessWidget {
-  static const double _height = 48;
+  static const double _height = historyBarHeight * 2;
 
   final bool canUndo;
   final bool canRedo;
@@ -146,6 +148,7 @@ class _VerboseHistoryBar extends StatelessWidget {
             height: _height,
             child: _VerboseHistoryButton(
               icon: Icons.fast_rewind_rounded,
+              iconSize: _height * 0.8,
               enabled: canUndo,
               color: undoColor,
               alignment: Alignment.center,
@@ -159,6 +162,7 @@ class _VerboseHistoryBar extends StatelessWidget {
             height: _height*1,
             child: _VerboseHistoryButton(
               icon: Icons.fast_forward_rounded,
+              iconSize: _height * 0.8,
               enabled: canRedo,
               color: redoColor,
               alignment: Alignment.centerRight,
@@ -246,6 +250,7 @@ class _VerboseHistoryPainter extends CustomPainter {
 
 class _VerboseHistoryButton extends StatelessWidget {
   final IconData icon;
+  final double iconSize;
   final bool enabled;
   final Color color;
   final Alignment alignment;
@@ -253,6 +258,7 @@ class _VerboseHistoryButton extends StatelessWidget {
 
   const _VerboseHistoryButton({
     required this.icon,
+    required this.iconSize,
     required this.enabled,
     required this.color,
     required this.alignment,
@@ -267,8 +273,8 @@ class _VerboseHistoryButton extends StatelessWidget {
       child: Align(
         alignment: alignment,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: Icon(icon, size: 34, color: color),
+          padding: const EdgeInsets.symmetric(horizontal: 5*historyBarHeight/24),
+          child: Icon(icon, size: iconSize, color: color),
         ),
       ),
     );

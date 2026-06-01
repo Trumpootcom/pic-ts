@@ -46,7 +46,7 @@ class HistoryDeleteRoster extends HistoryCommand {
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
   }) {
-    return 'Delete ${_studentLabel(row)}';
+    return 'Delete $_rosterLabel';
   }
 
   @override
@@ -54,7 +54,7 @@ class HistoryDeleteRoster extends HistoryCommand {
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
   }) {
-    return 'Delete ${_studentLabel(row)}';
+    return 'Delete $_rosterLabel';
   }
 
   @override
@@ -62,7 +62,13 @@ class HistoryDeleteRoster extends HistoryCommand {
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
   }) {
-    return 'Restore ${_studentLabel(row)}';
+    final fullName = row['fullName']?.toString().trim() ?? '';
+
+    if (fullName.isEmpty) {
+      return 'Restore $_rosterLabel';
+    }
+
+    return 'Restore $_rosterLabel: $fullName';
   }
 
   @override
@@ -73,6 +79,8 @@ class HistoryDeleteRoster extends HistoryCommand {
       'row': row,
     };
   }
+
+  String get _rosterLabel => 'Roster ${index + 1}';
 }
 
 List<Map<String, dynamic>> _rosterFromProject(Map<String, dynamic> projectData) {
@@ -81,14 +89,4 @@ List<Map<String, dynamic>> _rosterFromProject(Map<String, dynamic> projectData) 
       (e) => Map<String, dynamic>.from(e as Map),
     ),
   );
-}
-
-String _studentLabel(Map<String, dynamic> row) {
-  final fullName = row['fullName']?.toString().trim() ?? '';
-
-  if (fullName.isNotEmpty) {
-    return fullName;
-  }
-
-  return 'Student';
 }

@@ -35,7 +35,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   final ScrollController _scrollController = ScrollController();
 
   static const double topGap = 5.0;
-  static const double bottomGap = 5.0;
+  static const double bottomGap = 0.0;
 
   static const double thumbHeight = 55.0;
   static const double thumbWidth = thumbHeight * 11.0 / 8.5;
