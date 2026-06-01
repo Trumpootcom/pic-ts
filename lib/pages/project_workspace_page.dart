@@ -21,9 +21,11 @@ import '../widgets/workspace_page.dart';
 import '../models/workspace_carousel_item.dart';
 import '../services/roster_photo_service.dart';
 import "../pages/about_page.dart";
+import '../models/history_manager.dart';
+import '../services/history_storage.dart';
 
 int defaultProfileRotationQuarterTurns = 0;
-bool _shownAbout = false;
+late HistoryManager historyManager;
 
 class ProjectWorkspacePage extends StatefulWidget {
   final StoredProject project;
@@ -90,6 +92,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     templates = await TemplateLoader().loadProjectTemplates(
       projectFolderPath: widget.project.folderPath,
     );
+    historyManager = HistoryManager(
+      storage: HistoryStorage(project: widget.project),
+    );
+
+    await historyManager.load();
   }
 
   Future<void> _saveProject() async {
@@ -182,16 +189,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         cropResult.croppedImagePath,
         from: widget.project.folderPath,
       );
-
-      roster[i]['profilePictureCrop'] = {
-        'cropLeft': cropResult.cropLeft,
-        'cropTop': cropResult.cropTop,
-        'cropWidth': cropResult.cropWidth,
-        'cropHeight': cropResult.cropHeight,
-        'rotationQuarterTurns': cropResult.rotationQuarterTurns,
-        'rawWidth': cropResult.rawWidth,
-        'rawHeight': cropResult.rawHeight,
-      };
     });
   }
 
@@ -238,6 +235,19 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             documentSchema: documentSchema,
             documentData: documentData,
             inputDecoration: _inputDecoration,
+            onSetDocumentField: (key, value) async {
+              await historyManager.setDocumentField(
+                projectData: projectData,
+                key: key,
+                newValue: value,
+              );
+
+              setState(() {
+                documentData = Map<String, dynamic>.from(
+                  projectData['documentData'] as Map,
+                );
+              });
+            },
           ),
         ),
       ),
@@ -268,6 +278,22 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             onAddRosterRow: _addRosterRow,
             onDeleteRosterRow: _deleteRosterRow,
             onReplacePhoto: _replacePhoto,
+            onSetRosterField: (index, key, value) async {
+              await historyManager.setRosterField(
+                projectData: projectData,
+                index: index,
+                key: key,
+                newValue: value,
+              );
+
+              setState(() {
+                roster = List<Map<String, dynamic>>.from(
+                  (projectData['roster'] as List<dynamic>).map(
+                    (e) => Map<String, dynamic>.from(e as Map),
+                  ),
+                );
+              });
+            },
           ),
         ),
       ),
@@ -359,7 +385,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     return Scaffold(
       backgroundColor: AppColors.medUnsat,
       appBar: TstsTitleBar(
-        title: 'PIC Tool Suite $buildTime',
+        title: 'PIC Tool Suite',
         subtitle: widget.project.name,
       ),
       body: FutureBuilder<void>(

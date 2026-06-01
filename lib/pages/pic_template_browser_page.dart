@@ -141,7 +141,7 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
     return Scaffold(
       backgroundColor: AppColors.lightUnsat,
       appBar: const TstsTitleBar(
-        title: 'PIC Tool Suite $buildTime',
+        title: 'PIC Tool Suite',
         subtitle: 'Create New Project',
       ),
       body: FutureBuilder<List<File>>(

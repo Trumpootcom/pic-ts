@@ -167,7 +167,7 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
     return Scaffold(
       backgroundColor: AppColors.lightUnsat,
       appBar: const TstsTitleBar(
-        title: 'PIC Tool Suite $buildTime',
+        title: 'PIC Tool Suite',
         subtitle: 'Select Project',
       ),
       body: ColoredBox(

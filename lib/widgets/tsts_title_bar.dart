@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pic_ts/theme/app_colors.dart';
 import '../pages/about_page.dart';
 import '../theme/app_colors.dart';
+import '../build_info.dart';
 
 class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
   static const double titleBarHt = 50;
@@ -79,7 +80,7 @@ class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
                         children: [
                           const SizedBox(height: 4),
                           Text(
-                            title,
+                            title+' (v$buildTime)',
                             style: TextStyle(
                               fontSize: titleBarHt * 0.42 * 0.6,
                               fontFeatures: [FontFeature.enable('smcp')],

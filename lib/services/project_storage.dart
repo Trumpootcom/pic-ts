@@ -31,6 +31,7 @@ class StoredProject {
   String get dataJsonPath => '$folderPath/data/data.json';
   String get photosPath => '$folderPath/data/photos';
   String get templatesPath => '$folderPath/templates';
+  String get historyTxtPath => '$folderPath/data/history.txt';
 }
 
 class ProjectStorage {

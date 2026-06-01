@@ -6,7 +6,7 @@ Write-Host ""
 
 $hash = git rev-parse --short HEAD
 $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$buildTime = Get-Date -Format "HH:mm:ss"
+$buildTime = Get-Date -Format "HHmmss"
 
 @"
 const String gitCommit = '$hash';
