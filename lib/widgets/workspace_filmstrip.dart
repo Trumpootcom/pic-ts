@@ -49,7 +49,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   @override
   void initState() {
     super.initState();
-//    _scrollController.addListener(_handleFilmstripScroll);
+    //    _scrollController.addListener(_handleFilmstripScroll);
   }
 
   void _handleFilmstripScroll() {
@@ -96,7 +96,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
     return Padding(
       padding: const EdgeInsets.only(top: topGap, bottom: bottomGap),
       child: SizedBox(
-        height: thumbHeight,
+        height: thumbHeight+horizontalGap,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final sideSpacer = ((constraints.maxWidth - thumbWidth) / 2).clamp(
@@ -104,46 +104,81 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
               double.infinity,
             );
 
-            return ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: sideSpacer),
-              itemCount: widget.items.length,
-              itemBuilder: (context, index) {
-                final distance = (index - widget.currentPagePosition).abs();
-                final opacity = (1.0 - (distance * 0.55)).clamp(0.45, 1.0);
-                final selected = index == widget.currentIndex;
-
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: () => widget.onTap(index),
-                      child: Container(
-                        width: thumbWidth,
-                        height: thumbHeight,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.darkUnsat
-                              : AppColors.medUnsat,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Opacity(
-                          opacity: opacity,
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            clipBehavior: Clip.hardEdge,
-                            child: widget.items[index].thumbnail,
+            return Stack(
+              children: [
+                ListView.builder(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: sideSpacer),
+                  itemCount: widget.items.length,
+                  itemBuilder: (context, index) {
+                    //final selected = index == widget.currentIndex;
+                    final selected = false;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () => widget.onTap(index),
+                          child: Container(
+                            width: thumbWidth,
+                            height: thumbHeight,
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? AppColors.darkUnsat
+                                  : AppColors.medUnsat,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              clipBehavior: Clip.hardEdge,
+                              child: widget.items[index].thumbnail,
+                            ),
                           ),
                         ),
+                        if (index < widget.items.length - 1)
+                          const SizedBox(width: horizontalGap),
+                      ],
+                    );
+                  },
+                ),
+
+                IgnorePointer(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          color: AppColors.medUnsat.withAlpha(90),
+                        ),
+                      ),
+
+                      SizedBox(width: thumbWidth, height: thumbHeight+horizontalGap),
+
+                      Expanded(
+                        child: Container(
+                          color: AppColors.medUnsat.withAlpha(90),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                IgnorePointer(
+                  child: Center(
+                    child: Container(
+                      width: thumbWidth+horizontalGap,
+                      height: thumbHeight+horizontalGap,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.textLight,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    if (index < widget.items.length - 1)
-                      const SizedBox(width: horizontalGap),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             );
           },
         ),
