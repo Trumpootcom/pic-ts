@@ -22,12 +22,12 @@ class WorkspacePage extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.lightUnsat,
           borderRadius: BorderRadius.circular(6),
-          boxShadow: const [
+          boxShadow:  [
             BoxShadow(
-              color: Color(0x60000000),
-              blurRadius: 2,
-              spreadRadius: 2,
-              offset: Offset(0, 2),
+              color: AppColors.darkUnsat.withAlpha(180),
+              blurRadius: 1.5,
+              spreadRadius: 1.5,
+              offset: Offset(1, 2),
             ),
           ],
         ),
