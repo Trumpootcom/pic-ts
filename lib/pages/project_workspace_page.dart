@@ -413,13 +413,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           },
         ),
         HistoryBar(
+          verbose: true,
           canUndo: historyManager.canUndo,
           canRedo: historyManager.canRedo,
-          undoText: historyManager.undoShortDescription(
+          undoText: historyManager.undoDescription(
             documentSchema: documentSchema,
             rosterSchema: rosterSchema,
           ),
-          redoText: historyManager.redoShortDescription(
+          redoText: historyManager.redoDescription(
             documentSchema: documentSchema,
             rosterSchema: rosterSchema,
           ),
