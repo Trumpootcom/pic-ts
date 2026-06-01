@@ -7,8 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import '../models/class_photo_project.dart';
 import '../widgets/bottom_tool_dock.dart';
 import '../widgets/preview_pane.dart';
-
+import 'about_page.dart';
 const bool resetDefaultProjectOnLaunch = true;
+
 
 enum ActiveTool { none, title, add }
 
@@ -41,8 +42,12 @@ class _HomePageState extends State<HomePage> {
       final defaultProjectDir = Directory('${projectsRoot.path}/Default');
       await defaultProjectDir.create(recursive: true);
 
-      await Directory('${defaultProjectDir.path}/students').create(recursive: true);
-      await Directory('${defaultProjectDir.path}/exports').create(recursive: true);
+      await Directory(
+        '${defaultProjectDir.path}/students',
+      ).create(recursive: true);
+      await Directory(
+        '${defaultProjectDir.path}/exports',
+      ).create(recursive: true);
 
       final file = File('${defaultProjectDir.path}/project.json');
 
@@ -88,7 +93,9 @@ class _HomePageState extends State<HomePage> {
     });
 
     final titleController = TextEditingController(text: current.title.text);
-    final subtitleController = TextEditingController(text: current.subtitle.text);
+    final subtitleController = TextEditingController(
+      text: current.subtitle.text,
+    );
 
     final result = await showDialog<_TitleEditResult>(
       context: context,
@@ -167,16 +174,9 @@ class _HomePageState extends State<HomePage> {
 
     final next = students.length + 1;
 
-    students.add(
-      StudentSpec(
-        firstName: 'First_$next',
-        lastName: 'Last_$next',
-      ),
-    );
+    students.add(StudentSpec(firstName: 'First_$next', lastName: 'Last_$next'));
 
-    await _saveProject(
-      current.copyWith(students: students),
-    );
+    await _saveProject(current.copyWith(students: students));
 
     if (!mounted) return;
 
@@ -195,31 +195,25 @@ class _HomePageState extends State<HomePage> {
 
     students.removeAt(index);
 
-    await _saveProject(
-      current.copyWith(students: students),
-    );
+    await _saveProject(current.copyWith(students: students));
   }
 
   @override
   Widget build(BuildContext context) {
+
     if (errorText != null) {
       return Scaffold(
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
-              errorText!,
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(errorText!, style: const TextStyle(color: Colors.red)),
           ),
         ),
       );
     }
 
     if (project == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -272,10 +266,7 @@ class _TitleEditResult {
   final String title;
   final String subtitle;
 
-  const _TitleEditResult({
-    required this.title,
-    required this.subtitle,
-  });
+  const _TitleEditResult({required this.title, required this.subtitle});
 }
 
 Map<String, dynamic> createDefaultProjectJson() {
@@ -286,19 +277,19 @@ Map<String, dynamic> createDefaultProjectJson() {
       "centerX": 4.0,
       "topY": 0.5,
       "width": null,
-      "height": 1.125
+      "height": 1.125,
     },
     "title": {
       "text": "Certified Nurse Assistant Program",
       "centerX": 4.0,
       "topY": 1.75,
-      "fontSize": 0.22
+      "fontSize": 0.22,
     },
     "subtitle": {
       "text": "June 15, 2026",
       "centerX": 4.0,
       "topY": 2.15,
-      "fontSize": 0.18
+      "fontSize": 0.18,
     },
     "studentPortraitArea": {
       "centerX": 4.0,
@@ -311,21 +302,57 @@ Map<String, dynamic> createDefaultProjectJson() {
       "verticalGap": 0.20,
       "nameGap": 0.05,
       "fontSize": 0.12,
-      "ovalFrame": "assets/resources/oval.png"
+      "ovalFrame": "assets/resources/oval.png",
     },
     "studentLayouts": {
-      "1": [[1]],
-      "2": [[1, 2]],
-      "3": [[1, 2, 3]],
-      "4": [[1, 2], [3, 4]],
-      "5": [[1, 2], [3, 4, 5]],
-      "6": [[1, 2], [3, null, 4], [5, 6]],
-      "7": [[1, 2], [3, 4, 5], [6, 7]],
-      "8": [[1, 2, 3], [4, 5], [6, 7, 8]],
-      "9": [[1, 2], [3, 4, 5], [6, 7, 8, 9]],
-      "10": [[1, 2, 3], [4, 5, 6, 7], [8, 9, 10]],
-      "11": [[1, 2, 3, 4], [5, 6, 7], [8, 9, 10, 11]]
+      "1": [
+        [1],
+      ],
+      "2": [
+        [1, 2],
+      ],
+      "3": [
+        [1, 2, 3],
+      ],
+      "4": [
+        [1, 2],
+        [3, 4],
+      ],
+      "5": [
+        [1, 2],
+        [3, 4, 5],
+      ],
+      "6": [
+        [1, 2],
+        [3, null, 4],
+        [5, 6],
+      ],
+      "7": [
+        [1, 2],
+        [3, 4, 5],
+        [6, 7],
+      ],
+      "8": [
+        [1, 2, 3],
+        [4, 5],
+        [6, 7, 8],
+      ],
+      "9": [
+        [1, 2],
+        [3, 4, 5],
+        [6, 7, 8, 9],
+      ],
+      "10": [
+        [1, 2, 3],
+        [4, 5, 6, 7],
+        [8, 9, 10],
+      ],
+      "11": [
+        [1, 2, 3, 4],
+        [5, 6, 7],
+        [8, 9, 10, 11],
+      ],
     },
-    "students": []
+    "students": [],
   };
 }

@@ -20,8 +20,10 @@ import '../widgets/workspace_filmstrip.dart';
 import '../widgets/workspace_page.dart';
 import '../models/workspace_carousel_item.dart';
 import '../services/roster_photo_service.dart';
+import "../pages/about_page.dart";
 
 int defaultProfileRotationQuarterTurns = 0;
+bool _shownAbout = false;
 
 class ProjectWorkspacePage extends StatefulWidget {
   final StoredProject project;
@@ -377,7 +379,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               ),
             );
           }
-
           return _buildContentPages();
         },
       ),

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import '../pages/about_page.dart';
 
-class TstsTitleBar extends StatelessWidget
-    implements PreferredSizeWidget {
+class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
   static const double titleBarHt = 50;
 
   final String title;
   final String subtitle;
+  final VoidCallback? onLogoTap;
 
   const TstsTitleBar({
     super.key,
     required this.title,
     this.subtitle = "Trumpoot's Sweet Tool Suite",
+    this.onLogoTap,
   });
 
   @override
@@ -25,10 +27,7 @@ class TstsTitleBar extends StatelessWidget
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: topPadding,
-            color: Colors.black,
-          ),
+          Container(height: topPadding, color: Colors.black),
           SizedBox(
             height: titleBarHt,
             child: Stack(
@@ -40,27 +39,36 @@ class TstsTitleBar extends StatelessWidget
                 ),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Image.asset(
-                    'assets/backgrounds/trumpoot_titlebar_a.png',
-                    height: titleBarHt,
-                    fit: BoxFit.fitHeight,
+                  child: GestureDetector(
+                    onTap:
+                        onLogoTap ??
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const AboutPage(),
+                            ),
+                          );
+                        },
+                    child: Image.asset(
+                      'assets/backgrounds/trumpoot_titlebar_a.png',
+                      height: titleBarHt,
+                      fit: BoxFit.fitHeight,
+                    ),
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: titleBarHt / 98 * 185,
-                  ),
+                  padding: EdgeInsets.only(left: titleBarHt / 98 * 185),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 4,),
+                        const SizedBox(height: 4),
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: titleBarHt * 0.42*0.6,
+                            fontSize: titleBarHt * 0.42 * 0.6,
                             fontFeatures: [FontFeature.enable('smcp')],
                             fontWeight: FontWeight.w500,
                             letterSpacing: 2,
@@ -68,7 +76,7 @@ class TstsTitleBar extends StatelessWidget
                             color: Colors.black,
                           ),
                         ),
-                        const SizedBox(height: 3,),
+                        const SizedBox(height: 3),
                         Text(
                           subtitle,
                           style: TextStyle(

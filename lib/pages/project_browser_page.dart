@@ -11,6 +11,8 @@ import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
 import '../widgets/folder_list_tile.dart';
 import '../build_info.dart';
+import 'about_page.dart';
+bool _shownAbout = false;
 
 class ProjectBrowserPage extends StatefulWidget {
   const ProjectBrowserPage({super.key});
@@ -151,6 +153,17 @@ class _ProjectBrowserPageState extends State<ProjectBrowserPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_shownAbout) {
+      _shownAbout = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const AboutPage()));
+      });
+    }
     return Scaffold(
       backgroundColor: AppColors.lightUnsat,
       appBar: const TstsTitleBar(
