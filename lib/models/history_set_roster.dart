@@ -51,6 +51,24 @@ class HistorySetRoster extends HistoryCommand {
   }
 
   @override
+  String shortDescription({
+    required List<dynamic> documentSchema,
+    required List<dynamic> rosterSchema,
+  }) {
+    final label = historyFieldLabel(schema: rosterSchema, key: key);
+
+    if (key == 'fullName') {
+      return 'Student ${index + 1} Name';
+    }
+
+    if (key == 'profilePicture') {
+      return 'Student ${index + 1} Photo';
+    }
+
+    return 'Student ${index + 1} $label';
+  }
+
+  @override
   String redoDescription({
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,

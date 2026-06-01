@@ -23,6 +23,7 @@ import '../services/roster_photo_service.dart';
 import "../pages/about_page.dart";
 import '../models/history_manager.dart';
 import '../services/history_storage.dart';
+import '../widgets/history_bar.dart';
 
 int defaultProfileRotationQuarterTurns = 0;
 late HistoryManager historyManager;
@@ -350,31 +351,70 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             },
           ),
         ),
-        SafeArea(
-          top: false,
-          child: WorkspaceFilmstrip(
-            items: pages.map((page) => page.filmstripItem).toList(),
-            currentIndex: _currentPage,
-            currentPagePosition: _currentPagePosition,
-            onPagePositionChanged: (pagePosition) {
-              if (!_pageController.hasClients) return;
+        WorkspaceFilmstrip(
+          items: pages.map((page) => page.filmstripItem).toList(),
+          currentIndex: _currentPage,
+          currentPagePosition: _currentPagePosition,
+          onPagePositionChanged: (pagePosition) {
+            if (!_pageController.hasClients) return;
 
-              _pageController.jumpTo(
-                pagePosition * _pageController.position.viewportDimension,
-              );
-            },
-            /*
+            _pageController.jumpTo(
+              pagePosition * _pageController.position.viewportDimension,
+            );
+          },
+          /*
             onTap: (index) {
               _pageController.jumpToPage(index);
             },*/
-            onTap: (index) {
-              _pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-              );
-            },
+          onTap: (index) {
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+            );
+          },
+        ),
+        HistoryBar(
+          canUndo: historyManager.canUndo,
+          canRedo: historyManager.canRedo,
+          undoText: historyManager.undoShortDescription(
+            documentSchema: documentSchema,
+            rosterSchema: rosterSchema,
           ),
+          redoText: historyManager.redoShortDescription(
+            documentSchema: documentSchema,
+            rosterSchema: rosterSchema,
+          ),
+          onUndo: () async {
+            await historyManager.undo(projectData);
+
+            setState(() {
+              documentData = Map<String, dynamic>.from(
+                projectData['documentData'] as Map,
+              );
+
+              roster = List<Map<String, dynamic>>.from(
+                (projectData['roster'] as List<dynamic>).map(
+                  (e) => Map<String, dynamic>.from(e as Map),
+                ),
+              );
+            });
+          },
+          onRedo: () async {
+            await historyManager.redo(projectData);
+
+            setState(() {
+              documentData = Map<String, dynamic>.from(
+                projectData['documentData'] as Map,
+              );
+
+              roster = List<Map<String, dynamic>>.from(
+                (projectData['roster'] as List<dynamic>).map(
+                  (e) => Map<String, dynamic>.from(e as Map),
+                ),
+              );
+            });
+          },
         ),
       ],
     );
@@ -405,7 +445,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               ),
             );
           }
-          return _buildContentPages();
+          return SafeArea(top: false, child: _buildContentPages());
         },
       ),
     );

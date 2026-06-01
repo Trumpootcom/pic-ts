@@ -35,7 +35,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   final ScrollController _scrollController = ScrollController();
 
   static const double topGap = 5.0;
-  static const double bottomGap = 00.0;
+  static const double bottomGap = 5.0;
 
   static const double thumbHeight = 55.0;
   static const double thumbWidth = thumbHeight * 11.0 / 8.5;
@@ -104,16 +104,16 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
           color: AppColors.lightUnsat,
           boxShadow: [
             BoxShadow(
-              color: AppColors.darkUnsat.withAlpha(180),
+              color: AppColors.darkUnsat.withAlpha(120),
               blurRadius: 1.5,
               spreadRadius: 1.5,
-              offset: Offset(0, -2),
+              offset: Offset(0, -1.5),
             ),
             BoxShadow(
-              color: AppColors.darkUnsat.withAlpha(180),
+              color: AppColors.darkUnsat.withAlpha(120),
               blurRadius: 1.5,
               spreadRadius: 1.5,
-              offset: Offset(0, 2),
+              offset: Offset(0, 1.5),
             ),
           ],
         ),

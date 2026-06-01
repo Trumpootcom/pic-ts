@@ -7,6 +7,11 @@ abstract class HistoryCommand {
   void apply(Map<String, dynamic> projectData);
   void undo(Map<String, dynamic> projectData);
 
+  String shortDescription({
+    required List<dynamic> documentSchema,
+    required List<dynamic> rosterSchema,
+  });
+  
   String undoDescription({
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,

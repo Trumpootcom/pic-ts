@@ -133,6 +133,26 @@ class HistoryManager {
     await storage.savePointer(_pointer);
   }
 
+  String? undoShortDescription({
+    required List<dynamic> documentSchema,
+    required List<dynamic> rosterSchema,
+  }) {
+    return undoCommand?.shortDescription(
+      documentSchema: documentSchema,
+      rosterSchema: rosterSchema,
+    );
+  }
+
+  String? redoShortDescription({
+    required List<dynamic> documentSchema,
+    required List<dynamic> rosterSchema,
+  }) {
+    return redoCommand?.shortDescription(
+      documentSchema: documentSchema,
+      rosterSchema: rosterSchema,
+    );
+  }
+
   HistoryCommand? get undoCommand {
     if (!canUndo) return null;
     return _commands[_pointer - 1];

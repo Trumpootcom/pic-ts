@@ -12,7 +12,6 @@ class HistorySetDocument extends HistoryCommand {
     required this.newValue,
   });
 
-
   factory HistorySetDocument.fromJson(Map<String, dynamic> json) {
     return HistorySetDocument(
       key: json['key'] as String,
@@ -45,6 +44,15 @@ class HistorySetDocument extends HistoryCommand {
   }
 
   @override
+  String shortDescription({
+    required List<dynamic> documentSchema,
+    required List<dynamic> rosterSchema,
+  }) {
+    return historyFieldLabel(schema: documentSchema, key: key);
+  }
+
+
+  @override
   String redoDescription({
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
@@ -66,11 +74,6 @@ class HistorySetDocument extends HistoryCommand {
 
   @override
   Map<String, dynamic> toJson() {
-    return {
-      'cmd': cmd,
-      'key': key,
-      'old': oldValue,
-      'new': newValue,
-    };
+    return {'cmd': cmd, 'key': key, 'old': oldValue, 'new': newValue};
   }
 }

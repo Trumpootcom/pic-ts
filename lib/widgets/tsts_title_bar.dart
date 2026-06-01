@@ -32,7 +32,7 @@ class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
             color: AppColors.darkUnsat.withAlpha(180),
             blurRadius: 1.5,
             spreadRadius: 1.5,
-            offset: Offset(0, 2),
+            offset: Offset(0, 1),
           ),
         ],
       ),
