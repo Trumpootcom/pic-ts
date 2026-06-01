@@ -52,6 +52,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   final PageController _pageController = PageController();
 
   int _currentPage = 0;
+  double _currentPagePosition = 0.0;
   int _selectedRosterIndex = 0;
 
   late Map<String, dynamic> projectData;
@@ -64,13 +65,24 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   @override
   void initState() {
     super.initState();
+    _pageController.addListener(_handlePageScroll);
     _loadFuture = _loadProject();
   }
 
   @override
   void dispose() {
+    _pageController.removeListener(_handlePageScroll);
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _handlePageScroll() {
+    final page = _pageController.page;
+    if (page == null) return;
+
+    setState(() {
+      _currentPagePosition = page;
+    });
   }
 
   Future<void> _loadProject() async {
@@ -450,6 +462,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             onPageChanged: (value) {
               setState(() {
                 _currentPage = value;
+                _currentPagePosition = value.toDouble();
               });
             },
             itemCount: pages.length,
@@ -463,6 +476,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           child: WorkspaceFilmstrip(
             items: pages.map((page) => page.filmstripItem).toList(),
             currentIndex: _currentPage,
+            currentPagePosition: _currentPagePosition,
+/*            onPagePositionChanged: (pagePosition) {
+              if (!_pageController.hasClients) return;
+
+              _pageController.jumpTo(
+                pagePosition * _pageController.position.viewportDimension,
+              );
+            },*/
             onTap: (index) {
               _pageController.animateToPage(
                 index,
