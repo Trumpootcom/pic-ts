@@ -35,9 +35,9 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   final ScrollController _scrollController = ScrollController();
 
   static const double topGap = 5.0;
-  static const double bottomGap = 10.0;
+  static const double bottomGap = 00.0;
 
-  static const double thumbHeight = 75.0;
+  static const double thumbHeight = 55.0;
   static const double thumbWidth = thumbHeight * 11.0 / 8.5;
 
   static const double horizontalGap = 10.0;
@@ -98,131 +98,150 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: topGap, bottom: bottomGap),
-      child: SizedBox(
+      child: Container(
         height: thumbHeight + horizontalGap,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final sideSpacer = ((constraints.maxWidth - thumbWidth) / 2).clamp(
-              0.0,
-              double.infinity,
-            );
+        decoration: BoxDecoration(
+          color: AppColors.lightUnsat,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.darkUnsat.withAlpha(180),
+              blurRadius: 1.5,
+              spreadRadius: 1.5,
+              offset: Offset(0, -2),
+            ),
+            BoxShadow(
+              color: AppColors.darkUnsat.withAlpha(180),
+              blurRadius: 1.5,
+              spreadRadius: 1.5,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
 
-            return Stack(
-              children: [
-                NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification is UserScrollNotification &&
-                        notification.direction != ScrollDirection.idle) {
-                      _userDraggingFilmstrip = true;
-                    }
-                    if (notification is ScrollUpdateNotification &&
-                        _userDraggingFilmstrip) {
-                      final pagePosition =
-                          _scrollController.offset / _itemStride;
-                      widget.onPagePositionChanged?.call(pagePosition);
-                    }
-                    if (notification is ScrollEndNotification &&
-                        _userDraggingFilmstrip) {
-                      _userDraggingFilmstrip = false;
+        child: SizedBox(
+          height: thumbHeight + horizontalGap,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final sideSpacer = ((constraints.maxWidth - thumbWidth) / 2)
+                  .clamp(0.0, double.infinity);
 
-                      final rawIndex = _scrollController.offset / _itemStride;
-                      final index = rawIndex.round().clamp(
-                        0,
-                        widget.items.length - 1,
-                      );
+              return Stack(
+                children: [
+                  NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is UserScrollNotification &&
+                          notification.direction != ScrollDirection.idle) {
+                        _userDraggingFilmstrip = true;
+                      }
+                      if (notification is ScrollUpdateNotification &&
+                          _userDraggingFilmstrip) {
+                        final pagePosition =
+                            _scrollController.offset / _itemStride;
+                        widget.onPagePositionChanged?.call(pagePosition);
+                      }
+                      if (notification is ScrollEndNotification &&
+                          _userDraggingFilmstrip) {
+                        _userDraggingFilmstrip = false;
 
-                      final targetOffset = index * _itemStride;
+                        final rawIndex = _scrollController.offset / _itemStride;
+                        final index = rawIndex.round().clamp(
+                          0,
+                          widget.items.length - 1,
+                        );
 
-                      _scrollController.animateTo(
-                        targetOffset,
-                        duration: const Duration(milliseconds: 160),
-                        curve: Curves.easeOut,
-                      );
+                        final targetOffset = index * _itemStride;
 
-                      widget.onTap(index);
+                        _scrollController.animateTo(
+                          targetOffset,
+                          duration: const Duration(milliseconds: 160),
+                          curve: Curves.easeOut,
+                        );
 
-                      return true;
-                    }
-                    return false;
-                  },
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: sideSpacer),
-                    itemCount: widget.items.length,
-                    itemBuilder: (context, index) {
-                      //final selected = index == widget.currentIndex;
-                      final selected = false;
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () => widget.onTap(index),
-                            child: Container(
-                              width: thumbWidth,
-                              height: thumbHeight,
-                              decoration: BoxDecoration(
-                                color: selected
-                                    ? AppColors.darkUnsat
-                                    : AppColors.medUnsat,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: FittedBox(
-                                fit: BoxFit.cover,
-                                clipBehavior: Clip.hardEdge,
-                                child: widget.items[index].thumbnail,
+                        widget.onTap(index);
+
+                        return true;
+                      }
+                      return false;
+                    },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.symmetric(horizontal: sideSpacer),
+                      itemCount: widget.items.length,
+                      itemBuilder: (context, index) {
+                        //final selected = index == widget.currentIndex;
+                        final selected = false;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () => widget.onTap(index),
+                              child: Container(
+                                width: thumbWidth,
+                                height: thumbHeight,
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.darkUnsat
+                                      : AppColors.medUnsat,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: FittedBox(
+                                  fit: BoxFit.cover,
+                                  clipBehavior: Clip.hardEdge,
+                                  child: widget.items[index].thumbnail,
+                                ),
                               ),
                             ),
+                            if (index < widget.items.length - 1)
+                              const SizedBox(width: horizontalGap),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  IgnorePointer(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            color: AppColors.medUnsat.withAlpha(90),
                           ),
-                          if (index < widget.items.length - 1)
-                            const SizedBox(width: horizontalGap),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                IgnorePointer(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          color: AppColors.medUnsat.withAlpha(90),
                         ),
-                      ),
 
-                      SizedBox(
-                        width: thumbWidth,
+                        SizedBox(
+                          width: thumbWidth,
+                          height: thumbHeight + horizontalGap,
+                        ),
+
+                        Expanded(
+                          child: Container(
+                            color: AppColors.medUnsat.withAlpha(90),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  IgnorePointer(
+                    child: Center(
+                      child: Container(
+                        width: thumbWidth + horizontalGap,
                         height: thumbHeight + horizontalGap,
-                      ),
-
-                      Expanded(
-                        child: Container(
-                          color: AppColors.medUnsat.withAlpha(90),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.textLight,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                IgnorePointer(
-                  child: Center(
-                    child: Container(
-                      width: thumbWidth + horizontalGap,
-                      height: thumbHeight + horizontalGap,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: AppColors.textLight,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
