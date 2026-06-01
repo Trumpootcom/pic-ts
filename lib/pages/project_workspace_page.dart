@@ -477,14 +477,17 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             items: pages.map((page) => page.filmstripItem).toList(),
             currentIndex: _currentPage,
             currentPagePosition: _currentPagePosition,
-/*            onPagePositionChanged: (pagePosition) {
+            onPagePositionChanged: (pagePosition) {
               if (!_pageController.hasClients) return;
 
               _pageController.jumpTo(
                 pagePosition * _pageController.position.viewportDimension,
               );
-            },*/
+            },/*
             onTap: (index) {
+              _pageController.jumpToPage(index);
+            },*/
+                       onTap: (index) {
               _pageController.animateToPage(
                 index,
                 duration: const Duration(milliseconds: 250),

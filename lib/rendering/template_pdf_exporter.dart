@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-
+import '../util/ts_print.dart';
 import '../services/template_loader.dart';
 
 class TemplatePdfExporter {
@@ -38,6 +38,12 @@ class TemplatePdfExporter {
     final rosterHeightIn = (roster['height'] ?? heightIn).toDouble();
 
     final maxRosterPerPage = placement['maxRosterPerPage'] as int? ?? 1;
+    final pageSize = maxRosterPerPage <= 0 ? 1 : maxRosterPerPage;
+    final rosterCount = maxRosterPerPage <= 0 ? 1 : rosterRows.length;
+    tsPrint('EXPORT PDF: ------------------------------------------------');
+    tsPrint('MAX ROSTER PER PAGE: ${maxRosterPerPage}');
+    tsPrint('PAGE SIZE: ${pageSize}');
+    tsPrint('ROSTER COUNT: ${rosterCount}');
 
     final pageFormat = PdfPageFormat(
       widthIn * PdfPageFormat.inch,
@@ -45,12 +51,10 @@ class TemplatePdfExporter {
       marginAll: 0,
     );
 
-    for (
-      int pageStart = 0;
-      pageStart < rosterRows.length;
-      pageStart += maxRosterPerPage
-    ) {
+    for (int pageStart = 0; pageStart < rosterCount; pageStart += pageSize) {
       final pageWidgets = <pw.Widget>[];
+
+      tsPrint('ADDING DOCUMENT ELEMENTS TO PAGE: ${pageStart}');
 
       for (final element in documentElements) {
         pageWidgets.add(
@@ -67,6 +71,7 @@ class TemplatePdfExporter {
         );
       }
 
+      tsPrint('ADDING ROSTER ELEMENTS TO PAGE: ${pageStart}');
       for (int i = 0; i < slots.length && i < maxRosterPerPage; i++) {
         final rosterIndex = pageStart + i;
 
@@ -100,6 +105,7 @@ class TemplatePdfExporter {
         }
       }
 
+      tsPrint('ADDING PAGE TO PDF: ${pageStart}');
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,

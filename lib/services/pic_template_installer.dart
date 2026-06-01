@@ -33,9 +33,7 @@ class PicTemplateInstaller {
         '${root.path}/$fileName',
       );
 
-      if (await destination.exists()) {
-        continue;
-      }
+      //if (await destination.exists()) {       continue;      }
 
       final data = await rootBundle.load(assetPath);
 

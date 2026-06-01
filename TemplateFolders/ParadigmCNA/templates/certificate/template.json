@@ -24,7 +24,7 @@
         "key": "skillsHours",
         "label": "Skills Hours",
         "type": "text",
-        "default": "48 hrs"
+        "default": "40 hrs"
       },
 
       {
@@ -38,7 +38,7 @@
         "key": "totalHours",
         "label": "Total Hours",
         "type": "text",
-        "default": "148 hrs"
+        "default": "140 hrs"
       }
     ],
 

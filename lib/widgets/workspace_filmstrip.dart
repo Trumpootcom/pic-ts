@@ -1,7 +1,7 @@
 // lib/widgets/workspace_filmstrip.dart
 
 import 'package:flutter/material.dart';
-
+import 'package:flutter/rendering.dart';
 import '../theme/app_colors.dart';
 
 class WorkspaceFilmstripItem {
@@ -41,6 +41,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   static const double thumbWidth = thumbHeight * 11.0 / 8.5;
 
   static const double horizontalGap = 10.0;
+  bool _userDraggingFilmstrip = false;
 
   bool _syncingFromPageView = false;
 
@@ -49,7 +50,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   @override
   void initState() {
     super.initState();
-    //    _scrollController.addListener(_handleFilmstripScroll);
+    //_scrollController.addListener(_handleFilmstripScroll);
   }
 
   void _handleFilmstripScroll() {
@@ -64,6 +65,8 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   void didUpdateWidget(covariant WorkspaceFilmstrip oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (_userDraggingFilmstrip) return;
+
     if (oldWidget.currentPagePosition != widget.currentPagePosition) {
       _syncScrollToPagePosition();
     }
@@ -71,7 +74,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(_handleFilmstripScroll);
+    //_scrollController.removeListener(_handleFilmstripScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -96,7 +99,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
     return Padding(
       padding: const EdgeInsets.only(top: topGap, bottom: bottomGap),
       child: SizedBox(
-        height: thumbHeight+horizontalGap,
+        height: thumbHeight + horizontalGap,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final sideSpacer = ((constraints.maxWidth - thumbWidth) / 2).clamp(
@@ -106,43 +109,79 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
             return Stack(
               children: [
-                ListView.builder(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: sideSpacer),
-                  itemCount: widget.items.length,
-                  itemBuilder: (context, index) {
-                    //final selected = index == widget.currentIndex;
-                    final selected = false;
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: () => widget.onTap(index),
-                          child: Container(
-                            width: thumbWidth,
-                            height: thumbHeight,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.darkUnsat
-                                  : AppColors.medUnsat,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              clipBehavior: Clip.hardEdge,
-                              child: widget.items[index].thumbnail,
+                NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is UserScrollNotification &&
+                        notification.direction != ScrollDirection.idle) {
+                      _userDraggingFilmstrip = true;
+                    }
+                    if (notification is ScrollUpdateNotification &&
+                        _userDraggingFilmstrip) {
+                      final pagePosition =
+                          _scrollController.offset / _itemStride;
+                      widget.onPagePositionChanged?.call(pagePosition);
+                    }
+                    if (notification is ScrollEndNotification &&
+                        _userDraggingFilmstrip) {
+                      _userDraggingFilmstrip = false;
+
+                      final rawIndex = _scrollController.offset / _itemStride;
+                      final index = rawIndex.round().clamp(
+                        0,
+                        widget.items.length - 1,
+                      );
+
+                      final targetOffset = index * _itemStride;
+
+                      _scrollController.animateTo(
+                        targetOffset,
+                        duration: const Duration(milliseconds: 160),
+                        curve: Curves.easeOut,
+                      );
+
+                      widget.onTap(index);
+
+                      return true;
+                    }
+                    return false;
+                  },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(horizontal: sideSpacer),
+                    itemCount: widget.items.length,
+                    itemBuilder: (context, index) {
+                      //final selected = index == widget.currentIndex;
+                      final selected = false;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => widget.onTap(index),
+                            child: Container(
+                              width: thumbWidth,
+                              height: thumbHeight,
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? AppColors.darkUnsat
+                                    : AppColors.medUnsat,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                clipBehavior: Clip.hardEdge,
+                                child: widget.items[index].thumbnail,
+                              ),
                             ),
                           ),
-                        ),
-                        if (index < widget.items.length - 1)
-                          const SizedBox(width: horizontalGap),
-                      ],
-                    );
-                  },
+                          if (index < widget.items.length - 1)
+                            const SizedBox(width: horizontalGap),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-
                 IgnorePointer(
                   child: Row(
                     children: [
@@ -152,7 +191,10 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
                         ),
                       ),
 
-                      SizedBox(width: thumbWidth, height: thumbHeight+horizontalGap),
+                      SizedBox(
+                        width: thumbWidth,
+                        height: thumbHeight + horizontalGap,
+                      ),
 
                       Expanded(
                         child: Container(
@@ -166,8 +208,8 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
                 IgnorePointer(
                   child: Center(
                     child: Container(
-                      width: thumbWidth+horizontalGap,
-                      height: thumbHeight+horizontalGap,
+                      width: thumbWidth + horizontalGap,
+                      height: thumbHeight + horizontalGap,
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: AppColors.textLight,
