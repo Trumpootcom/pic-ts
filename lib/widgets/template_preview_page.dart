@@ -24,11 +24,15 @@ class TemplatePreviewPage extends StatefulWidget {
   State<TemplatePreviewPage> createState() => _TemplatePreviewPageState();
 }
 
-class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
+class _TemplatePreviewPageState extends State<TemplatePreviewPage> with AutomaticKeepAliveClientMixin{
   int _selectedRosterIndex = 0;
+
+  @override bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     if (_selectedRosterIndex >= widget.roster.length &&
         widget.roster.isNotEmpty) {
       _selectedRosterIndex = widget.roster.length - 1;

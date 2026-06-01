@@ -288,6 +288,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               ],
             ),
             child: TemplatePreviewPage(
+              key: PageStorageKey(
+                'template-preview-${loadedTemplate.template.id}',
+              ),
               loadedTemplate: loadedTemplate,
               documentData: documentData,
               roster: roster,
