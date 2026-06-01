@@ -106,4 +106,10 @@ class HistoryStorage {
       flush: true,
     );
   }
+
+  Future<void> saveProjectData(Map<String, dynamic> projectData) async {
+    projectData['modifiedAt'] = DateTime.now().toIso8601String();
+
+    await _saveDataJson(projectData);
+  }
 }

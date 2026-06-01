@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pic_ts/theme/app_colors.dart';
 import '../pages/about_page.dart';
-import '../theme/app_colors.dart';
 import '../build_info.dart';
 
 class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {

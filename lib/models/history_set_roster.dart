@@ -58,14 +58,14 @@ class HistorySetRoster extends HistoryCommand {
     final label = historyFieldLabel(schema: rosterSchema, key: key);
 
     if (key == 'fullName') {
-      return 'Student ${index + 1} Name';
+      return 'Roster ${index + 1} Name';
     }
 
     if (key == 'profilePicture') {
-      return 'Student ${index + 1} Photo';
+      return 'Roster ${index + 1} Photo';
     }
 
-    return 'Student ${index + 1} $label';
+    return 'Roster ${index + 1} $label';
   }
 
   @override

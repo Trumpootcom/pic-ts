@@ -9,7 +9,6 @@ import '../widgets/tsts_title_bar.dart';
 import '../widgets/folder_list_tile.dart';
 import '../services/pictsx_reader.dart';
 import '../util/ts_print.dart';
-import '../build_info.dart';
 
 class PicTemplateBrowserPage extends StatefulWidget {
   const PicTemplateBrowserPage({super.key});

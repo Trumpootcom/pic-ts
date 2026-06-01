@@ -10,7 +10,6 @@ import '../theme/app_colors.dart';
 import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
 import '../widgets/folder_list_tile.dart';
-import '../build_info.dart';
 import 'about_page.dart';
 bool _shownAbout = false;
 

@@ -1,3 +1,5 @@
+import 'history_delete_roster.dart';
+import 'history_insert_roster.dart';
 import 'history_set_document.dart';
 import 'history_set_roster.dart';
 
@@ -33,6 +35,12 @@ abstract class HistoryCommand {
 
       case HistorySetRoster.commandName:
         return HistorySetRoster.fromJson(json);
+
+      case HistoryInsertRoster.commandName:
+        return HistoryInsertRoster.fromJson(json);
+
+      case HistoryDeleteRoster.commandName:
+        return HistoryDeleteRoster.fromJson(json);
 
       default:
         throw Exception('Unknown history command: $cmd');

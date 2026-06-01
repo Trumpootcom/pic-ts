@@ -1,5 +1,7 @@
 import '../services/history_storage.dart';
 import 'history_command.dart';
+import 'history_delete_roster.dart';
+import 'history_insert_roster.dart';
 import 'history_set_document.dart';
 import 'history_set_roster.dart';
 
@@ -89,6 +91,51 @@ class HistoryManager {
     );
   }
 
+  Future<void> insertRosterRow({
+    required Map<String, dynamic> projectData,
+    required int index,
+    required Map<String, dynamic> row,
+  }) async {
+    final roster = List<Map<String, dynamic>>.from(
+      (projectData['roster'] as List<dynamic>? ?? []).map(
+        (e) => Map<String, dynamic>.from(e as Map),
+      ),
+    );
+    final insertIndex = index.clamp(0, roster.length).toInt();
+
+    await execute(
+      command: HistoryInsertRoster(
+        index: insertIndex,
+        displayNumber: roster.length + 1,
+        row: Map<String, dynamic>.from(row),
+      ),
+      projectData: projectData,
+    );
+  }
+
+  Future<void> deleteRosterRow({
+    required Map<String, dynamic> projectData,
+    required int index,
+  }) async {
+    final roster = List<Map<String, dynamic>>.from(
+      (projectData['roster'] as List<dynamic>? ?? []).map(
+        (e) => Map<String, dynamic>.from(e as Map),
+      ),
+    );
+
+    if (index < 0 || index >= roster.length) {
+      return;
+    }
+
+    await execute(
+      command: HistoryDeleteRoster(
+        index: index,
+        row: Map<String, dynamic>.from(roster[index]),
+      ),
+      projectData: projectData,
+    );
+  }
+
   Future<void> execute({
     required HistoryCommand command,
     required Map<String, dynamic> projectData,
@@ -103,8 +150,10 @@ class HistoryManager {
     _commands.add(command);
     _pointer = _commands.length;
 
+    projectData['historyPointer'] = _pointer;
+
     await storage.appendCommand(command);
-    await storage.savePointer(_pointer);
+    await storage.saveProjectData(projectData);
   }
 
   Future<void> undo(Map<String, dynamic> projectData) async {
@@ -117,7 +166,8 @@ class HistoryManager {
     command.undo(projectData);
     _pointer--;
 
-    await storage.savePointer(_pointer);
+    projectData['historyPointer'] = _pointer;
+    await storage.saveProjectData(projectData);
   }
 
   Future<void> redo(Map<String, dynamic> projectData) async {
@@ -130,7 +180,17 @@ class HistoryManager {
     command.apply(projectData);
     _pointer++;
 
-    await storage.savePointer(_pointer);
+    projectData['historyPointer'] = _pointer;
+    await storage.saveProjectData(projectData);
+  }
+
+  Future<void> clear(Map<String, dynamic> projectData) async {
+    _commands = [];
+    _pointer = 0;
+
+    projectData['historyPointer'] = _pointer;
+
+    await storage.saveCommands(_commands);
   }
 
   String? undoShortDescription({

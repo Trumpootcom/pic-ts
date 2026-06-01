@@ -7,20 +7,17 @@ import '../widgets/edit_document_page.dart';
 import '../widgets/edit_roster_page.dart';
 import 'photo_crop_page.dart';
 
-import '../build_info.dart';
 import '../rendering/template_pdf_exporter.dart';
 import '../widgets/template_preview_page.dart';
 import '../services/project_storage.dart';
 import '../services/template_loader.dart';
 import '../theme/app_colors.dart';
-import '../util/ts_print.dart';
 import '../widgets/tsts_title_bar.dart';
 import '../widgets/workspace_icon_button.dart';
 import '../widgets/workspace_filmstrip.dart';
 import '../widgets/workspace_page.dart';
 import '../models/workspace_carousel_item.dart';
 import '../services/roster_photo_service.dart';
-import "../pages/about_page.dart";
 import '../models/history_manager.dart';
 import '../services/history_storage.dart';
 import '../widgets/history_bar.dart';
@@ -101,6 +98,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Future<void> _saveProject() async {
+    await historyManager.clear(projectData);
+
     projectData['documentData'] = documentData;
     projectData['roster'] = roster;
 
@@ -111,12 +110,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     if (!mounted) return;
 
+    setState(() {});
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Project Saved')));
   }
 
-  void _addRosterRow() {
+  Future<void> _addRosterRow() async {
     final row = <String, dynamic>{};
 
     for (final field in rosterSchema) {
@@ -124,14 +125,37 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       row[key] = field['default'] ?? '';
     }
 
+    await historyManager.insertRosterRow(
+      projectData: projectData,
+      index: 0,
+      row: row,
+    );
+
+    if (!mounted) return;
+
     setState(() {
-      roster.add(row);
+      roster = List<Map<String, dynamic>>.from(
+        (projectData['roster'] as List<dynamic>).map(
+          (e) => Map<String, dynamic>.from(e as Map),
+        ),
+      );
     });
   }
 
-  void _deleteRosterRow(int index) {
+  Future<void> _deleteRosterRow(int index) async {
+    await historyManager.deleteRosterRow(
+      projectData: projectData,
+      index: index,
+    );
+
+    if (!mounted) return;
+
     setState(() {
-      roster.removeAt(index);
+      roster = List<Map<String, dynamic>>.from(
+        (projectData['roster'] as List<dynamic>).map(
+          (e) => Map<String, dynamic>.from(e as Map),
+        ),
+      );
     });
   }
 
@@ -184,11 +208,25 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     if (cropResult == null) return;
 
     defaultProfileRotationQuarterTurns = cropResult.rotationQuarterTurns;
+    final relativePath = p.relative(
+      cropResult.croppedImagePath,
+      from: widget.project.folderPath,
+    );
+
+    await historyManager.setRosterField(
+      projectData: projectData,
+      index: i,
+      key: 'profilePicture',
+      newValue: relativePath,
+    );
+
+    if (!mounted) return;
 
     setState(() {
-      roster[i]['profilePicture'] = p.relative(
-        cropResult.croppedImagePath,
-        from: widget.project.folderPath,
+      roster = List<Map<String, dynamic>>.from(
+        (projectData['roster'] as List<dynamic>).map(
+          (e) => Map<String, dynamic>.from(e as Map),
+        ),
       );
     });
   }
@@ -262,7 +300,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             children: [
               WorkspaceIconButton(
                 icon: Icons.person_add_alt_1_rounded,
-                onPressed: _addRosterRow,
+                onPressed: () => _addRosterRow(),
               ),
               WorkspaceIconButton(
                 icon: Icons.save_rounded,
@@ -276,8 +314,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             projectData: projectData,
             projectFolderPath: widget.project.folderPath,
             inputDecoration: _inputDecoration,
-            onAddRosterRow: _addRosterRow,
-            onDeleteRosterRow: _deleteRosterRow,
+            onAddRosterRow: () => _addRosterRow(),
+            onDeleteRosterRow: (index) => _deleteRosterRow(index),
             onReplacePhoto: _replacePhoto,
             onSetRosterField: (index, key, value) async {
               await historyManager.setRosterField(
