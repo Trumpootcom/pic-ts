@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'pages/project_browser_page.dart';
+import 'pages/project_workspace_page.dart';
 import 'services/pic_template_installer.dart';
 
 Future<void> main() async {
@@ -27,7 +27,7 @@ class PicTsApp extends StatelessWidget {
     return MaterialApp(
       title: 'Pic-ts',
       debugShowCheckedModeBanner: false,
-      home: const ProjectBrowserPage(),
+      home: const ProjectWorkspacePage(),
     );
   }
 }

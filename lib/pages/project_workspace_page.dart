@@ -28,9 +28,9 @@ int defaultProfileRotationQuarterTurns = 0;
 late HistoryManager historyManager;
 
 class ProjectWorkspacePage extends StatefulWidget {
-  final StoredProject project;
+  final StoredProject? project;
 
-  const ProjectWorkspacePage({super.key, required this.project});
+  const ProjectWorkspacePage({super.key, this.project});
 
   @override
   State<ProjectWorkspacePage> createState() => _ProjectWorkspacePageState();
@@ -38,10 +38,10 @@ class ProjectWorkspacePage extends StatefulWidget {
 
 class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   late Future<void> _loadFuture;
-  final PageController _pageController = PageController();
+  late final PageController _pageController;
 
-  int _currentPage = 0;
-  double _currentPagePosition = 0.0;
+  late int _currentPage;
+  late double _currentPagePosition;
 
   late Map<String, dynamic> projectData;
   late List<dynamic> documentSchema;
@@ -54,6 +54,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   @override
   void initState() {
     super.initState();
+    final initialPage = widget.project == null ? 0 : 2;
+
+    _currentPage = initialPage;
+    _currentPagePosition = initialPage.toDouble();
+    _pageController = PageController(initialPage: initialPage);
     _pageController.addListener(_handlePageScroll);
     _loadFuture = _loadProject();
   }
@@ -75,8 +80,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Future<void> _loadProject() async {
-    projectData = await ProjectStorage().openProject(widget.project);
     _projectsFuture = ProjectStorage().listProjects();
+
+    final project = widget.project;
+    if (project == null) {
+      return;
+    }
+
+    projectData = await ProjectStorage().openProject(project);
 
     documentSchema = projectData['documentSchema'] as List<dynamic>? ?? [];
     rosterSchema = projectData['rosterSchema'] as List<dynamic>? ?? [];
@@ -92,23 +103,26 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     );
 
     templates = await TemplateLoader().loadProjectTemplates(
-      projectFolderPath: widget.project.folderPath,
+      projectFolderPath: project.folderPath,
     );
     historyManager = HistoryManager(
-      storage: HistoryStorage(project: widget.project),
+      storage: HistoryStorage(project: project),
     );
 
     await historyManager.load();
   }
 
   Future<void> _saveProject() async {
+    final project = widget.project;
+    if (project == null) return;
+
     await historyManager.clear(projectData);
 
     projectData['documentData'] = documentData;
     projectData['roster'] = roster;
 
     await ProjectStorage().saveProject(
-      project: widget.project,
+      project: project,
       data: projectData,
     );
 
@@ -180,8 +194,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Future<void> _replacePhoto(int i) async {
+    final project = widget.project;
+    if (project == null) return;
+
     final preparedPhoto = await RosterPhotoService().pickAndPreparePhoto(
-      projectFolderPath: widget.project.folderPath,
+      projectFolderPath: project.folderPath,
     );
 
     if (preparedPhoto == null) return;
@@ -214,7 +231,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     defaultProfileRotationQuarterTurns = cropResult.rotationQuarterTurns;
     final relativePath = p.relative(
       cropResult.croppedImagePath,
-      from: widget.project.folderPath,
+      from: project.folderPath,
     );
 
     await historyManager.setRosterField(
@@ -236,6 +253,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Future<void> _exportTemplate(LoadedTemplate loadedTemplate) async {
+    final project = widget.project;
+    if (project == null) return;
+
     final document = Map<String, dynamic>.from(
       loadedTemplate.template.rawJson['document'] as Map? ?? {},
     );
@@ -250,7 +270,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       loadedTemplate: loadedTemplate,
       documentData: documentData,
       rosterRows: roster,
-      projectFolderPath: widget.project.folderPath,
+      projectFolderPath: project.folderPath,
       fileName: '${loadedTemplate.template.id}.pdf',
     );
   }
@@ -325,6 +345,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   List<WorkspaceCarouselItem> _buildCarouselItems() {
+    final project = widget.project;
+
     return [
       WorkspaceCarouselItem(
         title: 'Projects',
@@ -346,6 +368,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           child: _buildProjectsPage(),
         ),
       ),
+      if (project != null) ...[
       WorkspaceCarouselItem(
         title: 'Properties',
         thumbnail: Image.asset(
@@ -405,7 +428,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             roster: roster,
             rosterSchema: rosterSchema,
             projectData: projectData,
-            projectFolderPath: widget.project.folderPath,
+            projectFolderPath: project.folderPath,
             inputDecoration: _inputDecoration,
             onAddRosterRow: () => _addRosterRow(),
             onDeleteRosterRow: (index) => _deleteRosterRow(index),
@@ -454,10 +477,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               loadedTemplate: loadedTemplate,
               documentData: documentData,
               roster: roster,
-              projectFolderPath: widget.project.folderPath,
+              projectFolderPath: project.folderPath,
             ),
           ),
         ),
+      ],
     ];
   }
 
@@ -505,49 +529,50 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             );
           },
         ),
-        HistoryBar(
-          verbose: true,
-          canUndo: historyManager.canUndo,
-          canRedo: historyManager.canRedo,
-          undoText: historyManager.undoDescription(
-            documentSchema: documentSchema,
-            rosterSchema: rosterSchema,
+        if (widget.project != null)
+          HistoryBar(
+            verbose: true,
+            canUndo: historyManager.canUndo,
+            canRedo: historyManager.canRedo,
+            undoText: historyManager.undoDescription(
+              documentSchema: documentSchema,
+              rosterSchema: rosterSchema,
+            ),
+            redoText: historyManager.redoDescription(
+              documentSchema: documentSchema,
+              rosterSchema: rosterSchema,
+            ),
+            onUndo: () async {
+              await historyManager.undo(projectData);
+
+              setState(() {
+                documentData = Map<String, dynamic>.from(
+                  projectData['documentData'] as Map,
+                );
+
+                roster = List<Map<String, dynamic>>.from(
+                  (projectData['roster'] as List<dynamic>).map(
+                    (e) => Map<String, dynamic>.from(e as Map),
+                  ),
+                );
+              });
+            },
+            onRedo: () async {
+              await historyManager.redo(projectData);
+
+              setState(() {
+                documentData = Map<String, dynamic>.from(
+                  projectData['documentData'] as Map,
+                );
+
+                roster = List<Map<String, dynamic>>.from(
+                  (projectData['roster'] as List<dynamic>).map(
+                    (e) => Map<String, dynamic>.from(e as Map),
+                  ),
+                );
+              });
+            },
           ),
-          redoText: historyManager.redoDescription(
-            documentSchema: documentSchema,
-            rosterSchema: rosterSchema,
-          ),
-          onUndo: () async {
-            await historyManager.undo(projectData);
-
-            setState(() {
-              documentData = Map<String, dynamic>.from(
-                projectData['documentData'] as Map,
-              );
-
-              roster = List<Map<String, dynamic>>.from(
-                (projectData['roster'] as List<dynamic>).map(
-                  (e) => Map<String, dynamic>.from(e as Map),
-                ),
-              );
-            });
-          },
-          onRedo: () async {
-            await historyManager.redo(projectData);
-
-            setState(() {
-              documentData = Map<String, dynamic>.from(
-                projectData['documentData'] as Map,
-              );
-
-              roster = List<Map<String, dynamic>>.from(
-                (projectData['roster'] as List<dynamic>).map(
-                  (e) => Map<String, dynamic>.from(e as Map),
-                ),
-              );
-            });
-          },
-        ),
       ],
     );
   }
@@ -558,7 +583,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       backgroundColor: AppColors.medUnsat,
       appBar: TstsTitleBar(
         title: 'PIC Tool Suite',
-        subtitle: widget.project.name,
+        subtitle: widget.project?.name ?? 'Select Project',
       ),
       body: FutureBuilder<void>(
         future: _loadFuture,

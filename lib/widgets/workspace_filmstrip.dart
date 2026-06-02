@@ -51,6 +51,10 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
   void initState() {
     super.initState();
     //_scrollController.addListener(_handleFilmstripScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncScrollToPagePosition();
+    });
   }
 
   void _handleFilmstripScroll() {
