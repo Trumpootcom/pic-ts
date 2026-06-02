@@ -152,6 +152,7 @@ class _VerboseHistoryBar extends StatelessWidget {
                 reserveLeftCap: true,
                 reserveRightCap: false,
                 top: 1,
+                tooltipPrefix: 'UNDO',
                 text: canUndo ? (undoText ?? '') : '',
                 textAlign: TextAlign.left,
                 style: TextStyle(
@@ -167,6 +168,7 @@ class _VerboseHistoryBar extends StatelessWidget {
                 reserveLeftCap: false,
                 reserveRightCap: true,
                 bottom: 1,
+                tooltipPrefix: 'REDO',
                 text: canRedo ? (redoText ?? '') : '',
                 textAlign: TextAlign.right,
                 style: TextStyle(
@@ -183,6 +185,7 @@ class _VerboseHistoryBar extends StatelessWidget {
                 anchorRight: false,
                 icon: Icons.fast_rewind_rounded,
                 iconSize: _height * historyBarIconScale*1.33,
+                tooltip: 'Undo',
                 enabled: canUndo,
                 color: undoColor,
                 onTap: onUndo,
@@ -195,6 +198,7 @@ class _VerboseHistoryBar extends StatelessWidget {
                 anchorRight: true,
                 icon: Icons.fast_forward_rounded,
                 iconSize: _height * historyBarIconScale*1.33,
+                tooltip: 'Redo',
                 enabled: canRedo,
                 color: redoColor,
                 onTap: onRedo,
@@ -207,6 +211,7 @@ class _VerboseHistoryBar extends StatelessWidget {
                 anchorRight: true,
                 icon: Icons.save_rounded,
                 iconSize: _height * historyBarIconScale,
+                tooltip: 'Save Changes / Clear History',
                 enabled: onSave != null,
                 color: AppColors.textDark,
                 onTap: onSave,
@@ -434,6 +439,7 @@ class _CapAwareHistoryText extends StatefulWidget {
   final double rightInsetOffset;
   final double? top;
   final double? bottom;
+  final String? tooltipPrefix;
   final String text;
   final TextAlign textAlign;
   final TextStyle style;
@@ -450,6 +456,7 @@ class _CapAwareHistoryText extends StatefulWidget {
     this.rightInsetOffset = 0,
     this.top,
     this.bottom,
+    this.tooltipPrefix,
   });
 
   @override
@@ -533,12 +540,17 @@ class _CapAwareHistoryTextState extends State<_CapAwareHistoryText> {
           widget.rightInsetOffset,
       top: widget.top,
       bottom: widget.bottom,
-      child: Text(
-        widget.text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: widget.textAlign,
-        style: widget.style,
+      child: Tooltip(
+        message: widget.tooltipPrefix == null
+            ? widget.text
+            : '${widget.tooltipPrefix}: ${widget.text}',
+        child: Text(
+          widget.text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: widget.textAlign,
+          style: widget.style,
+        ),
       ),
     );
   }
@@ -552,6 +564,7 @@ class _CapHistoryButton extends StatefulWidget {
   final bool anchorRight;
   final IconData icon;
   final double iconSize;
+  final String tooltip;
   final bool enabled;
   final Color color;
   final VoidCallback? onTap;
@@ -564,6 +577,7 @@ class _CapHistoryButton extends StatefulWidget {
     required this.anchorRight,
     required this.icon,
     required this.iconSize,
+    required this.tooltip,
     required this.enabled,
     required this.color,
     required this.onTap,
@@ -650,6 +664,7 @@ class _CapHistoryButtonState extends State<_CapHistoryButton> {
       child: _VerboseHistoryButton(
         icon: widget.icon,
         iconSize: widget.iconSize,
+        tooltip: widget.tooltip,
         enabled: widget.enabled,
         color: widget.color,
         alignment: Alignment.center,
@@ -662,6 +677,7 @@ class _CapHistoryButtonState extends State<_CapHistoryButton> {
 class _VerboseHistoryButton extends StatelessWidget {
   final IconData icon;
   final double iconSize;
+  final String tooltip;
   final bool enabled;
   final Color color;
   final Alignment alignment;
@@ -670,6 +686,7 @@ class _VerboseHistoryButton extends StatelessWidget {
   const _VerboseHistoryButton({
     required this.icon,
     required this.iconSize,
+    required this.tooltip,
     required this.enabled,
     required this.color,
     required this.alignment,
@@ -678,16 +695,19 @@ class _VerboseHistoryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: enabled ? onTap : null,
-      child: Align(
-        alignment: alignment,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 3 * historyBarHeight / 24,
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? onTap : null,
+        child: Align(
+          alignment: alignment,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 3 * historyBarHeight / 24,
+            ),
+            child: Icon(icon, size: iconSize, color: color),
           ),
-          child: Icon(icon, size: iconSize, color: color),
         ),
       ),
     );

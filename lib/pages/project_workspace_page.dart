@@ -557,6 +557,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             children: [
               WorkspaceIconButton(
                 icon: Icons.person_add_alt_1_rounded,
+                tooltip: 'Add Roster',
                 onPressed: () => _addRosterRow(),
               ),
             ],

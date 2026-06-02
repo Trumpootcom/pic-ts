@@ -22,6 +22,12 @@ class AppColors {
   static const Color destructive =
       Color(0xFF9E3A3A);
 
+  static const Color goldSat =
+      Color(0xFFFFA500);
+
+  static const Color goldUnsat =
+      Color(0xFFD99821);
+
   static const Color textDark =
       Color(0xFF1E1E1E);
 

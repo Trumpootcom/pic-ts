@@ -73,6 +73,18 @@ class _EditDocumentPageState extends State<EditDocumentPage> {
 
     await widget.onSetDocumentField(key, controller.text);
   }
+  void _selectFieldText(String key) {
+    final controller = _controllers[key];
+
+    if (controller == null) {
+      return;
+    }
+
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.text.length,
+    );
+  }
 
   @override
   void dispose() {
@@ -96,20 +108,32 @@ class _EditDocumentPageState extends State<EditDocumentPage> {
         child: ListView(
           children: [
             for (final field in widget.documentSchema)
-              Padding(
-                padding: const EdgeInsets.only(top: 8, bottom: 4),
-                child: TextFormField(
-                  controller: _controllers[field['key'] as String],
-                  focusNode: _focusNodes[field['key'] as String],
-                  decoration: widget.inputDecoration(field['label'] as String),
-                  onFieldSubmitted: (_) {
-                    _commitField(field['key'] as String);
-                  },
-                ),
-              ),
+              _buildDocumentField(field),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildDocumentField(dynamic field) {
+    final key = field['key'] as String;
+    final label = field['label']?.toString() ?? key;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Tooltip(
+        message: 'Edit $label',
+        child: TextFormField(
+          controller: _controllers[key],
+          focusNode: _focusNodes[key],
+          decoration: widget.inputDecoration(label),
+          onTap: () => _selectFieldText(key),
+          onFieldSubmitted: (_) {
+            _commitField(key);
+          },
+        ),
+      ),
+    );
+  }
 }
+

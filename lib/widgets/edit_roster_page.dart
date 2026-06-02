@@ -130,6 +130,11 @@ class _EditRosterPageState extends State<EditRosterPage> {
     final previewWidth = previewHeight * previewAspect;
 
     final profilePicture = widget.roster[i]['profilePicture']?.toString();
+    final fullName = widget.roster[i]['fullName']?.toString().trim() ?? '';
+    final rosterLabel = 'Roster ${i + 1}';
+    final deleteTooltip = fullName.isEmpty
+        ? 'Delete $rosterLabel'
+        : 'Delete $rosterLabel $fullName';
 
     final imageWidget =
         profilePicture == null || profilePicture.startsWith('assets/')
@@ -160,15 +165,18 @@ class _EditRosterPageState extends State<EditRosterPage> {
         borderRadius: BorderRadius.circular(4),
         child: Row(
           children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => widget.onReplacePhoto(i),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  bottomLeft: Radius.circular(4),
+            Tooltip(
+              message: 'Select New Photo',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => widget.onReplacePhoto(i),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(4),
+                    bottomLeft: Radius.circular(4),
+                  ),
+                  child: imageWidget,
                 ),
-                child: imageWidget,
               ),
             ),
             Container(
@@ -177,19 +185,22 @@ class _EditRosterPageState extends State<EditRosterPage> {
               color: AppColors.darkUnsat,
             ),
             Expanded(
-              child: Container(
-                color: const Color.fromARGB(50, 255, 255, 255),
-                alignment: Alignment.centerLeft,
-                child: TextFormField(
-                  key: ValueKey('fullName_$i'),
-                  controller: _controllers[id],
-                  focusNode: _focusNodes[id],
-                  decoration: _rosterInputDecoration(),
-                  textCapitalization: TextCapitalization.words,
-                  onTap: () => _selectFieldText(i, 'fullName'),
-                  onFieldSubmitted: (_) {
-                    _commitField(i, 'fullName');
-                  },
+              child: Tooltip(
+                message: 'Edit Full Name',
+                child: Container(
+                  color: const Color.fromARGB(50, 255, 255, 255),
+                  alignment: Alignment.centerLeft,
+                  child: TextFormField(
+                    key: ValueKey('fullName_$i'),
+                    controller: _controllers[id],
+                    focusNode: _focusNodes[id],
+                    decoration: _rosterInputDecoration(),
+                    textCapitalization: TextCapitalization.words,
+                    onTap: () => _selectFieldText(i, 'fullName'),
+                    onFieldSubmitted: (_) {
+                      _commitField(i, 'fullName');
+                    },
+                  ),
                 ),
               ),
             ),
@@ -198,13 +209,19 @@ class _EditRosterPageState extends State<EditRosterPage> {
               height: previewHeight,
               color: AppColors.darkUnsat,
             ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 44, height: 44),
-              visualDensity: VisualDensity.compact,
-              color: AppColors.darkUnsat,
-              icon: const Icon(Icons.delete_forever),
-              onPressed: () => widget.onDeleteRosterRow(i),
+            Tooltip(
+              message: deleteTooltip,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 44,
+                  height: 44,
+                ),
+                visualDensity: VisualDensity.compact,
+                color: AppColors.darkUnsat,
+                icon: const Icon(Icons.delete_forever),
+                onPressed: () => widget.onDeleteRosterRow(i),
+              ),
             ),
           ],
         ),

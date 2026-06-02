@@ -52,20 +52,23 @@ class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap:
-                          onLogoTap ??
-                          () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const AboutPage(),
-                              ),
-                            );
-                          },
-                      child: Image.asset(
-                        'assets/backgrounds/trumpoot_titlebar_a.png',
-                        height: titleBarHt,
-                        fit: BoxFit.fitHeight,
+                    child: Tooltip(
+                      message: 'About',
+                      child: GestureDetector(
+                        onTap:
+                            onLogoTap ??
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const AboutPage(),
+                                ),
+                              );
+                            },
+                        child: Image.asset(
+                          'assets/backgrounds/trumpoot_titlebar_a.png',
+                          height: titleBarHt,
+                          fit: BoxFit.fitHeight,
+                        ),
                       ),
                     ),
                   ),

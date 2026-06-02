@@ -7,16 +7,19 @@ import '../theme/app_colors.dart';
 class WorkspaceIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
+  final String? tooltip;
 
   const WorkspaceIconButton({
     super.key,
     required this.icon,
     required this.onPressed,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
+      tooltip: tooltip,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
       visualDensity: VisualDensity.compact,
