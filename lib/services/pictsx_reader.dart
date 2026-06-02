@@ -51,18 +51,10 @@ class PictsxReader {
     final bytes = await pictsxFile.readAsBytes();
     final archive = ZipDecoder().decodeBytes(bytes);
 
-    for (final file in archive.files) {
-      final safeName = file.name.replaceAll('\\', '/');
-      final outPath = '${projectDir.path}/$safeName';
-      
-      if (file.isFile) {
-        final outFile = File(outPath);
-        await outFile.parent.create(recursive: true);
-        await outFile.writeAsBytes(file.content as List<int>, flush: true);
-      } else {
-        await Directory(outPath).create(recursive: true);
-      }
-    }
+    await _extractArchiveEntries(
+      archive: archive,
+      outputRootPath: projectDir.path,
+    );
 
     await _initializeProjectDataJson(
       projectDir: projectDir,
@@ -70,6 +62,36 @@ class PictsxReader {
       projectName: projectName,
     );
     return projectDir;
+  }
+
+  Future<void> importTemplatesToProject({
+    required File pictsxFile,
+    required String projectFolderPath,
+  }) async {
+    final bytes = await pictsxFile.readAsBytes();
+    final archive = ZipDecoder().decodeBytes(bytes);
+
+    var importedTemplateFile = false;
+
+    for (final file in archive.files) {
+      final safeName = file.name.replaceAll('\\', '/');
+
+      if (!safeName.startsWith('templates/')) {
+        continue;
+      }
+
+      importedTemplateFile = true;
+    }
+
+    if (!importedTemplateFile) {
+      throw Exception('No templates found in ${pictsxFile.path}');
+    }
+
+    await _extractArchiveEntries(
+      archive: archive,
+      outputRootPath: projectFolderPath,
+      pathPrefix: 'templates/',
+    );
   }
 
   Future<void> _initializeProjectDataJson({
@@ -123,5 +145,29 @@ class PictsxReader {
     await dataFile.writeAsString(
       const JsonEncoder.withIndent('  ').convert(dataJson),
     );
+  }
+
+  Future<void> _extractArchiveEntries({
+    required Archive archive,
+    required String outputRootPath,
+    String? pathPrefix,
+  }) async {
+    for (final file in archive.files) {
+      final safeName = file.name.replaceAll('\\', '/');
+
+      if (pathPrefix != null && !safeName.startsWith(pathPrefix)) {
+        continue;
+      }
+
+      final outPath = '$outputRootPath/$safeName';
+
+      if (file.isFile) {
+        final outFile = File(outPath);
+        await outFile.parent.create(recursive: true);
+        await outFile.writeAsBytes(file.content as List<int>, flush: true);
+      } else {
+        await Directory(outPath).create(recursive: true);
+      }
+    }
   }
 }

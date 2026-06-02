@@ -10,7 +10,7 @@
         "key": "photoTitle",
         "label": "Photo Title",
         "type": "text",
-        "default": "Class Photo"
+        "default": "Certified Nurse Assistant Class"
       },
 
       {
@@ -164,9 +164,10 @@
         "h": 0.5,
         "anchor": "topCenter",
         "align": "center",
-        "fontSize": 0.4,
+        "fontSize": 0.5,
         "fontFamily": "Times New Roman",
-        "color": "#275075"
+        "fontStyle": "bold",
+        "color": "#000000"
       },
 
       {
@@ -193,7 +194,7 @@
       {
         "type": "image",
         "source": "profilePicture",
-        "shape": "rect",
+        "shape": "oval",
         "x": 1.125,
         "y": 0.05,
         "w": 1.775,
@@ -217,12 +218,12 @@
         "type": "text",
         "source": "fullName",
         "x": 1.125,
-        "y": 2.6,
+        "y": 2.40,
         "w": 2,
         "h": 0.5,
         "anchor": "topCenter",
         "align": "center",
-        "fontSize": 0.25,
+        "fontSize": 0.22,
         "fontFamily": "Arial",
         "color": "#000000"
       }

@@ -21,6 +21,8 @@ import '../widgets/workspace_filmstrip.dart';
 import '../widgets/workspace_page.dart';
 import '../models/workspace_carousel_item.dart';
 import '../services/roster_photo_service.dart';
+import '../services/pic_template_installer.dart';
+import '../services/pictsx_reader.dart';
 import '../models/history_manager.dart';
 import '../services/history_storage.dart';
 import '../widgets/history_bar.dart';
@@ -356,6 +358,158 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     });
   }
 
+  Future<List<File>> _loadInstalledTemplateFiles() async {
+    final root = await PicTemplateInstaller().templatesRoot();
+
+    if (!await root.exists()) {
+      return [];
+    }
+
+    final files = root
+        .listSync()
+        .whereType<File>()
+        .where((file) => file.path.toLowerCase().endsWith('.pictsx'))
+        .toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+
+    return files;
+  }
+
+  String _templatePackName(File file) {
+    final name = file.path.split(Platform.pathSeparator).last;
+    return name.replaceAll(RegExp(r'\.pictsx$', caseSensitive: false), '');
+  }
+
+  Future<File?> _pickInstalledTemplatePack() async {
+    return showDialog<File>(
+      context: context,
+      builder: (dialogContext) {
+        return TstsDialog(
+          title: 'Add Templates',
+          actions: null,
+          child: SizedBox(
+            width: 420,
+            height: 360,
+            child: FutureBuilder<List<File>>(
+              future: _loadInstalledTemplateFiles(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.darkUnsat,
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textDark),
+                    ),
+                  );
+                }
+
+                final files = snapshot.data ?? [];
+
+                if (files.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No PIC templates found.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textDark),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  itemCount: files.length,
+                  separatorBuilder: (_, __) => Divider(
+                    color: AppColors.darkUnsat.withValues(alpha: 0.2),
+                    height: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final file = files[index];
+
+                    return ListTile(
+                      leading: Icon(
+                        Icons.folder_zip_rounded,
+                        color: AppColors.darkSat,
+                      ),
+                      title: Text(
+                        _templatePackName(file),
+                        style: TextStyle(color: AppColors.textDark),
+                      ),
+                      onTap: () => Navigator.of(dialogContext).pop(file),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _addTemplatesToProject() async {
+    final project = widget.project;
+    if (project == null) return;
+
+    final templatePack = await _pickInstalledTemplatePack();
+
+    if (templatePack == null) {
+      return;
+    }
+
+    try {
+      await PictsxReader().importTemplatesToProject(
+        pictsxFile: templatePack,
+        projectFolderPath: project.folderPath,
+      );
+
+      await ProjectStorage().refreshProjectSchema(
+        project: project,
+        projectData: projectData,
+      );
+
+      await ProjectStorage().saveProject(
+        project: project,
+        data: projectData,
+      );
+
+      templates = await TemplateLoader().loadProjectTemplates(
+        projectFolderPath: project.folderPath,
+      );
+
+      documentSchema = projectData['documentSchema'] as List<dynamic>? ?? [];
+      rosterSchema = projectData['rosterSchema'] as List<dynamic>? ?? [];
+      documentData = Map<String, dynamic>.from(
+        projectData['documentData'] as Map? ?? {},
+      );
+      roster = List<Map<String, dynamic>>.from(
+        (projectData['roster'] as List<dynamic>? ?? []).map(
+          (e) => Map<String, dynamic>.from(e as Map),
+        ),
+      );
+
+      if (!mounted) return;
+
+      setState(() {});
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Templates Added')));
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
   Future<void> _exportTemplate(LoadedTemplate loadedTemplate) async {
     final project = widget.project;
     if (project == null) return;
@@ -382,7 +536,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   Future<void> _createProject() async {
     final created = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => const PicTemplateBrowserPage(),
+        builder: (_) => PicTemplateBrowserPage(),
       ),
     );
 
@@ -527,6 +681,16 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         ),
         page: WorkspacePage(
           title: 'Properties',
+          actions: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              WorkspaceIconButton(
+                icon: Icons.library_add_rounded,
+                tooltip: 'Add Templates to Project',
+                onPressed: _addTemplatesToProject,
+              ),
+            ],
+          ),
           child: EditDocumentPage(
             documentSchema: documentSchema,
             documentData: documentData,

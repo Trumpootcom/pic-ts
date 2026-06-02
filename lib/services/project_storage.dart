@@ -74,14 +74,72 @@ class ProjectStorage {
 
     final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
 
+    await refreshProjectSchema(
+      project: project,
+      projectData: jsonMap,
+    );
+
+    await file.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(jsonMap),
+    );
+
+    return jsonMap;
+  }
+
+  Future<void> refreshProjectSchema({
+    required StoredProject project,
+    required Map<String, dynamic> projectData,
+  }) async {
+    final existingDocumentSchema = List<Map<String, dynamic>>.from(
+      (projectData['documentSchema'] as List<dynamic>? ?? []).map(
+        (e) => Map<String, dynamic>.from(e as Map),
+      ),
+    );
+    final existingRosterSchema = List<Map<String, dynamic>>.from(
+      (projectData['rosterSchema'] as List<dynamic>? ?? []).map(
+        (e) => Map<String, dynamic>.from(e as Map),
+      ),
+    );
+
     final schema = await ThemeSchemaBuilder().buildFromProjectDirectory(
       Directory(project.folderPath),
     );
+    final mergedDocumentSchema = _mergeSchemaFields(
+      existingFields: existingDocumentSchema,
+      discoveredFields: schema.documentFields,
+    );
+    final mergedRosterSchema = _mergeSchemaFields(
+      existingFields: existingRosterSchema,
+      discoveredFields: schema.rosterFields,
+    );
 
-    jsonMap['documentSchema'] = schema.documentFields;
-    jsonMap['rosterSchema'] = schema.rosterFields;
+    final documentData = Map<String, dynamic>.from(
+      projectData['documentData'] as Map? ?? {},
+    );
 
-    jsonMap['templateMetrics'] = {
+    for (final field in mergedDocumentSchema) {
+      final key = field['key'] as String;
+      documentData.putIfAbsent(key, () => field['default'] ?? '');
+    }
+
+    final rosterRows = List<Map<String, dynamic>>.from(
+      (projectData['roster'] as List<dynamic>? ?? []).map(
+        (e) => Map<String, dynamic>.from(e as Map),
+      ),
+    );
+
+    for (final row in rosterRows) {
+      for (final field in mergedRosterSchema) {
+        final key = field['key'] as String;
+        row.putIfAbsent(key, () => field['default'] ?? '');
+      }
+    }
+
+    projectData['documentSchema'] = mergedDocumentSchema;
+    projectData['rosterSchema'] = mergedRosterSchema;
+    projectData['documentData'] = documentData;
+    projectData['roster'] = rosterRows;
+    projectData['templateMetrics'] = {
       'profilePicturePreviewAspectRatio':
           schema.metrics.profilePicturePreviewAspectRatio,
       'profilePictureMaxRenderWidthPx':
@@ -92,12 +150,38 @@ class ProjectStorage {
           .map((e) => e.toJson())
           .toList(),
     };
+  }
 
-    await file.writeAsString(
-      const JsonEncoder.withIndent('  ').convert(jsonMap),
-    );
+  List<Map<String, dynamic>> _mergeSchemaFields({
+    required List<Map<String, dynamic>> existingFields,
+    required List<Map<String, dynamic>> discoveredFields,
+  }) {
+    final merged = <Map<String, dynamic>>[];
+    final seenKeys = <String>{};
 
-    return jsonMap;
+    for (final field in existingFields) {
+      final key = field['key'] as String?;
+
+      if (key == null || seenKeys.contains(key)) {
+        continue;
+      }
+
+      merged.add(field);
+      seenKeys.add(key);
+    }
+
+    for (final field in discoveredFields) {
+      final key = field['key'] as String?;
+
+      if (key == null || seenKeys.contains(key)) {
+        continue;
+      }
+
+      merged.add(field);
+      seenKeys.add(key);
+    }
+
+    return merged;
   }
 
   Future<void> saveProject({
