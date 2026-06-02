@@ -186,7 +186,7 @@ class _EditRosterPageState extends State<EditRosterPage> {
               constraints: const BoxConstraints.tightFor(width: 44, height: 44),
               visualDensity: VisualDensity.compact,
               color: AppColors.darkUnsat,
-              icon: const Icon(Icons.close),
+              icon: const Icon(Icons.delete_forever),
               onPressed: () => widget.onDeleteRosterRow(i),
             ),
           ],

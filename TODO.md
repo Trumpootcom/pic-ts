@@ -8,7 +8,7 @@
 * [ ] Add reusable document/template serialization classes
 * [ ] Add document metadata/version schema for future compatibility
 * [ ] Add embedded undo history support to the `.picts` document format
-* [x] Add ZIP-based project/document packaging system
+* [X] Add ZIP-based project/document packaging system
 
 ---
 
@@ -17,7 +17,7 @@
 * [ ] Add export/import/share workflow for templates
 * [ ] Add email/share/open integration for `.picts` files
 * [ ] Add photo template profile-picture placement variants by roster count
-* [x] Ensure templates initialize with empty `data/photos` and blank roster
+* [X] Ensure templates initialize with empty `data/photos` and blank roster
 
 ---
 
@@ -46,7 +46,7 @@
   * Alphabetical order
   * Graduation date
 * [ ] Add project auto-save/version backup system
-* [x] Add user-facing undo/redo history for document edits
+* [X] Add user-facing undo/redo history for document edits
 
 ---
 
@@ -54,11 +54,11 @@
 
 * [ ] Add visual crop-debug overlay/export mode
 * [ ] Add toggle to switch crop guide shape between rectangle and oval
-* [x] Add public/exported image gallery access outside app
-* [x] Define long-term storage structure for embedded photos/assets
-* [x] Finalize cropped-photo persistent storage location
-* [x] Verify crop save matches exact visual transform (zoom/pan/rotate)
-* [x] Decide between transformed-render save vs raw-source crop reconstruction
+* [X] Add public/exported image gallery access outside app
+* [X] Define long-term storage structure for embedded photos/assets
+* [X] Finalize cropped-photo persistent storage location
+* [X] Verify crop save matches exact visual transform (zoom/pan/rotate)
+* [X] Decide between transformed-render save vs raw-source crop reconstruction
 
 ---
 
@@ -68,9 +68,9 @@
 * [ ] Add vertical name gap setting below ovals
 * [ ] When adding a new roster entry, auto-scroll to the top so the new entry is immediately visible
 * [ ] Automatically alphabetize students by last name when adding them to the roster
-* [x] Update student paging arrows to increment by page size instead of 1
-* [x] Only show "STUDENTS" label when `maxRosterPage > 1`
-* [x] When adding a new roster entry, insert it at the beginning of the list
+* [X] Update student paging arrows to increment by page size instead of 1
+* [X] Only show "STUDENTS" label when `maxRosterPage > 1`
+* [X] When adding a new roster entry, insert it at the beginning of the list
 
 ---
 
@@ -78,8 +78,8 @@
 
 * [ ] Add PDF editable-field/template investigation
 * [ ] Choose clearer export icon for template preview pages
-* [x] Continue PDF optimization work to avoid duplicated assets
-* [x] Ensure PDF printing honors landscape orientation by default
+* [X] Continue PDF optimization work to avoid duplicated assets
+* [X] Ensure PDF printing honors landscape orientation by default
 
 ---
 
@@ -94,16 +94,17 @@
 ## Architecture / Refactor
 
 * [ ] Continue Flutter app file refactor from single-file architecture
-* [x] Extract remaining UI/widgets from `main.dart`
-* [x] Extract Projects carousel page into its own widget
-* [x] Remove legacy `ProjectBrowserPage` after project workflow migration
+* [X] Extract remaining UI/widgets from `main.dart`
+* [X] Extract Projects carousel page into its own widget
+* [X] Remove legacy `ProjectBrowserPage` after project workflow migration
 
 ---
 
 ## UI Chrome / Visual Design
 
 * [ ] Replace default Material dialog accent colors with TSTS theme colors
-* [x] Continue TSTS workspace/titlebar UI refactor
+* [X] Continue TSTS workspace/titlebar UI refactor
+* [X] Replace roster delete X buttons with `delete_forever` trash can icons
 
 ---
 
@@ -113,7 +114,6 @@
   * Document Data page
   * Roster Data page
   * Render / Preview page
-* [ ] Replace Projects filmstrip folder thumbnail with a custom project-list icon
 * [ ] Support circular page navigation
   * Last page wraps to first
   * First page wraps to last
@@ -122,13 +122,14 @@
 * [ ] Support dragging the filmstrip to navigate pages
 * [ ] Show partial adjacent pages during page transitions
 * [ ] Restyle bottom navigator with a black filmstrip outline
-* [x] Hide filmstrip when the workspace has only one page
-* [x] Create bottom-mounted filmstrip navigator
-* [x] Synchronize page carousel and filmstrip navigation
-* [x] Animate filmstrip movement when selecting pages
-* [x] Animate workspace pages in sync with filmstrip movement
-* [x] Use template preview thumbnails as filmstrip items
-* [x] Create Document icon for filmstrip
-* [x] Create Roster icon for filmstrip
-* [x] Keep action buttons in the top subtitle bar
-* [x] Reserve bottom area exclusively for navigation
+* [X] Replace Projects filmstrip folder thumbnail with a custom project-list icon
+* [X] Hide filmstrip when the workspace has only one page
+* [X] Create bottom-mounted filmstrip navigator
+* [X] Synchronize page carousel and filmstrip navigation
+* [X] Animate filmstrip movement when selecting pages
+* [X] Animate workspace pages in sync with filmstrip movement
+* [X] Use template preview thumbnails as filmstrip items
+* [X] Create Document icon for filmstrip
+* [X] Create Roster icon for filmstrip
+* [X] Keep action buttons in the top subtitle bar
+* [X] Reserve bottom area exclusively for navigation

@@ -162,6 +162,58 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   }
 
   Future<void> _deleteRosterRow(int index) async {
+    if (index < 0 || index >= roster.length) {
+      return;
+    }
+
+    final fullName = roster[index]['fullName']?.toString().trim() ?? '';
+    final rosterLabel = 'Roster ${index + 1}';
+    final message = fullName.isEmpty
+        ? 'Are you sure you want to delete $rosterLabel?'
+        : 'Are you sure you want to delete $rosterLabel $fullName?';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return TstsDialog(
+          title: 'Delete Roster',
+          actions: null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textDark),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('CANCEL'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9E3A3A),
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('DELETE'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || confirmed != true) return;
+
     await historyManager.deleteRosterRow(
       projectData: projectData,
       index: index,
