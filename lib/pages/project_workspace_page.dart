@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
+import '../widgets/folder_list_tile.dart';
 import '../widgets/edit_document_page.dart';
 import '../widgets/edit_roster_page.dart';
+import 'pic_template_browser_page.dart';
 import 'photo_crop_page.dart';
 
 import '../rendering/template_pdf_exporter.dart';
@@ -47,6 +49,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   late Map<String, dynamic> documentData;
   late List<Map<String, dynamic>> roster;
   late List<LoadedTemplate> templates;
+  late Future<List<StoredProject>> _projectsFuture;
 
   @override
   void initState() {
@@ -73,6 +76,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
   Future<void> _loadProject() async {
     projectData = await ProjectStorage().openProject(widget.project);
+    _projectsFuture = ProjectStorage().listProjects();
 
     documentSchema = projectData['documentSchema'] as List<dynamic>? ?? [];
     rosterSchema = projectData['rosterSchema'] as List<dynamic>? ?? [];
@@ -251,8 +255,97 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     );
   }
 
+  Future<void> _createProject() async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const PicTemplateBrowserPage(),
+      ),
+    );
+
+    if (!mounted || created != true) return;
+
+    setState(() {
+      _projectsFuture = ProjectStorage().listProjects();
+    });
+  }
+
+  Future<void> _openProject(StoredProject project) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProjectWorkspacePage(project: project),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _projectsFuture = ProjectStorage().listProjects();
+    });
+  }
+
+  Widget _buildProjectsPage() {
+    return FutureBuilder<List<StoredProject>>(
+      future: _projectsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return Center(
+            child: CircularProgressIndicator(color: AppColors.darkUnsat),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: TextStyle(color: AppColors.textDark),
+            ),
+          );
+        }
+
+        final projects = snapshot.data ?? [];
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            for (final project in projects)
+              FolderListTile(
+                title: project.name,
+                size: 64,
+                overlayIcon: Image.file(
+                  File(project.iconPath),
+                  fit: BoxFit.contain,
+                ),
+                isCreateTile: false,
+                onTap: () => _openProject(project),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   List<WorkspaceCarouselItem> _buildCarouselItems() {
     return [
+      WorkspaceCarouselItem(
+        title: 'Projects',
+        thumbnail: Icon(
+          Icons.folder_rounded,
+          color: AppColors.medSat,
+        ),
+        page: WorkspacePage(
+          title: 'Projects',
+          actions: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              WorkspaceIconButton(
+                icon: Icons.create_new_folder_rounded,
+                onPressed: _createProject,
+              ),
+            ],
+          ),
+          child: _buildProjectsPage(),
+        ),
+      ),
       WorkspaceCarouselItem(
         title: 'Properties',
         thumbnail: Image.asset(
