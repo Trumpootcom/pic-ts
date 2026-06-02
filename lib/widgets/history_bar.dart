@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 const double historyBarHeight = 20;
+const double historyBarTopGap = 8.0;
+const double historyBarBottomGap = 0.0;
+const double historyBarHorizontalGap = 8.0;
+const double historyBarIconScale = 0.5;
 
 class HistoryBar extends StatelessWidget {
   final bool canUndo;
@@ -11,6 +15,7 @@ class HistoryBar extends StatelessWidget {
   final String? redoText;
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
+  final VoidCallback? onSave;
   final bool verbose;
 
   const HistoryBar({
@@ -21,6 +26,7 @@ class HistoryBar extends StatelessWidget {
     required this.redoText,
     required this.onUndo,
     required this.onRedo,
+    this.onSave,
     this.verbose = false,
   });
 
@@ -34,38 +40,47 @@ class HistoryBar extends StatelessWidget {
         redoText: redoText,
         onUndo: onUndo,
         onRedo: onRedo,
+        onSave: onSave,
       );
     }
 
-    return Container(
-      height: historyBarHeight,
-      color: AppColors.lightUnsat,
-      child: Row(
-        children: [
-          Expanded(
-            child: _HistorySide(
-              icon: Icons.undo_rounded,
-              enabled: canUndo,
-              text: undoText,
-              onTap: onUndo,
-              reverse: false,
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: historyBarTopGap,
+        bottom: historyBarBottomGap,
+        left: historyBarHorizontalGap,
+        right: historyBarHorizontalGap,
+      ),
+      child: Container(
+        height: historyBarHeight,
+        color: AppColors.lightUnsat,
+        child: Row(
+          children: [
+            Expanded(
+              child: _HistorySide(
+                icon: Icons.undo_rounded,
+                enabled: canUndo,
+                text: undoText,
+                onTap: onUndo,
+                reverse: false,
+              ),
             ),
-          ),
-          Container(
-            width: 1,
-            height: 16,
-            color: AppColors.darkUnsat.withValues(alpha: 0.45),
-          ),
-          Expanded(
-            child: _HistorySide(
-              icon: Icons.redo_rounded,
-              enabled: canRedo,
-              text: redoText,
-              onTap: onRedo,
-              reverse: true,
+            Container(
+              width: 1,
+              height: 16,
+              color: AppColors.medUnsat,
             ),
-          ),
-        ],
+            Expanded(
+              child: _HistorySide(
+                icon: Icons.redo_rounded,
+                enabled: canRedo,
+                text: redoText,
+                onTap: onRedo,
+                reverse: true,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -80,6 +95,7 @@ class _VerboseHistoryBar extends StatelessWidget {
   final String? redoText;
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
+  final VoidCallback? onSave;
 
   const _VerboseHistoryBar({
     required this.canUndo,
@@ -88,10 +104,12 @@ class _VerboseHistoryBar extends StatelessWidget {
     required this.redoText,
     required this.onUndo,
     required this.onRedo,
+    required this.onSave,
   });
 
   @override
   Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(historyBarHeight);
     final undoColor = canUndo
         ? AppColors.textDark
         : AppColors.textDark.withValues(alpha: 0.28);
@@ -99,116 +117,241 @@ class _VerboseHistoryBar extends StatelessWidget {
         ? AppColors.textDark
         : AppColors.textDark.withValues(alpha: 0.28);
 
-    return Container(
-      height: _height,
-      color: AppColors.darkUnsat,
-      child: Stack(
-        children: [
-          const Positioned.fill(child: _HistoryBarBackground(height: _height)),
-          Positioned(
-            left: _height * 1.1,
-            right: _height * 1.1,
-            top: 1,
-            child: Text(
-              canUndo ? (undoText ?? '') : '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.left,
-              style: TextStyle(
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: historyBarTopGap,
+        bottom: historyBarBottomGap,
+        left: historyBarHorizontalGap,
+        right: historyBarHorizontalGap,
+      ),
+      child: Container(
+        height: _height,
+        decoration: BoxDecoration(
+          color: AppColors.medUnsat.withAlpha(120),
+          borderRadius: borderRadius,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.darkUnsat.withAlpha(120),
+              blurRadius: 2,
+              spreadRadius: 2,
+              offset: const Offset(0, 0.75),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: Stack(
+            children: [
+              const Positioned.fill(
+                child: _HistoryBarBackground(height: _height),
+              ),
+              _CapAwareHistoryText(
+                assetPath: _HistoryBarBackground._leftAssetPath,
+                barHeight: _height,
+                leftInsetOffset: -historyBarHeight,
+                reserveLeftCap: true,
+                reserveRightCap: false,
+                top: 1,
+                text: canUndo ? (undoText ?? '') : '',
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  color: undoColor,
+                  fontSize: _height / 4,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              _CapAwareHistoryText(
+                assetPath: _HistoryBarBackground._rightAssetPath,
+                barHeight: _height,
+                rightInsetOffset: -historyBarHeight,
+                reserveLeftCap: false,
+                reserveRightCap: true,
+                bottom: 1,
+                text: canRedo ? (redoText ?? '') : '',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: redoColor,
+                  fontSize: _height / 4,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              _CapHistoryButton(
+                assetPath: _HistoryBarBackground._leftAssetPath,
+                centerX: 50,
+                centerY: 50,
+                barHeight: _height,
+                anchorRight: false,
+                icon: Icons.fast_rewind_rounded,
+                iconSize: _height * historyBarIconScale*1.33,
+                enabled: canUndo,
                 color: undoColor,
-                fontSize: _height/4,
-                fontWeight: FontWeight.w400,
+                onTap: onUndo,
               ),
-            ),
-          ),
-          Positioned(
-            left: _height * 1.1,
-            right: _height * 1.1,
-            bottom: 1,
-            child: Text(
-              canRedo ? (redoText ?? '') : '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-              style: TextStyle(
+              _CapHistoryButton(
+                assetPath: _HistoryBarBackground._rightAssetPath,
+                centerX: 96,
+                centerY: 50,
+                barHeight: _height,
+                anchorRight: true,
+                icon: Icons.fast_forward_rounded,
+                iconSize: _height * historyBarIconScale*1.33,
+                enabled: canRedo,
                 color: redoColor,
-                fontSize: _height/4,
-                fontWeight: FontWeight.w400,
+                onTap: onRedo,
               ),
-            ),
+              _CapHistoryButton(
+                assetPath: _HistoryBarBackground._rightAssetPath,
+                centerX: 156,
+                centerY: 50,
+                barHeight: _height,
+                anchorRight: true,
+                icon: Icons.save_rounded,
+                iconSize: _height * historyBarIconScale,
+                enabled: onSave != null,
+                color: AppColors.textDark,
+                onTap: onSave,
+              ),
+            ],
           ),
-          Positioned(
-            left: 0,
-            top: 0,
-            width: _height * 1,
-            height: _height,
-            child: _VerboseHistoryButton(
-              icon: Icons.fast_rewind_rounded,
-              iconSize: _height * 0.8,
-              enabled: canUndo,
-              color: undoColor,
-              alignment: Alignment.center,
-              onTap: onUndo,
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 0,
-            width: _height * 1,
-            height: _height*1,
-            child: _VerboseHistoryButton(
-              icon: Icons.fast_forward_rounded,
-              iconSize: _height * 0.8,
-              enabled: canRedo,
-              color: redoColor,
-              alignment: Alignment.centerRight,
-              onTap: onRedo,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _HistoryBarBackground extends StatelessWidget {
-  static const double _capSourceWidth = 140;
-  static const double _sourceHeight = 100;
+class _HistoryBarBackground extends StatefulWidget {
+  static const String _leftAssetPath =
+      'assets/backgrounds/trumpoot_histbar_l.png';
+  static const String _middleAssetPath =
+      'assets/backgrounds/trumpoot_histbar_m.png';
+  static const String _rightAssetPath =
+      'assets/backgrounds/trumpoot_histbar_r.png';
+  static const double _saturation = 0.80;
 
   final double height;
 
   const _HistoryBarBackground({required this.height});
 
   @override
+  State<_HistoryBarBackground> createState() => _HistoryBarBackgroundState();
+}
+
+class _HistoryBarBackgroundState extends State<_HistoryBarBackground> {
+  ImageStream? _leftCapImageStream;
+  ImageStream? _rightCapImageStream;
+  ImageStreamListener? _leftCapImageListener;
+  ImageStreamListener? _rightCapImageListener;
+  double? _leftCapAspectRatio;
+  double? _rightCapAspectRatio;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolveCapDimensions(
+      assetPath: _HistoryBarBackground._leftAssetPath,
+      currentStream: _leftCapImageStream,
+      onStreamChanged: (imageStream) => _leftCapImageStream = imageStream,
+      currentListener: _leftCapImageListener,
+      onListenerChanged: (imageListener) {
+        _leftCapImageListener = imageListener;
+      },
+      onAspectRatioChanged: (aspectRatio) {
+        _leftCapAspectRatio = aspectRatio;
+      },
+    );
+    _resolveCapDimensions(
+      assetPath: _HistoryBarBackground._rightAssetPath,
+      currentStream: _rightCapImageStream,
+      onStreamChanged: (imageStream) => _rightCapImageStream = imageStream,
+      currentListener: _rightCapImageListener,
+      onListenerChanged: (imageListener) {
+        _rightCapImageListener = imageListener;
+      },
+      onAspectRatioChanged: (aspectRatio) {
+        _rightCapAspectRatio = aspectRatio;
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _removeCapImageListener(_leftCapImageStream, _leftCapImageListener);
+    _removeCapImageListener(_rightCapImageStream, _rightCapImageListener);
+    super.dispose();
+  }
+
+  void _resolveCapDimensions({
+    required String assetPath,
+    required ImageStream? currentStream,
+    required ValueChanged<ImageStream?> onStreamChanged,
+    required ImageStreamListener? currentListener,
+    required ValueChanged<ImageStreamListener?> onListenerChanged,
+    required ValueChanged<double?> onAspectRatioChanged,
+  }) {
+    final asset = AssetImage(assetPath);
+    final imageStream = asset.resolve(createLocalImageConfiguration(context));
+
+    if (currentStream?.key == imageStream.key) {
+      return;
+    }
+
+    _removeCapImageListener(currentStream, currentListener);
+
+    onStreamChanged(imageStream);
+    final imageListener = ImageStreamListener((imageInfo, synchronousCall) {
+      if (!mounted) return;
+
+      final width = imageInfo.image.width.toDouble();
+      final height = imageInfo.image.height.toDouble();
+
+      setState(() {
+        onAspectRatioChanged(height == 0 ? null : width / height);
+      });
+    });
+
+    onListenerChanged(imageListener);
+    imageStream.addListener(imageListener);
+  }
+
+  void _removeCapImageListener(
+    ImageStream? imageStream,
+    ImageStreamListener? imageListener,
+  ) {
+    if (imageStream != null && imageListener != null) {
+      imageStream.removeListener(imageListener);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final capWidth = height * _capSourceWidth / _sourceHeight;
-    final capOverlapWidth = capWidth.floorToDouble();
+    final leftCapWidth = widget.height * (_leftCapAspectRatio ?? 0);
+    final rightCapWidth = widget.height * (_rightCapAspectRatio ?? 0);
+    final leftCapOverlapWidth = leftCapWidth.floorToDouble();
+    final rightCapOverlapWidth = rightCapWidth.floorToDouble();
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final middleWidth =
-            constraints.maxWidth - capOverlapWidth - capOverlapWidth;
-
         return Stack(
           fit: StackFit.expand,
           children: [
-            Center(
-              child: SizedBox(
-                width: middleWidth.clamp(0, constraints.maxWidth),
-                height: height,
-                child: Image.asset(
-                  'assets/backgrounds/trumpoot_histbar_m.png',
-                  fit: BoxFit.fill,
-                ),
+            Positioned(
+              left: leftCapOverlapWidth,
+              right: rightCapOverlapWidth,
+              top: 0,
+              bottom: 0,
+              child: _SaturationFilteredImage(
+                assetPath: _HistoryBarBackground._middleAssetPath,
+                saturation: _HistoryBarBackground._saturation,
               ),
             ),
             Align(
               alignment: Alignment.centerLeft,
               child: SizedBox(
-                width: capWidth,
-                height: height,
-                child: Image.asset(
-                  'assets/backgrounds/trumpoot_histbar_l.png',
+                width: leftCapWidth,
+                height: widget.height,
+                child: _SaturationFilteredImage(
+                  assetPath: _HistoryBarBackground._leftAssetPath,
+                  saturation: _HistoryBarBackground._saturation,
                   fit: BoxFit.fill,
                 ),
               ),
@@ -216,10 +359,11 @@ class _HistoryBarBackground extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: SizedBox(
-                width: capWidth,
-                height: height,
-                child: Image.asset(
-                  'assets/backgrounds/trumpoot_histbar_r.png',
+                width: rightCapWidth,
+                height: widget.height,
+                child: _SaturationFilteredImage(
+                  assetPath: _HistoryBarBackground._rightAssetPath,
+                  saturation: _HistoryBarBackground._saturation,
                   fit: BoxFit.fill,
                 ),
               ),
@@ -227,6 +371,290 @@ class _HistoryBarBackground extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _SaturationFilteredImage extends StatelessWidget {
+  final String assetPath;
+  final double saturation;
+  final BoxFit fit;
+
+  const _SaturationFilteredImage({
+    required this.assetPath,
+    required this.saturation,
+    this.fit = BoxFit.fill,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ColorFiltered(
+      colorFilter: ColorFilter.matrix(_saturationMatrix(saturation)),
+      child: Image.asset(assetPath, fit: fit),
+    );
+  }
+
+  List<double> _saturationMatrix(double saturation) {
+    const redLuminance = 0.2126;
+    const greenLuminance = 0.7152;
+    const blueLuminance = 0.0722;
+    final inverseSaturation = 1 - saturation;
+
+    return [
+      redLuminance * inverseSaturation + saturation,
+      greenLuminance * inverseSaturation,
+      blueLuminance * inverseSaturation,
+      0,
+      0,
+      redLuminance * inverseSaturation,
+      greenLuminance * inverseSaturation + saturation,
+      blueLuminance * inverseSaturation,
+      0,
+      0,
+      redLuminance * inverseSaturation,
+      greenLuminance * inverseSaturation,
+      blueLuminance * inverseSaturation + saturation,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+}
+
+class _CapAwareHistoryText extends StatefulWidget {
+  final String assetPath;
+  final double barHeight;
+  final bool reserveLeftCap;
+  final bool reserveRightCap;
+  final double leftInsetOffset;
+  final double rightInsetOffset;
+  final double? top;
+  final double? bottom;
+  final String text;
+  final TextAlign textAlign;
+  final TextStyle style;
+
+  const _CapAwareHistoryText({
+    required this.assetPath,
+    required this.barHeight,
+    required this.reserveLeftCap,
+    required this.reserveRightCap,
+    required this.text,
+    required this.textAlign,
+    required this.style,
+    this.leftInsetOffset = 0,
+    this.rightInsetOffset = 0,
+    this.top,
+    this.bottom,
+  });
+
+  @override
+  State<_CapAwareHistoryText> createState() => _CapAwareHistoryTextState();
+}
+
+class _CapAwareHistoryTextState extends State<_CapAwareHistoryText> {
+  ImageStream? _imageStream;
+  ImageStreamListener? _imageListener;
+  double? _aspectRatio;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolveDimensions();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CapAwareHistoryText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.assetPath != widget.assetPath) {
+      _resolveDimensions();
+    }
+  }
+
+  @override
+  void dispose() {
+    _removeImageListener();
+    super.dispose();
+  }
+
+  void _resolveDimensions() {
+    final asset = AssetImage(widget.assetPath);
+    final imageStream = asset.resolve(createLocalImageConfiguration(context));
+
+    if (_imageStream?.key == imageStream.key) {
+      return;
+    }
+
+    _removeImageListener();
+
+    _imageStream = imageStream;
+    _imageListener = ImageStreamListener((imageInfo, synchronousCall) {
+      if (!mounted) return;
+
+      final width = imageInfo.image.width.toDouble();
+      final height = imageInfo.image.height.toDouble();
+
+      setState(() {
+        _aspectRatio = height == 0 ? null : width / height;
+      });
+    });
+
+    imageStream.addListener(_imageListener!);
+  }
+
+  void _removeImageListener() {
+    final imageStream = _imageStream;
+    final imageListener = _imageListener;
+
+    if (imageStream != null && imageListener != null) {
+      imageStream.removeListener(imageListener);
+    }
+
+    _imageStream = null;
+    _imageListener = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fallbackInset = widget.barHeight * 1.1;
+    final capInset = widget.barHeight * (_aspectRatio ?? 1.1);
+
+    return Positioned(
+      left:
+          (widget.reserveLeftCap ? capInset : fallbackInset) +
+          widget.leftInsetOffset,
+      right:
+          (widget.reserveRightCap ? capInset : fallbackInset) +
+          widget.rightInsetOffset,
+      top: widget.top,
+      bottom: widget.bottom,
+      child: Text(
+        widget.text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: widget.textAlign,
+        style: widget.style,
+      ),
+    );
+  }
+}
+
+class _CapHistoryButton extends StatefulWidget {
+  final String assetPath;
+  final double centerX;
+  final double centerY;
+  final double barHeight;
+  final bool anchorRight;
+  final IconData icon;
+  final double iconSize;
+  final bool enabled;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _CapHistoryButton({
+    required this.assetPath,
+    required this.centerX,
+    required this.centerY,
+    required this.barHeight,
+    required this.anchorRight,
+    required this.icon,
+    required this.iconSize,
+    required this.enabled,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_CapHistoryButton> createState() => _CapHistoryButtonState();
+}
+
+class _CapHistoryButtonState extends State<_CapHistoryButton> {
+  ImageStream? _imageStream;
+  ImageStreamListener? _imageListener;
+  Size? _sourceSize;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolveDimensions();
+  }
+
+  @override
+  void dispose() {
+    _removeImageListener();
+    super.dispose();
+  }
+
+  void _resolveDimensions() {
+    final asset = AssetImage(widget.assetPath);
+    final imageStream = asset.resolve(createLocalImageConfiguration(context));
+
+    if (_imageStream?.key == imageStream.key) {
+      return;
+    }
+
+    _removeImageListener();
+
+    _imageStream = imageStream;
+    _imageListener = ImageStreamListener((imageInfo, synchronousCall) {
+      if (!mounted) return;
+
+      setState(() {
+        _sourceSize = Size(
+          imageInfo.image.width.toDouble(),
+          imageInfo.image.height.toDouble(),
+        );
+      });
+    });
+
+    imageStream.addListener(_imageListener!);
+  }
+
+  void _removeImageListener() {
+    final imageStream = _imageStream;
+    final imageListener = _imageListener;
+
+    if (imageStream != null && imageListener != null) {
+      imageStream.removeListener(imageListener);
+    }
+
+    _imageStream = null;
+    _imageListener = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sourceSize = _sourceSize;
+
+    if (sourceSize == null || sourceSize.height == 0) {
+      return const SizedBox.shrink();
+    }
+
+    final scale = widget.barHeight / sourceSize.height;
+    final capWidth = sourceSize.width * scale;
+    final centerX = widget.centerX * scale;
+    final centerY = widget.centerY * scale;
+    final tapSize = widget.iconSize * 1.4;
+
+    return Positioned(
+      left: widget.anchorRight ? null : centerX - tapSize / 2,
+      right: widget.anchorRight ? capWidth - centerX - tapSize / 2 : null,
+      top: centerY - tapSize / 2,
+      width: tapSize,
+      height: tapSize,
+      child: _VerboseHistoryButton(
+        icon: widget.icon,
+        iconSize: widget.iconSize,
+        enabled: widget.enabled,
+        color: widget.color,
+        alignment: Alignment.center,
+        onTap: widget.onTap,
+      ),
     );
   }
 }

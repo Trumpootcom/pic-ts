@@ -117,6 +117,48 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     final project = widget.project;
     if (project == null) return;
 
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return TstsDialog(
+          title: 'Save Project',
+          actions: null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Save Project and Discard UNDO/REDO Edits?',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textDark),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('CANCEL'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.destructive,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('SAVE'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || confirmed != true) return;
+
     await historyManager.clear(projectData);
 
     projectData['documentData'] = documentData;
@@ -638,51 +680,58 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               );
             },
           ),
-        if (widget.project != null)
-          HistoryBar(
-            verbose: true,
-            canUndo: historyManager.canUndo,
-            canRedo: historyManager.canRedo,
-            undoText: historyManager.undoDescription(
-              documentSchema: documentSchema,
-              rosterSchema: rosterSchema,
-            ),
-            redoText: historyManager.redoDescription(
-              documentSchema: documentSchema,
-              rosterSchema: rosterSchema,
-            ),
-            onUndo: () async {
-              await historyManager.undo(projectData);
-
-              setState(() {
-                documentData = Map<String, dynamic>.from(
-                  projectData['documentData'] as Map,
-                );
-
-                roster = List<Map<String, dynamic>>.from(
-                  (projectData['roster'] as List<dynamic>).map(
-                    (e) => Map<String, dynamic>.from(e as Map),
-                  ),
-                );
-              });
-            },
-            onRedo: () async {
-              await historyManager.redo(projectData);
-
-              setState(() {
-                documentData = Map<String, dynamic>.from(
-                  projectData['documentData'] as Map,
-                );
-
-                roster = List<Map<String, dynamic>>.from(
-                  (projectData['roster'] as List<dynamic>).map(
-                    (e) => Map<String, dynamic>.from(e as Map),
-                  ),
-                );
-              });
-            },
-          ),
       ],
+    );
+  }
+
+  Widget _buildHistoryBar() {
+    if (widget.project == null) {
+      return const SizedBox.shrink();
+    }
+
+    return HistoryBar(
+      verbose: true,
+      canUndo: historyManager.canUndo,
+      canRedo: historyManager.canRedo,
+      undoText: historyManager.undoDescription(
+        documentSchema: documentSchema,
+        rosterSchema: rosterSchema,
+      ),
+      redoText: historyManager.redoDescription(
+        documentSchema: documentSchema,
+        rosterSchema: rosterSchema,
+      ),
+      onUndo: () async {
+        await historyManager.undo(projectData);
+
+        setState(() {
+          documentData = Map<String, dynamic>.from(
+            projectData['documentData'] as Map,
+          );
+
+          roster = List<Map<String, dynamic>>.from(
+            (projectData['roster'] as List<dynamic>).map(
+              (e) => Map<String, dynamic>.from(e as Map),
+            ),
+          );
+        });
+      },
+      onRedo: () async {
+        await historyManager.redo(projectData);
+
+        setState(() {
+          documentData = Map<String, dynamic>.from(
+            projectData['documentData'] as Map,
+          );
+
+          roster = List<Map<String, dynamic>>.from(
+            (projectData['roster'] as List<dynamic>).map(
+              (e) => Map<String, dynamic>.from(e as Map),
+            ),
+          );
+        });
+      },
+      onSave: _saveProject,
     );
   }
 
@@ -711,7 +760,15 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               ),
             );
           }
-          return SafeArea(top: false, child: _buildContentPages());
+          return SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                _buildHistoryBar(),
+                Expanded(child: _buildContentPages()),
+              ],
+            ),
+          );
         },
       ),
     );
