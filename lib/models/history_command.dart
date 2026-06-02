@@ -60,6 +60,21 @@ String historyFieldLabel({required List<dynamic> schema, required String key}) {
   return key;
 }
 
+dynamic historyFieldDefault({
+  required List<dynamic> schema,
+  required String key,
+}) {
+  for (final field in schema) {
+    if (field is! Map) continue;
+
+    if (field['key'] == key) {
+      return field['default'];
+    }
+  }
+
+  return null;
+}
+
 String historyValueText(dynamic value) {
   if (value == null) return 'blank';
   final text = value.toString();

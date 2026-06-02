@@ -54,7 +54,13 @@ class HistoryDeleteRoster extends HistoryCommand {
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
   }) {
-    return 'Delete $_rosterLabel';
+    final fullName = _meaningfulFullName(rosterSchema);
+
+    if (fullName == null) {
+      return 'Delete $_rosterLabel';
+    }
+
+    return 'Delete $_rosterLabel: $fullName';
   }
 
   @override
@@ -62,13 +68,27 @@ class HistoryDeleteRoster extends HistoryCommand {
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
   }) {
-    final fullName = row['fullName']?.toString().trim() ?? '';
+    final fullName = _meaningfulFullName(rosterSchema);
 
-    if (fullName.isEmpty) {
+    if (fullName == null) {
       return 'Restore $_rosterLabel';
     }
 
     return 'Restore $_rosterLabel: $fullName';
+  }
+
+  String? _meaningfulFullName(List<dynamic> rosterSchema) {
+    final fullName = row['fullName']?.toString().trim() ?? '';
+    final defaultFullName = historyFieldDefault(
+      schema: rosterSchema,
+      key: 'fullName',
+    )?.toString().trim();
+
+    if (fullName.isEmpty || fullName == defaultFullName) {
+      return null;
+    }
+
+    return fullName;
   }
 
   @override
