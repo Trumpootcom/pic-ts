@@ -23,11 +23,9 @@ class TemplatePdfExporter {
 
     final document = Map<String, dynamic>.from(json['document'] as Map? ?? {});
     final roster = Map<String, dynamic>.from(json['roster'] as Map? ?? {});
-    final placementVariant = _resolvePlacementVariant(document);
 
     final documentElements = document['elements'] as List<dynamic>? ?? [];
     final rosterElements = roster['elements'] as List<dynamic>? ?? [];
-    final slots = placementVariant['slots'] as List<dynamic>? ?? [];
 
     final widthIn = (document['width'] ?? 11).toDouble();
     final heightIn = (document['height'] ?? 8.5).toDouble();
@@ -51,6 +49,17 @@ class TemplatePdfExporter {
 
     for (int pageStart = 0; pageStart < rosterCount; pageStart += pageSize) {
       final pageWidgets = <pw.Widget>[];
+      final pageRosterCount = _pageRosterCount(
+        maxRosterPerPage: maxRosterPerPage,
+        pageStart: pageStart,
+        pageSize: pageSize,
+        rosterRows: rosterRows,
+      );
+      final placementVariant = _resolvePlacementVariant(
+        document: document,
+        rosterCount: pageRosterCount,
+      );
+      final slots = placementVariant['slots'] as List<dynamic>? ?? [];
 
       tsPrint('ADDING DOCUMENT ELEMENTS TO PAGE: ${pageStart}');
 
@@ -70,7 +79,7 @@ class TemplatePdfExporter {
       }
 
       tsPrint('ADDING ROSTER ELEMENTS TO PAGE: ${pageStart}');
-      for (int i = 0; i < slots.length && i < maxRosterPerPage; i++) {
+      for (int i = 0; i < slots.length && i < pageRosterCount; i++) {
         final rosterIndex = pageStart + i;
 
         if (rosterIndex >= rosterRows.length) {
@@ -312,12 +321,37 @@ class TemplatePdfExporter {
     return pw.BoxFit.fill;
   }
 
-  Map<String, dynamic> _resolvePlacementVariant(Map<String, dynamic> document) {
+  int _pageRosterCount({
+    required int maxRosterPerPage,
+    required int pageStart,
+    required int pageSize,
+    required List<Map<String, dynamic>> rosterRows,
+  }) {
+    if (maxRosterPerPage <= 0) {
+      return 0;
+    }
+
+    final remainingRows = rosterRows.length - pageStart;
+    if (remainingRows <= 0) {
+      return 0;
+    }
+
+    return remainingRows < pageSize ? remainingRows : pageSize;
+  }
+
+  Map<String, dynamic> _resolvePlacementVariant({
+    required Map<String, dynamic> document,
+    required int rosterCount,
+  }) {
     final variants = Map<String, dynamic>.from(
       document['placementVariants'] as Map? ?? {},
     );
 
-    return Map<String, dynamic>.from(variants['default'] as Map? ?? {});
+    return Map<String, dynamic>.from(
+      variants[rosterCount.toString()] as Map? ??
+          variants['default'] as Map? ??
+          {},
+    );
   }
 
   pw.Widget _applyImageShape({

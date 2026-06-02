@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -26,11 +27,8 @@ class TemplatePreview extends StatelessWidget {
 
     final document = Map<String, dynamic>.from(json['document'] as Map? ?? {});
     final roster = Map<String, dynamic>.from(json['roster'] as Map? ?? {});
-    final placementVariant = _resolvePlacementVariant(document);
-
     final documentElements = document['elements'] as List<dynamic>? ?? [];
     final rosterElements = roster['elements'] as List<dynamic>? ?? [];
-    final slots = placementVariant['slots'] as List<dynamic>? ?? [];
 
     final widthIn = (document['width'] ?? 11).toDouble();
     final heightIn = (document['height'] ?? 8.5).toDouble();
@@ -39,6 +37,16 @@ class TemplatePreview extends StatelessWidget {
     final rosterHeightIn = (roster['height'] ?? heightIn).toDouble();
 
     final maxRosterPerPage = document['maxRosterPerPage'] as int? ?? 1;
+    final pageRosterCount = _pageRosterCount(
+      maxRosterPerPage: maxRosterPerPage,
+      rosterStartIndex: rosterStartIndex,
+      rosterRows: rosterRows,
+    );
+    final placementVariant = _resolvePlacementVariant(
+      document: document,
+      rosterCount: pageRosterCount,
+    );
+    final slots = placementVariant['slots'] as List<dynamic>? ?? [];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -71,7 +79,7 @@ class TemplatePreview extends StatelessWidget {
                     slotScaleX: 1,
                     slotScaleY: 1,
                   ),
-                for (int i = 0; i < slots.length && i < maxRosterPerPage; i++)
+                for (int i = 0; i < slots.length && i < pageRosterCount; i++)
                   if (rosterStartIndex + i < rosterRows.length)
                     ..._buildRosterSlot(
                       slot: Map<String, dynamic>.from(slots[i] as Map),
@@ -293,12 +301,32 @@ class TemplatePreview extends StatelessWidget {
     return BoxFit.fill;
   }
 
-  Map<String, dynamic> _resolvePlacementVariant(Map<String, dynamic> document) {
+  int _pageRosterCount({
+    required int maxRosterPerPage,
+    required int rosterStartIndex,
+    required List<Map<String, dynamic>> rosterRows,
+  }) {
+    if (maxRosterPerPage <= 0) {
+      return 0;
+    }
+
+    final remainingRows = rosterRows.length - rosterStartIndex;
+    return math.max(0, math.min(maxRosterPerPage, remainingRows));
+  }
+
+  Map<String, dynamic> _resolvePlacementVariant({
+    required Map<String, dynamic> document,
+    required int rosterCount,
+  }) {
     final variants = Map<String, dynamic>.from(
       document['placementVariants'] as Map? ?? {},
     );
 
-    return Map<String, dynamic>.from(variants['default'] as Map? ?? {});
+    return Map<String, dynamic>.from(
+      variants[rosterCount.toString()] as Map? ??
+          variants['default'] as Map? ??
+          {},
+    );
   }
 
   Widget _applyImageShape({
