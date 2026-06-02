@@ -219,10 +219,10 @@ class _VerboseHistoryPainter extends CustomPainter {
       ..lineTo(w - w1, h)
       ..close();
 
-    final redoPaint = Paint()..color =AppColors.lightUnsat;
-    final undoPaint = Paint()..color = AppColors.lightSat;
+    final redoPaint = Paint()..color =AppColors.medSat;
+    final undoPaint = Paint()..color = AppColors.medUnsat;
     final targetPaint = Paint()
-      ..color = AppColors.darkUnsat.withValues(alpha: 0.04);
+      ..color = AppColors.darkUnsat.withValues(alpha: 0.15);
     final linePaint = Paint()
       ..color = AppColors.darkUnsat.withValues(alpha: 0.45)
       ..style = PaintingStyle.stroke
@@ -234,10 +234,13 @@ class _VerboseHistoryPainter extends CustomPainter {
     canvas.drawPath(redoTargetPath, targetPaint);
 
     final dividerPath = Path()
-      ..moveTo(w-w1, 0)
+      ..moveTo(0, 0)
+      ..lineTo(w, 0)
+      ..lineTo(w-w1, 0)
       ..lineTo(w-w2, h / 2)
       ..lineTo(w2, h / 2)
-      ..lineTo(w1, h);
+      ..lineTo(w1, h)
+      ;
 
     canvas.drawPath(dividerPath, linePaint);
   }
@@ -273,7 +276,7 @@ class _VerboseHistoryButton extends StatelessWidget {
       child: Align(
         alignment: alignment,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5*historyBarHeight/24),
+          padding: const EdgeInsets.symmetric(horizontal: 3*historyBarHeight/24),
           child: Icon(icon, size: iconSize, color: color),
         ),
       ),

@@ -75,9 +75,9 @@
 ## Architecture / Refactor
 
 * [ ] Continue Flutter app file refactor from single-file architecture
-* [ ] Remove legacy `ProjectBrowserPage` after project workflow migration
 * [x] Extract remaining UI/widgets from `main.dart`
 * [x] Extract Projects carousel page into its own widget
+* [x] Remove legacy `ProjectBrowserPage` after project workflow migration
 
 ---
 
