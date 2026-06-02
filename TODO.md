@@ -14,9 +14,10 @@
 
 ## Templates
 
-* [x] Ensure templates initialize with empty `data/photos` and blank roster
 * [ ] Add export/import/share workflow for templates
 * [ ] Add email/share/open integration for `.picts` files
+* [ ] Add photo template profile-picture placement variants by roster count
+* [x] Ensure templates initialize with empty `data/photos` and blank roster
 
 ---
 
@@ -25,6 +26,15 @@
 * [ ] Register `.picts` file association on Android
 * [ ] Add "Open With PIC Tool Suite" Android intent handling
 * [ ] Restore lost Android app project data handling strategy
+
+---
+
+## Compatibility Testing
+
+* [ ] Test on newer Android versions
+* [ ] Test on older Android versions
+* [ ] Test on newer iPhone/iOS versions
+* [ ] Test on older iPhone/iOS versions
 
 ---
 
@@ -67,8 +77,17 @@
 ## PDF / Export System
 
 * [ ] Add PDF editable-field/template investigation
+* [ ] Choose clearer export icon for template preview pages
 * [x] Continue PDF optimization work to avoid duplicated assets
 * [x] Ensure PDF printing honors landscape orientation by default
+
+---
+
+## Template Preview UX
+
+* [ ] Add pinch zoom to template preview
+* [ ] Extract shared template layout engine for preview and PDF export
+* [ ] Replace template preview page buttons with vertically scrollable/swipeable generated pages
 
 ---
 
@@ -83,6 +102,7 @@
 
 ## UI Chrome / Visual Design
 
+* [ ] Replace default Material dialog accent colors with TSTS theme colors
 * [x] Continue TSTS workspace/titlebar UI refactor
 
 ---
@@ -93,6 +113,7 @@
   * Document Data page
   * Roster Data page
   * Render / Preview page
+* [ ] Replace Projects filmstrip folder thumbnail with a custom project-list icon
 * [ ] Support circular page navigation
   * Last page wraps to first
   * First page wraps to last
@@ -100,6 +121,8 @@
 * [ ] Dim non-selected filmstrip items
 * [ ] Support dragging the filmstrip to navigate pages
 * [ ] Show partial adjacent pages during page transitions
+* [ ] Restyle bottom navigator with a black filmstrip outline
+* [x] Hide filmstrip when the workspace has only one page
 * [x] Create bottom-mounted filmstrip navigator
 * [x] Synchronize page carousel and filmstrip navigation
 * [x] Animate filmstrip movement when selecting pages

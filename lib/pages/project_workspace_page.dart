@@ -383,9 +383,18 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     return [
       WorkspaceCarouselItem(
         title: 'Projects',
-        thumbnail: Icon(
-          Icons.folder_rounded,
-          color: AppColors.medSat,
+        thumbnail: SizedBox(
+          width: 110,
+          height: 85,
+          child: Container(
+            color: AppColors.lightUnsat,
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.folder_rounded,
+              color: AppColors.darkSat,
+              size: 84,
+            ),
+          ),
         ),
         page: WorkspacePage(
           title: 'Projects',
@@ -544,29 +553,30 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             },
           ),
         ),
-        WorkspaceFilmstrip(
-          items: pages.map((page) => page.filmstripItem).toList(),
-          currentIndex: _currentPage,
-          currentPagePosition: _currentPagePosition,
-          onPagePositionChanged: (pagePosition) {
-            if (!_pageController.hasClients) return;
+        if (pages.length > 1)
+          WorkspaceFilmstrip(
+            items: pages.map((page) => page.filmstripItem).toList(),
+            currentIndex: _currentPage,
+            currentPagePosition: _currentPagePosition,
+            onPagePositionChanged: (pagePosition) {
+              if (!_pageController.hasClients) return;
 
-            _pageController.jumpTo(
-              pagePosition * _pageController.position.viewportDimension,
-            );
-          },
-          /*
+              _pageController.jumpTo(
+                pagePosition * _pageController.position.viewportDimension,
+              );
+            },
+            /*
+              onTap: (index) {
+                _pageController.jumpToPage(index);
+              },*/
             onTap: (index) {
-              _pageController.jumpToPage(index);
-            },*/
-          onTap: (index) {
-            _pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut,
-            );
-          },
-        ),
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+              );
+            },
+          ),
         if (widget.project != null)
           HistoryBar(
             verbose: true,
