@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
-import '../widgets/folder_list_tile.dart';
 import '../widgets/edit_document_page.dart';
+import '../widgets/edit_projects_page.dart';
 import '../widgets/edit_roster_page.dart';
 import 'pic_template_browser_page.dart';
 import 'photo_crop_page.dart';
@@ -14,6 +14,7 @@ import '../widgets/template_preview_page.dart';
 import '../services/project_storage.dart';
 import '../services/template_loader.dart';
 import '../theme/app_colors.dart';
+import '../widgets/tsts_dialog.dart';
 import '../widgets/tsts_title_bar.dart';
 import '../widgets/workspace_icon_button.dart';
 import '../widgets/workspace_filmstrip.dart';
@@ -303,45 +304,77 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     });
   }
 
-  Widget _buildProjectsPage() {
-    return FutureBuilder<List<StoredProject>>(
-      future: _projectsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return Center(
-            child: CircularProgressIndicator(color: AppColors.darkUnsat),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Error: ${snapshot.error}',
-              style: TextStyle(color: AppColors.textDark),
-            ),
-          );
-        }
-
-        final projects = snapshot.data ?? [];
-
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            for (final project in projects)
-              FolderListTile(
-                title: project.name,
-                size: 64,
-                overlayIcon: Image.file(
-                  File(project.iconPath),
-                  fit: BoxFit.contain,
-                ),
-                isCreateTile: false,
-                onTap: () => _openProject(project),
+  Future<void> _confirmDeleteProject(StoredProject project) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return TstsDialog(
+          title: 'Delete Project',
+          actions: null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Delete "${project.name}"?',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textDark),
               ),
-          ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('CANCEL'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF9E3A3A),
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('DELETE'),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
+
+    if (!mounted || confirmed != true) return;
+
+    await ProjectStorage().deleteProject(project);
+
+    if (!mounted) return;
+
+    setState(() {
+      _projectsFuture = ProjectStorage().listProjects();
+    });
+  }
+
+  Future<void> _renameProject(StoredProject project) async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => _RenameProjectDialog(initialName: project.name),
+    );
+
+    final trimmedName = newName?.trim() ?? '';
+
+    if (!mounted || trimmedName.isEmpty || trimmedName == project.name) {
+      return;
+    }
+
+    await ProjectStorage().renameProject(project: project, name: trimmedName);
+
+    if (!mounted) return;
+
+    setState(() {
+      _projectsFuture = ProjectStorage().listProjects();
+    });
   }
 
   List<WorkspaceCarouselItem> _buildCarouselItems() {
@@ -365,7 +398,12 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               ),
             ],
           ),
-          child: _buildProjectsPage(),
+          child: EditProjectsPage(
+            projectsFuture: _projectsFuture,
+            onOpenProject: _openProject,
+            onRenameProject: _renameProject,
+            onDeleteProject: _confirmDeleteProject,
+          ),
         ),
       ),
       if (project != null) ...[
@@ -604,6 +642,70 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           }
           return SafeArea(top: false, child: _buildContentPages());
         },
+      ),
+    );
+  }
+}
+
+class _RenameProjectDialog extends StatefulWidget {
+  final String initialName;
+
+  const _RenameProjectDialog({required this.initialName});
+
+  @override
+  State<_RenameProjectDialog> createState() => _RenameProjectDialogState();
+}
+
+class _RenameProjectDialogState extends State<_RenameProjectDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context).pop(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TstsDialog(
+      title: 'Rename Project',
+      actions: null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Project Name'),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('CANCEL'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submit,
+              child: const Text('RENAME'),
+            ),
+          ),
+        ],
       ),
     );
   }

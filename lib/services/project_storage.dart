@@ -111,6 +111,22 @@ class ProjectStorage {
     );
   }
 
+  Future<void> renameProject({
+    required StoredProject project,
+    required String name,
+  }) async {
+    final file = File(project.dataJsonPath);
+    final jsonText = await file.readAsString();
+    final jsonMap = jsonDecode(jsonText) as Map<String, dynamic>;
+
+    jsonMap['name'] = name;
+    jsonMap['modifiedAt'] = DateTime.now().toIso8601String();
+
+    await file.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(jsonMap),
+    );
+  }
+
   Future<void> deleteProject(StoredProject project) async {
     final dir = Directory(project.folderPath);
 
