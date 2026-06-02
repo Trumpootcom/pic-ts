@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-const double historyBarHeight = 18;
+const double historyBarHeight = 20;
 
 class HistoryBar extends StatelessWidget {
   final bool canUndo;
@@ -101,14 +101,10 @@ class _VerboseHistoryBar extends StatelessWidget {
 
     return Container(
       height: _height,
-      color: AppColors.lightUnsat,
+      color: AppColors.darkUnsat,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _VerboseHistoryPainter(),
-            ),
-          ),
+          const Positioned.fill(child: _HistoryBarBackground(height: _height)),
           Positioned(
             left: _height * 1.1,
             right: _height * 1.1,
@@ -175,79 +171,63 @@ class _VerboseHistoryBar extends StatelessWidget {
   }
 }
 
-class _VerboseHistoryPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final w1 = 3*h/4;
-    final w2 = w1 + h/4;
+class _HistoryBarBackground extends StatelessWidget {
+  static const double _capSourceWidth = 140;
+  static const double _sourceHeight = 100;
 
-    Offset p(double x, double y) => Offset(x, h - y);
+  final double height;
 
-    final undoPath = Path()
-      ..moveTo(0, 0)
-      ..lineTo(0, h)
-      ..lineTo(w1, h)
-      ..lineTo(w2, h / 2)
-      ..lineTo(w-w2, h / 2)
-      ..lineTo(w-w1, 0)
-      ..close();
-
-    final undoTargetPath = Path()
-      ..moveTo(0, 0)
-      ..lineTo(0, h)
-      ..lineTo(w1, h)
-      ..lineTo(w2, h / 2)
-      ..lineTo(w1, 0)
-      ..close();
-
-    final redoPath = Path()
-      ..moveTo(w, h)
-      ..lineTo(w, 0)
-      ..lineTo(w-w1, 0)
-      ..lineTo(w-w2, h / 2)
-      ..lineTo(w2, h / 2)
-      ..lineTo(w1, h)
-      ..close();
-
-    final redoTargetPath = Path()
-      ..moveTo(w, h)
-      ..lineTo(w, 0)
-      ..lineTo(w - w1, 0)
-      ..lineTo(w - w2, h / 2)
-      ..lineTo(w - w1, h)
-      ..close();
-
-    final redoPaint = Paint()..color =AppColors.medSat;
-    final undoPaint = Paint()..color = AppColors.medUnsat;
-    final targetPaint = Paint()
-      ..color = AppColors.darkUnsat.withValues(alpha: 0.15);
-    final linePaint = Paint()
-      ..color = AppColors.darkUnsat.withValues(alpha: 0.45)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    canvas.drawPath(redoPath, redoPaint);
-    canvas.drawPath(undoPath, undoPaint);
-    canvas.drawPath(undoTargetPath, targetPaint);
-    canvas.drawPath(redoTargetPath, targetPaint);
-
-    final dividerPath = Path()
-      ..moveTo(0, 0)
-      ..lineTo(w, 0)
-      ..lineTo(w-w1, 0)
-      ..lineTo(w-w2, h / 2)
-      ..lineTo(w2, h / 2)
-      ..lineTo(w1, h)
-      ;
-
-    canvas.drawPath(dividerPath, linePaint);
-  }
+  const _HistoryBarBackground({required this.height});
 
   @override
-  bool shouldRepaint(covariant _VerboseHistoryPainter oldDelegate) {
-    return false;
+  Widget build(BuildContext context) {
+    final capWidth = height * _capSourceWidth / _sourceHeight;
+    final capOverlapWidth = capWidth.floorToDouble();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final middleWidth =
+            constraints.maxWidth - capOverlapWidth - capOverlapWidth;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Center(
+              child: SizedBox(
+                width: middleWidth.clamp(0, constraints.maxWidth),
+                height: height,
+                child: Image.asset(
+                  'assets/backgrounds/trumpoot_histbar_m.png',
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: capWidth,
+                height: height,
+                child: Image.asset(
+                  'assets/backgrounds/trumpoot_histbar_l.png',
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: capWidth,
+                height: height,
+                child: Image.asset(
+                  'assets/backgrounds/trumpoot_histbar_r.png',
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -276,7 +256,9 @@ class _VerboseHistoryButton extends StatelessWidget {
       child: Align(
         alignment: alignment,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3*historyBarHeight/24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 3 * historyBarHeight / 24,
+          ),
           child: Icon(icon, size: iconSize, color: color),
         ),
       ),
