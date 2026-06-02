@@ -127,7 +127,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Save Project and Discard UNDO/REDO Edits?',
+                'Save Changes and Clear UNDO/REDO History?',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textDark),
               ),
@@ -527,15 +527,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         ),
         page: WorkspacePage(
           title: 'Properties',
-          actions: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              WorkspaceIconButton(
-                icon: Icons.save_rounded,
-                onPressed: _saveProject,
-              ),
-            ],
-          ),
           child: EditDocumentPage(
             documentSchema: documentSchema,
             documentData: documentData,
@@ -567,10 +558,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               WorkspaceIconButton(
                 icon: Icons.person_add_alt_1_rounded,
                 onPressed: () => _addRosterRow(),
-              ),
-              WorkspaceIconButton(
-                icon: Icons.save_rounded,
-                onPressed: _saveProject,
               ),
             ],
           ),
