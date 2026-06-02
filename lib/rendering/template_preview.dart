@@ -172,18 +172,21 @@ class TemplatePreview extends StatelessWidget {
     if (type == 'image') {
       final imagePath = _resolveImagePath(element, sourceData);
       final fit = _resolveBoxFit(element['fit']?.toString());
+      final shape = element['shape']?.toString() ?? 'rect';
 
       final isFileImage =
           imagePath.startsWith('/') || imagePath.startsWith('file:');
+
+      final imageWidget = isFileImage
+          ? Image.file(File(imagePath), fit: fit)
+          : Image.asset(imagePath, fit: fit);
 
       return Positioned(
         left: left,
         top: top,
         width: w,
         height: h,
-        child: isFileImage
-            ? Image.file(File(imagePath), fit: fit)
-            : Image.asset(imagePath, fit: fit),
+        child: _applyImageShape(shape: shape, child: imageWidget),
       );
     }
 
@@ -290,6 +293,17 @@ class TemplatePreview extends StatelessWidget {
     }
 
     return BoxFit.fill;
+  }
+
+  Widget _applyImageShape({
+    required String shape,
+    required Widget child,
+  }) {
+    if (shape == 'oval') {
+      return ClipOval(child: child);
+    }
+
+    return child;
   }
 
   String _firstNameLastInitial(String value) {

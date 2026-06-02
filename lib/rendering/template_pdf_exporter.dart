@@ -179,6 +179,11 @@ class TemplatePdfExporter {
       );
 
       final image = await _getPdfImage(imagePath);
+      final shape = element['shape']?.toString() ?? 'rect';
+      final imageWidget = pw.Image(
+        image,
+        fit: _resolveBoxFit(element['fit']?.toString()),
+      );
 
       return pw.Positioned(
         left: left * PdfPageFormat.inch,
@@ -186,10 +191,7 @@ class TemplatePdfExporter {
         child: pw.SizedBox(
           width: w * PdfPageFormat.inch,
           height: h * PdfPageFormat.inch,
-          child: pw.Image(
-            image,
-            fit: _resolveBoxFit(element['fit']?.toString()),
-          ),
+          child: _applyImageShape(shape: shape, child: imageWidget),
         ),
       );
     }
@@ -310,6 +312,17 @@ class TemplatePdfExporter {
     }
 
     return pw.BoxFit.fill;
+  }
+
+  pw.Widget _applyImageShape({
+    required String shape,
+    required pw.Widget child,
+  }) {
+    if (shape == 'oval') {
+      return pw.ClipOval(child: child);
+    }
+
+    return child;
   }
 
   bool _isBold(Map<String, dynamic> element) {

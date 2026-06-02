@@ -52,6 +52,8 @@
 
 ## Photo Crop / Image Pipeline
 
+* [ ] Add Capture directly from Camera
+* [ ] Add Crop Guide overlay to Camera preview during capture (toggle guide?)
 * [ ] Add visual crop-debug overlay/export mode
 * [ ] Add toggle to switch crop guide shape between rectangle and oval
 * [X] Add public/exported image gallery access outside app
