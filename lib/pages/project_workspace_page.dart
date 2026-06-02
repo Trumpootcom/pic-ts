@@ -308,6 +308,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     );
 
     if (preparedPhoto == null) return;
+    if (!mounted) return;
 
     final cropResult = await Navigator.of(context).push<PhotoCropResult>(
       MaterialPageRoute(
@@ -425,7 +426,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
                 return ListView.separated(
                   itemCount: files.length,
-                  separatorBuilder: (_, __) => Divider(
+                  separatorBuilder: (context, index) => Divider(
                     color: AppColors.darkUnsat.withValues(alpha: 0.2),
                     height: 1,
                   ),

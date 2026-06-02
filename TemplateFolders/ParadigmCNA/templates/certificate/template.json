@@ -3,7 +3,8 @@
   "name": "CNA Certificate",
   "productType": "certificate",
   "preview": "preview.jpg",
-
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-02",
   "data": {
     "document": [
       {
@@ -12,28 +13,24 @@
         "type": "text",
         "default": "June 12, 2026"
       },
-
       {
         "key": "classroomHours",
         "label": "Classroom Hours",
         "type": "text",
         "default": "60 hrs"
       },
-
       {
         "key": "skillsHours",
         "label": "Skills Hours",
         "type": "text",
         "default": "40 hrs"
       },
-
       {
         "key": "clinicalHours",
         "label": "Clinical Hours",
         "type": "text",
         "default": "40 hrs"
       },
-
       {
         "key": "totalHours",
         "label": "Total Hours",
@@ -41,11 +38,9 @@
         "default": "140 hrs"
       }
     ],
-
     "roster": {
       "label": "Students",
       "itemLabel": "Student",
-
       "fields": [
         {
           "key": "fullName",
@@ -53,7 +48,6 @@
           "type": "text",
           "default": "First Last"
         },
-
         {
           "key": "profilePicture",
           "label": "Profile Picture",
@@ -63,28 +57,11 @@
       ]
     }
   },
-
   "document": {
     "width": 11,
     "height": 8.5,
     "dpi": 200,
     "output": "pdf",
-
-    "placement": {
-      "type": "single",
-      "maxRosterPerPage": 1,
-
-      "slots": [
-        {
-          "x": 0,
-          "y": 0,
-          "w": 11,
-          "h": 8.5,
-          "anchor": "topLeft"
-        }
-      ]
-    },
-
     "elements": [
       {
         "type": "image",
@@ -95,7 +72,6 @@
         "h": 8.5,
         "anchor": "topLeft"
       },
-
       {
         "type": "text",
         "source": "compDate",
@@ -110,7 +86,6 @@
         "fontStyle": "italic",
         "color": "#000000"
       },
-
       {
         "type": "text",
         "source": "classroomHours",
@@ -125,7 +100,6 @@
         "fontStyle": "italic",
         "color": "#000000"
       },
-
       {
         "type": "text",
         "source": "skillsHours",
@@ -140,7 +114,6 @@
         "fontStyle": "italic",
         "color": "#000000"
       },
-
       {
         "type": "text",
         "source": "clinicalHours",
@@ -155,7 +128,6 @@
         "fontStyle": "italic",
         "color": "#000000"
       },
-
       {
         "type": "text",
         "source": "totalHours",
@@ -170,13 +142,25 @@
         "fontStyle": "italic",
         "color": "#000000"
       }
-    ]
+    ],
+    "maxRosterPerPage": 1,
+    "placementVariants": {
+      "default": {
+        "slots": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 11,
+            "h": 8.5,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
   },
-
   "roster": {
     "width": 11,
     "height": 8.5,
-
     "elements": [
       {
         "type": "text",

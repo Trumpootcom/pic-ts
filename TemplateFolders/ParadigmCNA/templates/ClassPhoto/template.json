@@ -3,7 +3,8 @@
   "name": "Class Photo",
   "productType": "class_photo",
   "preview": "preview.jpg",
-
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-02",
   "data": {
     "document": [
       {
@@ -12,7 +13,6 @@
         "type": "text",
         "default": "Certified Nurse Assistant Class"
       },
-
       {
         "key": "compDate",
         "label": "Completion Date",
@@ -20,11 +20,9 @@
         "default": "June 12, 2026"
       }
     ],
-
     "roster": {
       "label": "Students",
       "itemLabel": "Student",
-
       "fields": [
         {
           "key": "fullName",
@@ -32,7 +30,6 @@
           "type": "text",
           "default": "First Last"
         },
-
         {
           "key": "profilePicture",
           "label": "Profile Picture",
@@ -42,108 +39,11 @@
       ]
     }
   },
-
   "document": {
     "width": 11,
     "height": 14,
     "dpi": 200,
     "output": "pdf",
-
-    "placement": {
-      "type": "custom",
-      "maxRosterPerPage": 11,
-
-      "slots": [
-        {
-          "x": 0.76,
-          "y": 4.393,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 3.17,
-          "y": 4.393,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 5.58,
-          "y": 4.393,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 7.99,
-          "y": 4.393,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 1.965,
-          "y": 7.307,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 4.375,
-          "y": 7.307,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 6.785,
-          "y": 7.307,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 0.76,
-          "y": 10.217,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 3.17,
-          "y": 10.217,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 5.58,
-          "y": 10.217,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 7.99,
-          "y": 10.217,
-          "w": 2.25,
-          "h": 2.875,
-          "anchor": "topLeft"
-        }
-      ]
-    },
-
     "elements": [
       {
         "type": "image",
@@ -154,7 +54,6 @@
         "h": 14,
         "anchor": "topLeft"
       },
-
       {
         "type": "text",
         "source": "photoTitle",
@@ -169,7 +68,6 @@
         "fontStyle": "bold",
         "color": "#000000"
       },
-
       {
         "type": "text",
         "source": "compDate",
@@ -183,13 +81,95 @@
         "fontFamily": "Times New Roman",
         "color": "#000000"
       }
-    ]
+    ],
+    "maxRosterPerPage": 11,
+    "placementVariants": {
+      "default": {
+        "slots": [
+          {
+            "x": 0.76,
+            "y": 4.193,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 4.193,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 4.193,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 4.193,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.965,
+            "y": 7.307,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.375,
+            "y": 7.307,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.785,
+            "y": 7.307,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.76,
+            "y": 10.417,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 10.417,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 10.417,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 10.417,
+            "w": 2.25,
+            "h": 2.875,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
   },
-
   "roster": {
     "width": 2.25,
     "height": 2.875,
-
     "elements": [
       {
         "type": "image",
@@ -202,23 +182,21 @@
         "anchor": "topCenter",
         "fit": "cover"
       },
-
       {
         "type": "image",
         "source": "oval.png",
         "x": 1.125,
-        "y": 0.0,
+        "y": 0,
         "w": 1.875,
         "h": 2.5,
         "anchor": "topCenter",
         "fit": "fill"
       },
-
       {
         "type": "text",
         "source": "fullName",
         "x": 1.125,
-        "y": 2.40,
+        "y": 2.4,
         "w": 2,
         "h": 0.5,
         "anchor": "topCenter",

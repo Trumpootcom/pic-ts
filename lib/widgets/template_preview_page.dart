@@ -38,12 +38,11 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> with Automati
       _selectedRosterIndex = widget.roster.length - 1;
     }
 
-    final placement = Map<String, dynamic>.from(
-      widget.loadedTemplate.template.rawJson['document']['placement'] as Map? ??
-          {},
+    final document = Map<String, dynamic>.from(
+      widget.loadedTemplate.template.rawJson['document'] as Map? ?? {},
     );
 
-    final maxRosterPerPage = placement['maxRosterPerPage'] as int? ?? 1;
+    final maxRosterPerPage = document['maxRosterPerPage'] as int? ?? 1;
     final isSinglePage = maxRosterPerPage <= 0;
     final effectiveRosterPerPage = isSinglePage ? 1 : maxRosterPerPage;
     final hasRoster = !isSinglePage && widget.roster.isNotEmpty;

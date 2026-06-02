@@ -23,13 +23,11 @@ class TemplatePdfExporter {
 
     final document = Map<String, dynamic>.from(json['document'] as Map? ?? {});
     final roster = Map<String, dynamic>.from(json['roster'] as Map? ?? {});
-    final placement = Map<String, dynamic>.from(
-      document['placement'] as Map? ?? {},
-    );
+    final placementVariant = _resolvePlacementVariant(document);
 
     final documentElements = document['elements'] as List<dynamic>? ?? [];
     final rosterElements = roster['elements'] as List<dynamic>? ?? [];
-    final slots = placement['slots'] as List<dynamic>? ?? [];
+    final slots = placementVariant['slots'] as List<dynamic>? ?? [];
 
     final widthIn = (document['width'] ?? 11).toDouble();
     final heightIn = (document['height'] ?? 8.5).toDouble();
@@ -37,7 +35,7 @@ class TemplatePdfExporter {
     final rosterWidthIn = (roster['width'] ?? widthIn).toDouble();
     final rosterHeightIn = (roster['height'] ?? heightIn).toDouble();
 
-    final maxRosterPerPage = placement['maxRosterPerPage'] as int? ?? 1;
+    final maxRosterPerPage = document['maxRosterPerPage'] as int? ?? 1;
     final pageSize = maxRosterPerPage <= 0 ? 1 : maxRosterPerPage;
     final rosterCount = maxRosterPerPage <= 0 ? 1 : rosterRows.length;
     tsPrint('EXPORT PDF: ------------------------------------------------');
@@ -312,6 +310,14 @@ class TemplatePdfExporter {
     }
 
     return pw.BoxFit.fill;
+  }
+
+  Map<String, dynamic> _resolvePlacementVariant(Map<String, dynamic> document) {
+    final variants = Map<String, dynamic>.from(
+      document['placementVariants'] as Map? ?? {},
+    );
+
+    return Map<String, dynamic>.from(variants['default'] as Map? ?? {});
   }
 
   pw.Widget _applyImageShape({

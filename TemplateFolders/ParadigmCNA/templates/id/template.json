@@ -3,14 +3,13 @@
   "name": "ID Cards",
   "productType": "id_card",
   "preview": "preview.jpg",
-
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-02",
   "data": {
     "document": [],
-
     "roster": {
       "label": "Students",
       "itemLabel": "Student",
-
       "fields": [
         {
           "key": "fullName",
@@ -18,7 +17,6 @@
           "type": "text",
           "default": "First Last"
         },
-
         {
           "key": "profilePicture",
           "label": "Profile Picture",
@@ -28,91 +26,79 @@
       ]
     }
   },
-
   "document": {
     "width": 11,
     "height": 8.5,
     "dpi": 200,
     "output": "pdf",
-
-    "placement": {
-      "type": "grid",
-      "maxRosterPerPage": 8,
-
-      "slots": [
-        {
-          "x": 1.0,
-          "y": 0.625,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 3.25,
-          "y": 0.625,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 5.5,
-          "y": 0.625,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 7.75,
-          "y": 0.625,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 1.0,
-          "y": 4.25,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 3.25,
-          "y": 4.25,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 5.5,
-          "y": 4.25,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        },
-
-        {
-          "x": 7.75,
-          "y": 4.25,
-          "w": 2.25,
-          "h": 3.625,
-          "anchor": "topLeft"
-        }
-      ]
-    },
-
-    "elements": []
+    "elements": [],
+    "maxRosterPerPage": 8,
+    "placementVariants": {
+      "default": {
+        "slots": [
+          {
+            "x": 1,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.25,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.5,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.75,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.25,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.5,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.75,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
   },
-
   "roster": {
     "width": 2.25,
     "height": 3.625,
-
     "elements": [
       {
         "type": "image",
@@ -124,11 +110,10 @@
         "anchor": "topLeft",
         "fit": "fill"
       },
-
       {
         "type": "image",
         "source": "profilePicture",
-        "shape" : "rect",
+        "shape": "rect",
         "x": 1.125,
         "y": 0.4375,
         "w": 1.42,
@@ -136,18 +121,16 @@
         "anchor": "topCenter",
         "fit": "cover"
       },
-
       {
         "type": "image",
         "source": "mat.png",
         "x": 1.125,
         "y": 0.375,
         "w": 1.545,
-        "h": 2.0,
+        "h": 2,
         "anchor": "topCenter",
         "fit": "fill"
       },
-
       {
         "type": "text",
         "source": "fullName",

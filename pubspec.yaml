@@ -80,9 +80,6 @@ flutter:
     - assets/logos/
     - assets/icons/
     - assets/resources/
-    - assets/templates/Paradigm/
-    - assets/templates/Paradigm/certificate/
-    - assets/templates/Paradigm/id/
     - assets/pic_templates/ParadigmCNA.pictsx
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
