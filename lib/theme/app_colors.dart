@@ -19,6 +19,9 @@ class AppColors {
   static final Color darkSat =
       HSLColor.fromAHSL( 1.0, 41.0, 0.50, 0.33, ).toColor();
 
+  static const Color destructive =
+      Color(0xFF9E3A3A);
+
   static const Color textDark =
       Color(0xFF1E1E1E);
 

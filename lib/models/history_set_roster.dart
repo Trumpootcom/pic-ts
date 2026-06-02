@@ -75,7 +75,7 @@ class HistorySetRoster extends HistoryCommand {
   }) {
     final label = historyFieldLabel(schema: rosterSchema, key: key);
 
-    return 'Change Roster ${index + 1} $label from ${historyValueText(oldValue)} to ${historyValueText(newValue)}';
+    return '$label[${index + 1}]: ${_valueText(oldValue)} -> ${_valueText(newValue)}';
   }
 
   @override
@@ -85,7 +85,7 @@ class HistorySetRoster extends HistoryCommand {
   }) {
     final label = historyFieldLabel(schema: rosterSchema, key: key);
 
-    return 'Change Roster ${index + 1} $label from ${historyValueText(newValue)} to ${historyValueText(oldValue)}';
+    return '$label[${index + 1}]: ${_valueText(newValue)} -> ${_valueText(oldValue)}';
   }
 
   @override
@@ -97,5 +97,17 @@ class HistorySetRoster extends HistoryCommand {
       'old': oldValue,
       'new': newValue,
     };
+  }
+
+  String _valueText(dynamic value) {
+    if (value == null) return 'blank';
+
+    final text = value.toString();
+
+    if (text.isEmpty) {
+      return 'blank';
+    }
+
+    return text;
   }
 }

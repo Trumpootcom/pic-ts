@@ -67,7 +67,9 @@ class _EditRosterPageState extends State<EditRosterPage> {
         final node = FocusNode();
 
         node.addListener(() {
-          if (!node.hasFocus) {
+          if (node.hasFocus) {
+            _selectFieldText(i, 'fullName');
+          } else {
             _commitField(i, 'fullName');
           }
         });
@@ -89,6 +91,19 @@ class _EditRosterPageState extends State<EditRosterPage> {
     }
 
     await widget.onSetRosterField(index, key, controller.text);
+  }
+
+  void _selectFieldText(int index, String key) {
+    final controller = _controllers[_fieldId(index, key)];
+
+    if (controller == null) {
+      return;
+    }
+
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.text.length,
+    );
   }
 
   @override
@@ -170,6 +185,8 @@ class _EditRosterPageState extends State<EditRosterPage> {
                   controller: _controllers[id],
                   focusNode: _focusNodes[id],
                   decoration: _rosterInputDecoration(),
+                  textCapitalization: TextCapitalization.words,
+                  onTap: () => _selectFieldText(i, 'fullName'),
                   onFieldSubmitted: (_) {
                     _commitField(i, 'fullName');
                   },

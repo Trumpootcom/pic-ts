@@ -168,10 +168,6 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     final fullName = roster[index]['fullName']?.toString().trim() ?? '';
     final rosterLabel = 'Roster ${index + 1}';
-    final message = fullName.isEmpty
-        ? 'Are you sure you want to delete $rosterLabel?'
-        : 'Are you sure you want to delete $rosterLabel $fullName?';
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -181,8 +177,21 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                message,
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: '¿¿DELETE??',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: '\n$rosterLabel'),
+                    if (fullName.isNotEmpty)
+                      TextSpan(
+                        text: '\n$fullName',
+                        style: const TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                  ],
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textDark),
               ),
@@ -199,7 +208,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9E3A3A),
+                    backgroundColor: AppColors.destructive,
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -384,7 +393,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9E3A3A),
+                    backgroundColor: AppColors.destructive,
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () => Navigator.of(dialogContext).pop(true),
