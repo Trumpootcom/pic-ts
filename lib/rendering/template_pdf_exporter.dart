@@ -17,6 +17,22 @@ class TemplatePdfExporter {
     required String projectFolderPath,
     required String fileName,
   }) async {
+    final bytes = await buildPdfBytes(
+      loadedTemplate: loadedTemplate,
+      documentData: documentData,
+      rosterRows: rosterRows,
+      projectFolderPath: projectFolderPath,
+    );
+
+    await Printing.sharePdf(bytes: bytes, filename: fileName);
+  }
+
+  Future<Uint8List> buildPdfBytes({
+    required LoadedTemplate loadedTemplate,
+    required Map<String, dynamic> documentData,
+    required List<Map<String, dynamic>> rosterRows,
+    required String projectFolderPath,
+  }) async {
     final pdf = pw.Document();
 
     final json = loadedTemplate.template.rawJson;
@@ -123,9 +139,7 @@ class TemplatePdfExporter {
       );
     }
 
-    final bytes = await pdf.save();
-
-    await Printing.sharePdf(bytes: bytes, filename: fileName);
+    return pdf.save();
   }
 
   Future<pw.Widget> _buildElement({

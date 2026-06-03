@@ -9,6 +9,7 @@ import '../widgets/edit_roster_page.dart';
 import 'pic_template_browser_page.dart';
 import 'photo_crop_page.dart';
 
+import '../rendering/template_jpg_exporter.dart';
 import '../rendering/template_pdf_exporter.dart';
 import '../widgets/template_preview_page.dart';
 import '../services/project_storage.dart';
@@ -594,19 +595,43 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
       loadedTemplate.template.rawJson['document'] as Map? ?? {},
     );
 
-    final output = document['output']?.toString() ?? '';
+    final output = (document['output']?.toString() ?? '').toLowerCase();
 
-    if (output != 'pdf') {
-      return;
+    try {
+      if (output == 'pdf') {
+        await TemplatePdfExporter().exportAndShare(
+          loadedTemplate: loadedTemplate,
+          documentData: documentData,
+          rosterRows: roster,
+          projectFolderPath: project.folderPath,
+          fileName: '${loadedTemplate.template.id}.pdf',
+        );
+        return;
+      }
+
+      if (output == 'jpg' || output == 'jpeg') {
+        await TemplateJpgExporter().exportAndShare(
+          loadedTemplate: loadedTemplate,
+          documentData: documentData,
+          rosterRows: roster,
+          projectFolderPath: project.folderPath,
+          fileName: '${loadedTemplate.template.id}.jpg',
+        );
+        return;
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unsupported export type: $output')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     }
-
-    await TemplatePdfExporter().exportAndShare(
-      loadedTemplate: loadedTemplate,
-      documentData: documentData,
-      rosterRows: roster,
-      projectFolderPath: project.folderPath,
-      fileName: '${loadedTemplate.template.id}.pdf',
-    );
   }
 
   Future<void> _createProject() async {

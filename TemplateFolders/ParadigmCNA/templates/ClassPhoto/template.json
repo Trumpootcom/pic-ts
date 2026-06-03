@@ -42,8 +42,8 @@
   "document": {
     "width": 11,
     "height": 14,
-    "dpi": 200,
-    "output": "pdf",
+    "dpi": 300,
+    "output": "jpg",
     "elements": [
       {
         "type": "image",
@@ -58,7 +58,7 @@
         "type": "text",
         "source": "photoTitle",
         "x": 5.5,
-        "y": 2.8,
+        "y": 2.935,
         "w": 7,
         "h": 0.5,
         "anchor": "topCenter",
@@ -72,7 +72,7 @@
         "type": "text",
         "source": "compDate",
         "x": 5.5,
-        "y": 3.3,
+        "y": 3.435,
         "w": 7,
         "h": 0.4,
         "anchor": "topCenter",
