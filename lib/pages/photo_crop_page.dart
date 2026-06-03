@@ -68,6 +68,7 @@ class PhotoCropPage extends StatefulWidget {
 class _PhotoCropPageState extends State<PhotoCropPage> {
   late final TransformationController _controller;
   late int rotationQuarterTurns;
+  late String cropGuideShape;
 
   img.Image? decodedImage;
 
@@ -92,11 +93,22 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     super.initState();
 
     rotationQuarterTurns = widget.initialRotationQuarterTurns;
+    cropGuideShape = _initialCropGuideShape();
 
     _controller = TransformationController();
     _controller.addListener(_updateDebugOverlay);
 
     _loadImage();
+  }
+
+  String _initialCropGuideShape() {
+    for (final crop in widget.profilePictureCrops) {
+      if (crop['shape']?.toString() == 'oval') {
+        return 'oval';
+      }
+    }
+
+    return 'rect';
   }
 
   @override
@@ -296,6 +308,21 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
         title: const Text('Position Photo'),
         actions: [
           IconButton(
+            tooltip: cropGuideShape == 'oval'
+                ? 'Use rectangular crop guide'
+                : 'Use oval crop guide',
+            icon: Icon(
+              cropGuideShape == 'oval'
+                  ? Icons.crop_portrait
+                  : Icons.circle_outlined,
+            ),
+            onPressed: () {
+              setState(() {
+                cropGuideShape = cropGuideShape == 'oval' ? 'rect' : 'oval';
+              });
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.rotate_left),
             onPressed: () {
               setState(() {
@@ -314,7 +341,7 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final previewAspect = widget.profilePictureCrops.isEmpty
+          final guideAspectRatio = widget.profilePictureCrops.isEmpty
               ? 1.0
               : widget.profilePictureCrops
                     .map(
@@ -327,11 +354,11 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
           final maxH = constraints.maxHeight * 0.90;
 
           double calcWidth = maxW;
-          double calcHeight = calcWidth / previewAspect;
+          double calcHeight = calcWidth / guideAspectRatio;
 
           if (calcHeight > maxH) {
             calcHeight = maxH;
-            calcWidth = calcHeight * previewAspect;
+            calcWidth = calcHeight * guideAspectRatio;
           }
 
           final viewportChanged =
@@ -384,7 +411,8 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
                         height: viewportHeight,
                         child: CustomPaint(
                           painter: _CropGuidePainter(
-                            crops: widget.profilePictureCrops,
+                            aspectRatio: guideAspectRatio,
+                            shape: cropGuideShape,
                           ),
                         ),
                       ),
@@ -440,9 +468,13 @@ class _CropRect {
 }
 
 class _CropGuidePainter extends CustomPainter {
-  final List<Map<String, dynamic>> crops;
+  final double aspectRatio;
+  final String shape;
 
-  const _CropGuidePainter({required this.crops});
+  const _CropGuidePainter({
+    required this.aspectRatio,
+    required this.shape,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -451,49 +483,35 @@ class _CropGuidePainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    final guideCrops = crops.isEmpty
-        ? [
-            {'aspectRatio': size.width / size.height, 'shape': 'rect'},
-          ]
-        : crops;
+    final h = size.height;
+    final w = h * aspectRatio;
 
-    for (final crop in guideCrops) {
-      final aspectRatio =
-          (crop['aspectRatio'] as num?)?.toDouble() ??
-          (size.width / size.height);
+    final rect = Rect.fromCenter(
+      center: size.center(Offset.zero),
+      width: w,
+      height: h,
+    );
 
-      final shape = crop['shape']?.toString() ?? 'rect';
+    final path = Path();
 
-      final h = size.height;
-      final w = h * aspectRatio;
-
-      final rect = Rect.fromCenter(
-        center: size.center(Offset.zero),
-        width: w,
-        height: h,
-      );
-
-      final path = Path();
-
-      if (shape == 'oval') {
-        path.addOval(rect);
-      } else {
-        path.addRect(rect);
-      }
-
-      _drawDashedPath(canvas, path, paint);
-
-      final diagonal1 = Path()
-        ..moveTo(rect.left, rect.top)
-        ..lineTo(rect.right, rect.bottom);
-
-      final diagonal2 = Path()
-        ..moveTo(rect.right, rect.top)
-        ..lineTo(rect.left, rect.bottom);
-
-      _drawDashedPath(canvas, diagonal1, paint);
-      _drawDashedPath(canvas, diagonal2, paint);
+    if (shape == 'oval') {
+      path.addOval(rect);
+    } else {
+      path.addRect(rect);
     }
+
+    _drawDashedPath(canvas, path, paint);
+
+    final diagonal1 = Path()
+      ..moveTo(rect.left, rect.top)
+      ..lineTo(rect.right, rect.bottom);
+
+    final diagonal2 = Path()
+      ..moveTo(rect.right, rect.top)
+      ..lineTo(rect.left, rect.bottom);
+
+    _drawDashedPath(canvas, diagonal1, paint);
+    _drawDashedPath(canvas, diagonal2, paint);
   }
 
   void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
@@ -515,6 +533,7 @@ class _CropGuidePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CropGuidePainter oldDelegate) {
-    return oldDelegate.crops != crops;
+    return oldDelegate.aspectRatio != aspectRatio ||
+        oldDelegate.shape != shape;
   }
 }

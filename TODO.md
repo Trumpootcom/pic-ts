@@ -16,6 +16,7 @@
 
 * [ ] Add export/import/share workflow for templates
 * [ ] Add email/share/open integration for `.picts` files
+* [X] Create 8x10 photo template with same layout as 11x14
 * [X] Add photo template profile-picture placement variants by roster count
 * [X] Ensure templates initialize with empty `data/photos` and blank roster
 
@@ -41,6 +42,7 @@
 ## Project Browser / Document Workflow
 
 * [ ] Create in-memory document open/import workflow
+* [ ] When deleting the currently selected project, unselect the active project
 * [ ] In the project/document view, add sorting by:
   * Recent modified date
   * Alphabetical order
