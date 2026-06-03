@@ -829,7 +829,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         title: 'Roster',
         thumbnail: Image.asset('assets/icons/roster.png', fit: BoxFit.cover),
         page: WorkspacePage(
-          title: 'Roster',
+          title: 'Roster (${roster.length})',
           actions: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

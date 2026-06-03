@@ -7,7 +7,7 @@
 * [ ] Separate project vs document loading logic
 * [ ] Add reusable document/template serialization classes
 * [ ] Add document metadata/version schema for future compatibility
-* [ ] Add embedded undo history support to the `.picts` document format
+* [/] Add embedded undo history support to the `.picts` document format
 * [X] Add ZIP-based project/document packaging system
 
 ---
@@ -66,7 +66,7 @@
 
 ## Roster Layout / Class Photo Features
 
-* [/] When adding a new roster entry, auto-scroll to the top so the new entry is immediately visible
+* [X] When adding a new roster entry, auto-scroll to the top so the new entry is immediately visible
 * [X] Alphabetize students by last name when saving.
 * [X] Update student paging arrows to increment by page size instead of 1
 * [X] Only show "STUDENTS" label when `maxRosterPage > 1`
@@ -78,6 +78,7 @@
 
 * [ ] Add PDF editable-field/template investigation
 * [ ] Choose clearer export icon for template preview pages
+* [X] Add JPG template export/share support
 * [X] Continue PDF optimization work to avoid duplicated assets
 * [X] Ensure PDF printing honors landscape orientation by default
 
@@ -86,7 +87,7 @@
 ## Template Preview UX
 
 * [ ] Add pinch zoom to template preview
-* [ ] Extract shared template layout engine for preview and PDF export
+* [?] Extract shared template layout engine for preview and PDF export
 * [ ] Replace template preview page buttons with vertically scrollable/swipeable generated pages
 
 ---
@@ -110,17 +111,16 @@
 
 ## Workspace Navigation
 
-* [ ] Split project workspace into:
+* [X] Split project workspace into:
   * Document Data page
   * Roster Data page
   * Render / Preview page
 * [ ] Support circular page navigation
   * Last page wraps to first
   * First page wraps to last
-* [ ] Center item in filmstrip is always selected
-* [ ] Dim non-selected filmstrip items
-* [ ] Support dragging the filmstrip to navigate pages
-* [ ] Show partial adjacent pages during page transitions
+* [X] Center item in filmstrip is always selected
+* [X] Dim non-selected filmstrip items
+* [X] Support dragging the filmstrip to navigate pages
 * [ ] Restyle bottom navigator with a black filmstrip outline
 * [X] Replace Projects filmstrip folder thumbnail with a custom project-list icon
 * [X] Hide filmstrip when the workspace has only one page
