@@ -9,6 +9,7 @@ import '../services/template_loader.dart';
 
 class TemplatePdfExporter {
   final Map<String, pw.MemoryImage> _pdfImageCache = {};
+  final Map<String, pw.Font> _pdfFontCache = {};
 
   Future<void> exportAndShare({
     required LoadedTemplate loadedTemplate,
@@ -226,6 +227,7 @@ class TemplatePdfExporter {
       }
 
       final fontSize = (element['fontSize'] ?? 0.25).toDouble();
+      final font = await _resolvePdfFont(element);
 
       return pw.Positioned(
         left: left * PdfPageFormat.inch,
@@ -242,6 +244,7 @@ class TemplatePdfExporter {
                   value,
                   maxLines: 1,
                   style: pw.TextStyle(
+                    font: font,
                     fontSize: fontSize * PdfPageFormat.inch,
                     fontWeight: _isBold(element)
                         ? pw.FontWeight.bold
@@ -389,6 +392,72 @@ class TemplatePdfExporter {
     final fontStyleString =
         element['fontStyle']?.toString().toLowerCase() ?? '';
     return fontStyleString.contains('italic');
+  }
+
+  Future<pw.Font?> _resolvePdfFont(Map<String, dynamic> element) async {
+    final fontFamily = element['fontFamily']?.toString();
+    final fontAssetPath = _fontAssetPath(
+      fontFamily: fontFamily,
+      isBold: _isBold(element),
+      isItalic: _isItalic(element),
+    );
+
+    if (fontAssetPath == null) {
+      return null;
+    }
+
+    final cached = _pdfFontCache[fontAssetPath];
+
+    if (cached != null) {
+      return cached;
+    }
+
+    final data = await rootBundle.load(fontAssetPath);
+    final font = pw.Font.ttf(data);
+
+    _pdfFontCache[fontAssetPath] = font;
+
+    return font;
+  }
+
+  String? _fontAssetPath({
+    required String? fontFamily,
+    required bool isBold,
+    required bool isItalic,
+  }) {
+    switch (fontFamily?.toLowerCase()) {
+      case 'arial':
+        if (isBold && isItalic) return 'assets/fonts/arialbi.ttf';
+        if (isBold) return 'assets/fonts/arialbd.ttf';
+        if (isItalic) return 'assets/fonts/ariali.ttf';
+        return 'assets/fonts/arial.ttf';
+
+      case 'calibri':
+        if (isBold && isItalic) return 'assets/fonts/calibriz.ttf';
+        if (isBold) return 'assets/fonts/calibrib.ttf';
+        if (isItalic) return 'assets/fonts/calibrii.ttf';
+        return 'assets/fonts/calibri.ttf';
+
+      case 'cambria':
+        if (isBold && isItalic) return 'assets/fonts/cambriaz.ttf';
+        if (isBold) return 'assets/fonts/cambriab.ttf';
+        if (isItalic) return 'assets/fonts/cambriai.ttf';
+        return 'assets/fonts/cambria.ttc';
+
+      case 'georgia':
+        if (isBold && isItalic) return 'assets/fonts/georgiaz.ttf';
+        if (isBold) return 'assets/fonts/georgiab.ttf';
+        if (isItalic) return 'assets/fonts/georgiai.ttf';
+        return 'assets/fonts/georgia.ttf';
+
+      case 'times new roman':
+        if (isBold && isItalic) return 'assets/fonts/timesbi.ttf';
+        if (isBold) return 'assets/fonts/timesbd.ttf';
+        if (isItalic) return 'assets/fonts/timesi.ttf';
+        return 'assets/fonts/times.ttf';
+    }
+
+    return null;
   }
 
   String _firstNameLastInitial(String value) {
