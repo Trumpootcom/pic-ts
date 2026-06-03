@@ -604,7 +604,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           documentData: documentData,
           rosterRows: roster,
           projectFolderPath: project.folderPath,
-          fileName: '${loadedTemplate.template.id}.pdf',
+          fileName: _exportFileName(project.name, 'pdf'),
         );
         return;
       }
@@ -615,7 +615,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           documentData: documentData,
           rosterRows: roster,
           projectFolderPath: project.folderPath,
-          fileName: '${loadedTemplate.template.id}.jpg',
+          fileName: _exportFileName(project.name, 'jpg'),
         );
         return;
       }
@@ -632,6 +632,19 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         context,
       ).showSnackBar(SnackBar(content: Text(error.toString())));
     }
+  }
+
+  String _exportFileName(String projectName, String extension) {
+    final safeName = projectName
+        .trim()
+        .replaceAll(RegExp(r'[\\/:*?"<>|]+'), '')
+        .replaceAll(RegExp(r'\s+'), '_');
+
+    if (safeName.isEmpty) {
+      return 'export.$extension';
+    }
+
+    return '$safeName.$extension';
   }
 
   Future<void> _createProject() async {
