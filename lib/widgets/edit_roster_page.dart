@@ -38,6 +38,7 @@ class EditRosterPage extends StatefulWidget {
 class _EditRosterPageState extends State<EditRosterPage> {
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
+  final ScrollController _scrollController = ScrollController();
 
   String _fieldId(int index, String key) => '${index}_$key';
 
@@ -51,6 +52,20 @@ class _EditRosterPageState extends State<EditRosterPage> {
   void didUpdateWidget(covariant EditRosterPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     _setupFields();
+
+    if (widget.roster.length > oldWidget.roster.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) {
+          return;
+        }
+
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      });
+    }
   }
 
   void _setupFields() {
@@ -115,6 +130,8 @@ class _EditRosterPageState extends State<EditRosterPage> {
     for (final node in _focusNodes.values) {
       node.dispose();
     }
+
+    _scrollController.dispose();
 
     super.dispose();
   }
@@ -259,9 +276,11 @@ class _EditRosterPageState extends State<EditRosterPage> {
                 thickness: WidgetStateProperty.all(8),
               ),
               child: Scrollbar(
+                controller: _scrollController,
                 thumbVisibility: false,
                 trackVisibility: false,
                 child: ListView(
+                  controller: _scrollController,
                   padding: const EdgeInsets.only(right: 0),
                   children: [
                     for (int i = 0; i < widget.roster.length; i++)

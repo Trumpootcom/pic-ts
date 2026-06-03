@@ -163,8 +163,9 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     await historyManager.clear(projectData);
 
+    final sortedRoster = _rosterSortedForSave();
     projectData['documentData'] = documentData;
-    projectData['roster'] = roster;
+    projectData['roster'] = sortedRoster;
 
     await ProjectStorage().saveProject(
       project: project,
@@ -173,11 +174,85 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     if (!mounted) return;
 
-    setState(() {});
+    setState(() {
+      roster = sortedRoster;
+    });
 
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Project Saved')));
+  }
+
+  List<Map<String, dynamic>> _rosterSortedForSave() {
+    final defaultFullName = _rosterFieldDefault('fullName').trim();
+    final sortedRoster = <Map<String, dynamic>>[];
+    final originalOrder = <Map<String, dynamic>, int>{};
+
+    for (int i = 0; i < roster.length; i++) {
+      final row = Map<String, dynamic>.from(roster[i])..remove('_rowId');
+      sortedRoster.add(row);
+      originalOrder[row] = i;
+    }
+
+    sortedRoster.sort((a, b) {
+      final aName = a['fullName']?.toString().trim() ?? '';
+      final bName = b['fullName']?.toString().trim() ?? '';
+      final aIsDefault = aName.isEmpty || aName == defaultFullName;
+      final bIsDefault = bName.isEmpty || bName == defaultFullName;
+
+      if (aIsDefault != bIsDefault) {
+        return aIsDefault ? -1 : 1;
+      }
+
+      if (aIsDefault && bIsDefault) {
+        return (originalOrder[a] ?? 0).compareTo(originalOrder[b] ?? 0);
+      }
+
+      final nameCompare = _lastNameSortKey(aName).compareTo(
+        _lastNameSortKey(bName),
+      );
+
+      if (nameCompare != 0) {
+        return nameCompare;
+      }
+
+      return (originalOrder[a] ?? 0).compareTo(originalOrder[b] ?? 0);
+    });
+
+    return sortedRoster;
+  }
+
+  String _lastNameSortKey(String fullName) {
+    final parts = fullName
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return '';
+    }
+
+    if (parts.length == 1) {
+      return parts.first;
+    }
+
+    final lastName = parts.removeLast();
+    return '$lastName ${parts.join(' ')}';
+  }
+
+  String _rosterFieldDefault(String key) {
+    for (final field in rosterSchema) {
+      if (field is! Map) {
+        continue;
+      }
+
+      if (field['key'] == key) {
+        return field['default']?.toString() ?? '';
+      }
+    }
+
+    return '';
   }
 
   Future<void> _addRosterRow() async {

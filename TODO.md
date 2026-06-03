@@ -16,7 +16,7 @@
 
 * [ ] Add export/import/share workflow for templates
 * [ ] Add email/share/open integration for `.picts` files
-* [ ] Add photo template profile-picture placement variants by roster count
+* [X] Add photo template profile-picture placement variants by roster count
 * [X] Ensure templates initialize with empty `data/photos` and blank roster
 
 ---
@@ -66,10 +66,8 @@
 
 ## Roster Layout / Class Photo Features
 
-* [ ] Add student-name font size setting to portrait areas
-* [ ] Add vertical name gap setting below ovals
-* [ ] When adding a new roster entry, auto-scroll to the top so the new entry is immediately visible
-* [ ] Automatically alphabetize students by last name when adding them to the roster
+* [/] When adding a new roster entry, auto-scroll to the top so the new entry is immediately visible
+* [X] Alphabetize students by last name when saving.
 * [X] Update student paging arrows to increment by page size instead of 1
 * [X] Only show "STUDENTS" label when `maxRosterPage > 1`
 * [X] When adding a new roster entry, insert it at the beginning of the list
