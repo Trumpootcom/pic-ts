@@ -73,18 +73,6 @@ class _EditDocumentPageState extends State<EditDocumentPage> {
 
     await widget.onSetDocumentField(key, controller.text);
   }
-  void _selectFieldText(String key) {
-    final controller = _controllers[key];
-
-    if (controller == null) {
-      return;
-    }
-
-    controller.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: controller.text.length,
-    );
-  }
 
   @override
   void dispose() {
@@ -127,7 +115,6 @@ class _EditDocumentPageState extends State<EditDocumentPage> {
           controller: _controllers[key],
           focusNode: _focusNodes[key],
           decoration: widget.inputDecoration(label),
-          onTap: () => _selectFieldText(key),
           onFieldSubmitted: (_) {
             _commitField(key);
           },

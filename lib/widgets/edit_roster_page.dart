@@ -83,7 +83,7 @@ class _EditRosterPageState extends State<EditRosterPage> {
 
         node.addListener(() {
           if (node.hasFocus) {
-            _selectFieldText(i, 'fullName');
+            _selectDefaultFieldText(i, 'fullName');
           } else {
             _commitField(i, 'fullName');
           }
@@ -108,10 +108,14 @@ class _EditRosterPageState extends State<EditRosterPage> {
     await widget.onSetRosterField(index, key, controller.text);
   }
 
-  void _selectFieldText(int index, String key) {
+  void _selectDefaultFieldText(int index, String key) {
     final controller = _controllers[_fieldId(index, key)];
 
     if (controller == null) {
+      return;
+    }
+
+    if (controller.text.trim() != _rosterFieldDefault(key).trim()) {
       return;
     }
 
@@ -119,6 +123,20 @@ class _EditRosterPageState extends State<EditRosterPage> {
       baseOffset: 0,
       extentOffset: controller.text.length,
     );
+  }
+
+  String _rosterFieldDefault(String key) {
+    for (final field in widget.rosterSchema) {
+      if (field is! Map) {
+        continue;
+      }
+
+      if (field['key'] == key) {
+        return field['default']?.toString() ?? '';
+      }
+    }
+
+    return '';
   }
 
   @override
@@ -213,7 +231,7 @@ class _EditRosterPageState extends State<EditRosterPage> {
                     focusNode: _focusNodes[id],
                     decoration: _rosterInputDecoration(),
                     textCapitalization: TextCapitalization.words,
-                    onTap: () => _selectFieldText(i, 'fullName'),
+                    onTap: () => _selectDefaultFieldText(i, 'fullName'),
                     onFieldSubmitted: (_) {
                       _commitField(i, 'fullName');
                     },
