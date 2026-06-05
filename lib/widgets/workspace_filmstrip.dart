@@ -17,6 +17,7 @@ class WorkspaceFilmstrip extends StatefulWidget {
   final double currentPagePosition;
   final ValueChanged<double>? onPagePositionChanged;
   final ValueChanged<int> onTap;
+  final bool filmTheme;
 
   const WorkspaceFilmstrip({
     super.key,
@@ -25,6 +26,7 @@ class WorkspaceFilmstrip extends StatefulWidget {
     required this.currentPagePosition,
     required this.onTap,
     this.onPagePositionChanged,
+    this.filmTheme = false,
   });
 
   @override
@@ -102,11 +104,16 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
   @override
   Widget build(BuildContext context) {
+    final stripHeight = widget.filmTheme
+        ? filmstripHeight
+        : thumbHeight + horizontalGap;
+
     return Padding(
       padding: const EdgeInsets.only(top: topGap, bottom: bottomGap),
       child: Container(
-        height: filmstripHeight,
+        height: stripHeight,
         decoration: BoxDecoration(
+          color: widget.filmTheme ? null : AppColors.lightUnsat,
           boxShadow: [
             BoxShadow(
               color: AppColors.darkUnsat.withAlpha(120),
@@ -129,9 +136,10 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
             sprocketColor: AppColors.lightUnsat,
             sprocketBandHeight: sprocketBandHeight,
             scrollController: _scrollController,
+            enabled: widget.filmTheme,
           ),
           child: SizedBox(
-            height: filmstripHeight,
+            height: stripHeight,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final sideSpacer = ((constraints.maxWidth - thumbWidth) / 2)
@@ -226,7 +234,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
                           SizedBox(
                             width: thumbWidth,
-                            height: filmstripHeight,
+                            height: stripHeight,
                           ),
 
                           Expanded(
@@ -242,7 +250,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
                       child: Center(
                         child: Container(
                           width: thumbWidth + horizontalGap,
-                          height: filmstripHeight,
+                          height: stripHeight,
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: AppColors.textLight,
@@ -270,6 +278,7 @@ class _FilmstripFramePainter extends CustomPainter {
   final Color sprocketColor;
   final double sprocketBandHeight;
   final ScrollController scrollController;
+  final bool enabled;
 
   _FilmstripFramePainter({
     required this.frameColor,
@@ -277,10 +286,15 @@ class _FilmstripFramePainter extends CustomPainter {
     required this.sprocketColor,
     required this.sprocketBandHeight,
     required this.scrollController,
+    required this.enabled,
   }) : super(repaint: scrollController);
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (!enabled) {
+      return;
+    }
+
     final framePaint = Paint()..color = frameColor;
     final lanePaint = Paint()..color = laneColor;
     final sprocketPaint = Paint()..color = sprocketColor;
@@ -335,6 +349,7 @@ class _FilmstripFramePainter extends CustomPainter {
         oldDelegate.laneColor != laneColor ||
         oldDelegate.sprocketColor != sprocketColor ||
         oldDelegate.sprocketBandHeight != sprocketBandHeight ||
-        oldDelegate.scrollController != scrollController;
+        oldDelegate.scrollController != scrollController ||
+        oldDelegate.enabled != enabled;
   }
 }

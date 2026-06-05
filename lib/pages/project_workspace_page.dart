@@ -944,6 +944,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             items: pages.map((page) => page.filmstripItem).toList(),
             currentIndex: _currentPage,
             currentPagePosition: _currentPagePosition,
+            filmTheme: true,
             onPagePositionChanged: (pagePosition) {
               if (!_pageController.hasClients) return;
 
