@@ -89,7 +89,7 @@
 ## Template Preview UX
 
 * [X] Add pinch zoom to template preview
-* [?] Extract shared template layout engine for preview and PDF export
+* [X] Extract shared template layout engine for preview and PDF export
 * [X] Replace template preview page buttons with vertically scrollable/swipeable generated pages
 
 ---

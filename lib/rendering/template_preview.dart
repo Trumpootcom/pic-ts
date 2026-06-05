@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'template_layout_engine.dart';
 import '../services/template_loader.dart';
 
 class TemplatePreview extends StatelessWidget {
@@ -25,45 +25,23 @@ class TemplatePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final json = loadedTemplate.template.rawJson;
-
-    final document = Map<String, dynamic>.from(json['document'] as Map? ?? {});
-    final roster = Map<String, dynamic>.from(json['roster'] as Map? ?? {});
-    final documentElements = document['elements'] as List<dynamic>? ?? [];
-    final rosterElements = roster['elements'] as List<dynamic>? ?? [];
-
-    final widthIn = (document['width'] ?? 11).toDouble();
-    final heightIn = (document['height'] ?? 8.5).toDouble();
-
-    final rosterWidthIn = (roster['width'] ?? widthIn).toDouble();
-    final rosterHeightIn = (roster['height'] ?? heightIn).toDouble();
-
-    final maxRosterPerPage = document['maxRosterPerPage'] as int? ?? 1;
-    final pageRosterCount = _pageRosterCount(
-      maxRosterPerPage: maxRosterPerPage,
-      rosterStartIndex: rosterStartIndex,
+    final layoutEngine = TemplateLayoutEngine(
+      loadedTemplate: loadedTemplate,
+      documentData: documentData,
       rosterRows: rosterRows,
+      projectFolderPath: projectFolderPath,
     );
-    final placementVariant = _resolvePlacementVariant(
-      document: document,
-      rosterCount: pageRosterCount,
-    );
-    final slots = placementVariant['slots'] as List<dynamic>? ?? [];
+    final metrics = layoutEngine.metrics();
+    final page = layoutEngine.buildPage(rosterStartIndex: rosterStartIndex);
 
-    final aspect = widthIn / heightIn;
+    final aspect = metrics.widthIn / metrics.heightIn;
 
     if (previewWidth != null) {
       return _buildPreviewSurface(
         width: previewWidth!,
         height: previewWidth! / aspect,
-        scale: previewWidth! / widthIn,
-        documentElements: documentElements,
-        rosterElements: rosterElements,
-        rosterRows: rosterRows,
-        rosterWidthIn: rosterWidthIn,
-        rosterHeightIn: rosterHeightIn,
-        slots: slots,
-        pageRosterCount: pageRosterCount,
+        scale: previewWidth! / metrics.widthIn,
+        page: page,
       );
     }
 
@@ -81,14 +59,8 @@ class TemplatePreview extends StatelessWidget {
           child: _buildPreviewSurface(
             width: fittedWidth,
             height: fittedHeight,
-            scale: fittedWidth / widthIn,
-            documentElements: documentElements,
-            rosterElements: rosterElements,
-            rosterRows: rosterRows,
-            rosterWidthIn: rosterWidthIn,
-            rosterHeightIn: rosterHeightIn,
-            slots: slots,
-            pageRosterCount: pageRosterCount,
+            scale: fittedWidth / metrics.widthIn,
+            page: page,
           ),
         );
       },
@@ -99,13 +71,7 @@ class TemplatePreview extends StatelessWidget {
     required double width,
     required double height,
     required double scale,
-    required List<dynamic> documentElements,
-    required List<dynamic> rosterElements,
-    required List<Map<String, dynamic>> rosterRows,
-    required double rosterWidthIn,
-    required double rosterHeightIn,
-    required List<dynamic> slots,
-    required int pageRosterCount,
+    required TemplateLayoutPage page,
   }) {
     return Container(
       width: width,
@@ -113,118 +79,29 @@ class TemplatePreview extends StatelessWidget {
       color: Colors.white,
       child: Stack(
         children: [
-          for (final element in documentElements)
+          for (final element in page.elements)
             _buildElement(
-              element: Map<String, dynamic>.from(element as Map),
+              element: element,
               scale: scale,
-              sourceData: documentData,
-              fallbackData: const <String, dynamic>{},
-              offsetXIn: 0,
-              offsetYIn: 0,
-              slotScaleX: 1,
-              slotScaleY: 1,
             ),
-          for (int i = 0; i < slots.length && i < pageRosterCount; i++)
-            if (rosterStartIndex + i < rosterRows.length)
-              ..._buildRosterSlot(
-                slot: Map<String, dynamic>.from(slots[i] as Map),
-                rosterElements: rosterElements,
-                rosterRow: rosterRows[rosterStartIndex + i],
-                rosterWidthIn: rosterWidthIn,
-                rosterHeightIn: rosterHeightIn,
-                scale: scale,
-                fallbackData: documentData,
-              ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildRosterSlot({
-    required Map<String, dynamic> slot,
-    required List<dynamic> rosterElements,
-    required Map<String, dynamic> rosterRow,
-    required double rosterWidthIn,
-    required double rosterHeightIn,
-    required double scale,
-    required Map<String, dynamic> fallbackData,
-  }) {
-    final slotX = (slot['x'] ?? 0).toDouble();
-    final slotY = (slot['y'] ?? 0).toDouble();
-    final slotW = (slot['w'] ?? rosterWidthIn).toDouble();
-    final slotH = (slot['h'] ?? rosterHeightIn).toDouble();
-
-    final slotScaleX = slotW / rosterWidthIn;
-    final slotScaleY = slotH / rosterHeightIn;
-
-    return [
-      for (final element in rosterElements)
-        _buildElement(
-          element: Map<String, dynamic>.from(element as Map),
-          scale: scale,
-          sourceData: rosterRow,
-          fallbackData: fallbackData,
-          offsetXIn: slotX,
-          offsetYIn: slotY,
-          slotScaleX: slotScaleX,
-          slotScaleY: slotScaleY,
-        ),
-    ];
-  }
-
   Widget _buildElement({
-    required Map<String, dynamic> element,
+    required TemplateLayoutElement element,
     required double scale,
-    required Map<String, dynamic> sourceData,
-    required Map<String, dynamic> fallbackData,
-    required double offsetXIn,
-    required double offsetYIn,
-    required double slotScaleX,
-    required double slotScaleY,
   }) {
-    final type = element['type']?.toString() ?? '';
+    final left = element.rect.left * scale;
+    final top = element.rect.top * scale;
+    final w = element.rect.width * scale;
+    final h = element.rect.height * scale;
 
-    final rawX = (element['x'] ?? 0).toDouble();
-    final rawY = (element['y'] ?? 0).toDouble();
-    final rawW = (element['w'] ?? 1).toDouble();
-    final rawH = (element['h'] ?? 1).toDouble();
-
-    final x = (offsetXIn + (rawX * slotScaleX)) * scale;
-    final y = (offsetYIn + (rawY * slotScaleY)) * scale;
-    final w = rawW * slotScaleX * scale;
-    final h = rawH * slotScaleY * scale;
-
-    final anchor = element['anchor']?.toString() ?? 'topLeft';
-
-    double left = x;
-    double top = y;
-
-    if (anchor == 'topCenter') {
-      left = x - (w / 2);
-    } else if (anchor == 'center') {
-      left = x - (w / 2);
-      top = y - (h / 2);
-    } else if (anchor == 'centerLeft') {
-      top = y - (h / 2);
-    } else if (anchor == 'centerRight') {
-      left = x - w;
-      top = y - (h / 2);
-    } else if (anchor == 'topRight') {
-      left = x - w;
-    } else if (anchor == 'bottomLeft') {
-      top = y - h;
-    } else if (anchor == 'bottomCenter') {
-      left = x - (w / 2);
-      top = y - h;
-    } else if (anchor == 'bottomRight') {
-      left = x - w;
-      top = y - h;
-    }
-
-    if (type == 'image') {
-      final imagePath = _resolveImagePath(element, sourceData, fallbackData);
-      final fit = _resolveBoxFit(element['fit']?.toString());
-      final shape = element['shape']?.toString() ?? 'rect';
+    if (element.type == 'image') {
+      final imagePath = element.imagePath ?? '';
+      final fit = _resolveBoxFit(element.rawElement['fit']?.toString());
+      final shape = element.rawElement['shape']?.toString() ?? 'rect';
 
       final isFileImage =
           imagePath.startsWith('/') || imagePath.startsWith('file:');
@@ -242,25 +119,13 @@ class TemplatePreview extends StatelessWidget {
       );
     }
 
-    if (type == 'text') {
-      final source = element['source']?.toString() ?? '';
-      String value = sourceData[source]?.toString() ??
-          fallbackData[source]?.toString() ??
-          '';
-      value = value.trimRight();
-
-      final transform = element['transform']?.toString();
-
-      if (transform == 'firstNameLastInitial') {
-        value = _firstNameLastInitial(value);
-      } else if (transform == 'upperCase' || transform == 'uppercase') {
-        value = value.toUpperCase();
-      }
-
-      final fontSize = (element['fontSize'] ?? 0.25).toDouble() * scale;
-      final colorString = element['color']?.toString() ?? '#000000';
-      final alignString = element['align']?.toString() ?? 'left';
-      final fontFamily = element['fontFamily']?.toString();
+    if (element.type == 'text') {
+      final value = element.text ?? '';
+      final fontSize =
+          (element.rawElement['fontSize'] ?? 0.25).toDouble() * scale;
+      final colorString = element.rawElement['color']?.toString() ?? '#000000';
+      final alignString = element.rawElement['align']?.toString() ?? 'left';
+      final fontFamily = element.rawElement['fontFamily']?.toString();
 
       TextAlign textAlign = TextAlign.left;
 
@@ -271,7 +136,7 @@ class TemplatePreview extends StatelessWidget {
       }
 
       final fontStyleString =
-          element['fontStyle']?.toString().toLowerCase() ?? '';
+          element.rawElement['fontStyle']?.toString().toLowerCase() ?? '';
 
       final fontStyle = fontStyleString.contains('italic')
           ? FontStyle.italic
@@ -301,45 +166,13 @@ class TemplatePreview extends StatelessWidget {
             scale: scale,
             templateId: loadedTemplate.template.id,
             productType: loadedTemplate.template.productType,
-            source: source,
+            source: element.source,
           ),
         ),
       );
     }
 
     return const SizedBox.shrink();
-  }
-
-  String _resolveImagePath(
-    Map<String, dynamic> element,
-    Map<String, dynamic> sourceData,
-    Map<String, dynamic> fallbackData,
-  ) {
-    final source = element['source']?.toString() ?? '';
-    final value =
-        sourceData[source]?.toString() ?? fallbackData[source]?.toString();
-
-    if (value != null && value.trim().isNotEmpty) {
-      if (value.startsWith('assets/')) {
-        return value;
-      }
-
-      if (value.startsWith('/')) {
-        return value;
-      }
-
-      return '$projectFolderPath/$value';
-    }
-
-    if (source == 'profilePicture') {
-      return 'assets/resources/portrait.png';
-    }
-
-    if (source.startsWith('assets/')) {
-      return source;
-    }
-
-    return loadedTemplate.assetPath(source);
   }
 
   BoxFit _resolveBoxFit(String? value) {
@@ -354,34 +187,6 @@ class TemplatePreview extends StatelessWidget {
     return BoxFit.fill;
   }
 
-  int _pageRosterCount({
-    required int maxRosterPerPage,
-    required int rosterStartIndex,
-    required List<Map<String, dynamic>> rosterRows,
-  }) {
-    if (maxRosterPerPage <= 0) {
-      return 0;
-    }
-
-    final remainingRows = rosterRows.length - rosterStartIndex;
-    return math.max(0, math.min(maxRosterPerPage, remainingRows));
-  }
-
-  Map<String, dynamic> _resolvePlacementVariant({
-    required Map<String, dynamic> document,
-    required int rosterCount,
-  }) {
-    final variants = Map<String, dynamic>.from(
-      document['placementVariants'] as Map? ?? {},
-    );
-
-    return Map<String, dynamic>.from(
-      variants[rosterCount.toString()] as Map? ??
-          variants['default'] as Map? ??
-          {},
-    );
-  }
-
   Widget _applyImageShape({
     required String shape,
     required Widget child,
@@ -391,27 +196,6 @@ class TemplatePreview extends StatelessWidget {
     }
 
     return child;
-  }
-
-  String _firstNameLastInitial(String value) {
-    final parts = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    if (parts.isEmpty) {
-      return '';
-    }
-
-    if (parts.length == 1) {
-      return parts.first;
-    }
-
-    final firstName = parts.first;
-    final lastInitial = parts.last[0];
-
-    return '$firstName $lastInitial.';
   }
 
   Color _parseColor(String value) {

@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../util/ts_print.dart';
 import '../services/template_loader.dart';
+import 'template_layout_engine.dart';
 
 class TemplatePdfExporter {
   final Map<String, pw.MemoryImage> _pdfImageCache = {};
@@ -36,99 +37,37 @@ class TemplatePdfExporter {
   }) async {
     final pdf = pw.Document();
 
-    final json = loadedTemplate.template.rawJson;
+    final layoutEngine = TemplateLayoutEngine(
+      loadedTemplate: loadedTemplate,
+      documentData: documentData,
+      rosterRows: rosterRows,
+      projectFolderPath: projectFolderPath,
+    );
+    final metrics = layoutEngine.metrics();
+    final pageStarts = layoutEngine.pageStarts();
 
-    final document = Map<String, dynamic>.from(json['document'] as Map? ?? {});
-    final roster = Map<String, dynamic>.from(json['roster'] as Map? ?? {});
-
-    final documentElements = document['elements'] as List<dynamic>? ?? [];
-    final rosterElements = roster['elements'] as List<dynamic>? ?? [];
-
-    final widthIn = (document['width'] ?? 11).toDouble();
-    final heightIn = (document['height'] ?? 8.5).toDouble();
-
-    final rosterWidthIn = (roster['width'] ?? widthIn).toDouble();
-    final rosterHeightIn = (roster['height'] ?? heightIn).toDouble();
-
-    final maxRosterPerPage = document['maxRosterPerPage'] as int? ?? 1;
-    final pageSize = maxRosterPerPage <= 0 ? 1 : maxRosterPerPage;
-    final rosterCount = maxRosterPerPage <= 0 ? 1 : rosterRows.length;
     tsPrint('EXPORT PDF: ------------------------------------------------');
-    tsPrint('MAX ROSTER PER PAGE: ${maxRosterPerPage}');
-    tsPrint('PAGE SIZE: ${pageSize}');
-    tsPrint('ROSTER COUNT: ${rosterCount}');
+    tsPrint('MAX ROSTER PER PAGE: ${metrics.maxRosterPerPage}');
+    tsPrint('PAGE COUNT: ${pageStarts.length}');
 
     final pageFormat = PdfPageFormat(
-      widthIn * PdfPageFormat.inch,
-      heightIn * PdfPageFormat.inch,
+      metrics.widthIn * PdfPageFormat.inch,
+      metrics.heightIn * PdfPageFormat.inch,
       marginAll: 0,
     );
 
-    for (int pageStart = 0; pageStart < rosterCount; pageStart += pageSize) {
+    for (final pageStart in pageStarts) {
       final pageWidgets = <pw.Widget>[];
-      final pageRosterCount = _pageRosterCount(
-        maxRosterPerPage: maxRosterPerPage,
-        pageStart: pageStart,
-        pageSize: pageSize,
-        rosterRows: rosterRows,
-      );
-      final placementVariant = _resolvePlacementVariant(
-        document: document,
-        rosterCount: pageRosterCount,
-      );
-      final slots = placementVariant['slots'] as List<dynamic>? ?? [];
+      final page = layoutEngine.buildPage(rosterStartIndex: pageStart);
 
       tsPrint('ADDING DOCUMENT ELEMENTS TO PAGE: ${pageStart}');
 
-      for (final element in documentElements) {
+      for (final element in page.elements) {
         pageWidgets.add(
           await _buildElement(
-            loadedTemplate: loadedTemplate,
-            element: Map<String, dynamic>.from(element as Map),
-            sourceData: documentData,
-            fallbackData: const <String, dynamic>{},
-            projectFolderPath: projectFolderPath,
-            offsetXIn: 0,
-            offsetYIn: 0,
-            slotScaleX: 1,
-            slotScaleY: 1,
+            element: element,
           ),
         );
-      }
-
-      tsPrint('ADDING ROSTER ELEMENTS TO PAGE: ${pageStart}');
-      for (int i = 0; i < slots.length && i < pageRosterCount; i++) {
-        final rosterIndex = pageStart + i;
-
-        if (rosterIndex >= rosterRows.length) {
-          break;
-        }
-
-        final slot = Map<String, dynamic>.from(slots[i] as Map);
-
-        final slotX = (slot['x'] ?? 0).toDouble();
-        final slotY = (slot['y'] ?? 0).toDouble();
-        final slotW = (slot['w'] ?? rosterWidthIn).toDouble();
-        final slotH = (slot['h'] ?? rosterHeightIn).toDouble();
-
-        final slotScaleX = slotW / rosterWidthIn;
-        final slotScaleY = slotH / rosterHeightIn;
-
-        for (final element in rosterElements) {
-          pageWidgets.add(
-            await _buildElement(
-              loadedTemplate: loadedTemplate,
-              element: Map<String, dynamic>.from(element as Map),
-              sourceData: rosterRows[rosterIndex],
-              fallbackData: documentData,
-              projectFolderPath: projectFolderPath,
-              offsetXIn: slotX,
-              offsetYIn: slotY,
-              slotScaleX: slotScaleX,
-              slotScaleY: slotScaleY,
-            ),
-          );
-        }
       }
 
       tsPrint('ADDING PAGE TO PDF: ${pageStart}');
@@ -146,69 +85,20 @@ class TemplatePdfExporter {
   }
 
   Future<pw.Widget> _buildElement({
-    required LoadedTemplate loadedTemplate,
-    required Map<String, dynamic> element,
-    required Map<String, dynamic> sourceData,
-    required Map<String, dynamic> fallbackData,
-    required String projectFolderPath,
-    required double offsetXIn,
-    required double offsetYIn,
-    required double slotScaleX,
-    required double slotScaleY,
+    required TemplateLayoutElement element,
   }) async {
-    final type = element['type']?.toString() ?? '';
+    final left = element.rect.left;
+    final top = element.rect.top;
+    final w = element.rect.width;
+    final h = element.rect.height;
 
-    final rawX = (element['x'] ?? 0).toDouble();
-    final rawY = (element['y'] ?? 0).toDouble();
-    final rawW = (element['w'] ?? 1).toDouble();
-    final rawH = (element['h'] ?? 1).toDouble();
-
-    final x = offsetXIn + (rawX * slotScaleX);
-    final y = offsetYIn + (rawY * slotScaleY);
-    final w = rawW * slotScaleX;
-    final h = rawH * slotScaleY;
-
-    final anchor = element['anchor']?.toString() ?? 'topLeft';
-
-    double left = x;
-    double top = y;
-
-    if (anchor == 'topCenter') {
-      left = x - (w / 2);
-    } else if (anchor == 'center') {
-      left = x - (w / 2);
-      top = y - (h / 2);
-    } else if (anchor == 'centerLeft') {
-      top = y - (h / 2);
-    } else if (anchor == 'centerRight') {
-      left = x - w;
-      top = y - (h / 2);
-    } else if (anchor == 'topRight') {
-      left = x - w;
-    } else if (anchor == 'bottomLeft') {
-      top = y - h;
-    } else if (anchor == 'bottomCenter') {
-      left = x - (w / 2);
-      top = y - h;
-    } else if (anchor == 'bottomRight') {
-      left = x - w;
-      top = y - h;
-    }
-
-    if (type == 'image') {
-      final imagePath = _resolveImagePath(
-        loadedTemplate: loadedTemplate,
-        element: element,
-        sourceData: sourceData,
-        fallbackData: fallbackData,
-        projectFolderPath: projectFolderPath,
-      );
-
+    if (element.type == 'image') {
+      final imagePath = element.imagePath ?? '';
       final image = await _getPdfImage(imagePath);
-      final shape = element['shape']?.toString() ?? 'rect';
+      final shape = element.rawElement['shape']?.toString() ?? 'rect';
       final imageWidget = pw.Image(
         image,
-        fit: _resolveBoxFit(element['fit']?.toString()),
+        fit: _resolveBoxFit(element.rawElement['fit']?.toString()),
       );
 
       return pw.Positioned(
@@ -222,23 +112,10 @@ class TemplatePdfExporter {
       );
     }
 
-    if (type == 'text') {
-      final source = element['source']?.toString() ?? '';
-      String value = sourceData[source]?.toString() ??
-          fallbackData[source]?.toString() ??
-          '';
-      value = value.trimRight();
-
-      final transform = element['transform']?.toString();
-
-      if (transform == 'firstNameLastInitial') {
-        value = _firstNameLastInitial(value);
-      } else if (transform == 'upperCase' || transform == 'uppercase') {
-        value = value.toUpperCase();
-      }
-
-      final fontSize = (element['fontSize'] ?? 0.25).toDouble();
-      final font = await _resolvePdfFont(element);
+    if (element.type == 'text') {
+      final value = element.text ?? '';
+      final fontSize = (element.rawElement['fontSize'] ?? 0.25).toDouble();
+      final font = await _resolvePdfFont(element.rawElement);
 
       return pw.Positioned(
         left: left * PdfPageFormat.inch,
@@ -257,10 +134,10 @@ class TemplatePdfExporter {
                   style: pw.TextStyle(
                     font: font,
                     fontSize: fontSize * PdfPageFormat.inch,
-                    fontWeight: _isBold(element)
+                    fontWeight: _isBold(element.rawElement)
                         ? pw.FontWeight.bold
                         : pw.FontWeight.normal,
-                    fontStyle: _isItalic(element)
+                    fontStyle: _isItalic(element.rawElement)
                         ? pw.FontStyle.italic
                         : pw.FontStyle.normal,
                   ),
@@ -273,40 +150,6 @@ class TemplatePdfExporter {
     }
 
     return pw.SizedBox();
-  }
-
-  String _resolveImagePath({
-    required LoadedTemplate loadedTemplate,
-    required Map<String, dynamic> element,
-    required Map<String, dynamic> sourceData,
-    required Map<String, dynamic> fallbackData,
-    required String projectFolderPath,
-  }) {
-    final source = element['source']?.toString() ?? '';
-    final value =
-        sourceData[source]?.toString() ?? fallbackData[source]?.toString();
-
-    if (value != null && value.trim().isNotEmpty) {
-      if (value.startsWith('assets/')) {
-        return value;
-      }
-
-      if (value.startsWith('/')) {
-        return value;
-      }
-
-      return '$projectFolderPath/$value';
-    }
-
-    if (source == 'profilePicture') {
-      return 'assets/resources/portrait.png';
-    }
-
-    if (source.startsWith('assets/')) {
-      return source;
-    }
-
-    return loadedTemplate.assetPath(source);
   }
 
   Future<pw.MemoryImage> _getPdfImage(String imagePath) async {
@@ -349,39 +192,6 @@ class TemplatePdfExporter {
     }
 
     return pw.BoxFit.fill;
-  }
-
-  int _pageRosterCount({
-    required int maxRosterPerPage,
-    required int pageStart,
-    required int pageSize,
-    required List<Map<String, dynamic>> rosterRows,
-  }) {
-    if (maxRosterPerPage <= 0) {
-      return 0;
-    }
-
-    final remainingRows = rosterRows.length - pageStart;
-    if (remainingRows <= 0) {
-      return 0;
-    }
-
-    return remainingRows < pageSize ? remainingRows : pageSize;
-  }
-
-  Map<String, dynamic> _resolvePlacementVariant({
-    required Map<String, dynamic> document,
-    required int rosterCount,
-  }) {
-    final variants = Map<String, dynamic>.from(
-      document['placementVariants'] as Map? ?? {},
-    );
-
-    return Map<String, dynamic>.from(
-      variants[rosterCount.toString()] as Map? ??
-          variants['default'] as Map? ??
-          {},
-    );
   }
 
   pw.Widget _applyImageShape({
@@ -471,23 +281,5 @@ class TemplatePdfExporter {
     }
 
     return null;
-  }
-
-  String _firstNameLastInitial(String value) {
-    final parts = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((e) => e.isNotEmpty)
-        .toList();
-
-    if (parts.isEmpty) {
-      return '';
-    }
-
-    if (parts.length == 1) {
-      return parts.first;
-    }
-
-    return '${parts.first} ${parts.last[0]}.';
   }
 }

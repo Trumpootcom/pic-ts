@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../rendering/template_preview.dart';
+import '../rendering/template_layout_engine.dart';
 import '../services/template_loader.dart';
 
 class TemplatePreviewPage extends StatefulWidget {
@@ -59,19 +60,16 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
   Widget build(BuildContext context) {
     super.build(context);
 
-    final document = Map<String, dynamic>.from(
-      widget.loadedTemplate.template.rawJson['document'] as Map? ?? {},
+    final layoutEngine = TemplateLayoutEngine(
+      loadedTemplate: widget.loadedTemplate,
+      documentData: widget.documentData,
+      rosterRows: widget.roster,
+      projectFolderPath: widget.projectFolderPath,
     );
-
-    final maxRosterPerPage = document['maxRosterPerPage'] as int? ?? 1;
-    final isSinglePage = maxRosterPerPage <= 0;
-    final widthIn = (document['width'] ?? 11).toDouble();
-    final heightIn = (document['height'] ?? 8.5).toDouble();
-    final aspect = widthIn / heightIn;
-    final pageStarts = _pageStarts(
-      maxRosterPerPage: maxRosterPerPage,
-      rosterCount: widget.roster.length,
-    );
+    final metrics = layoutEngine.metrics();
+    final isSinglePage = metrics.maxRosterPerPage <= 0;
+    final aspect = metrics.widthIn / metrics.heightIn;
+    final pageStarts = layoutEngine.pageStarts(includeEmptyRosterPage: true);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
@@ -172,19 +170,6 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
         ),
       ),
     );
-  }
-
-  List<int> _pageStarts({
-    required int maxRosterPerPage,
-    required int rosterCount,
-  }) {
-    if (maxRosterPerPage <= 0 || rosterCount <= 0) {
-      return const [0];
-    }
-
-    return [
-      for (int i = 0; i < rosterCount; i += maxRosterPerPage) i,
-    ];
   }
 
   void _clampPreviewTransform() {
