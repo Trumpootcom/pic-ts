@@ -56,8 +56,8 @@
 
 * [ ] Add Capture directly from Camera
 * [ ] Add Crop Guide overlay to Camera preview during capture (toggle guide?)
-* [ ] Add visual crop-debug overlay/export mode
-* [ ] Add toggle to switch crop guide shape between rectangle and oval
+* [X] Clean up debug overlay from crop mode.
+* [X] Add toggle to switch crop guide shape between rectangle and oval
 * [X] Add public/exported image gallery access outside app
 * [X] Define long-term storage structure for embedded photos/assets
 * [X] Finalize cropped-photo persistent storage location

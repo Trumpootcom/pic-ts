@@ -81,13 +81,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
   double imageChildWidth = 1;
   double imageChildHeight = 1;
 
-  int debugLeft = 0;
-  int debugRight = 0;
-  int debugTop = 0;
-  int debugBottom = 0;
-
-  double debugZoom = 1.0;
-
   void _toggleCropGuideShape() {
     setState(() {
       cropGuideShape = cropGuideShape == 'oval' ? 'rect' : 'oval';
@@ -114,7 +107,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
     cropGuideShape = _initialCropGuideShape();
 
     _controller = TransformationController();
-    _controller.addListener(_updateDebugOverlay);
 
     _loadImage();
   }
@@ -131,7 +123,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
 
   @override
   void dispose() {
-    _controller.removeListener(_updateDebugOverlay);
     _controller.dispose();
     super.dispose();
   }
@@ -197,7 +188,13 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       ..translate(offsetX, offsetY)
       ..scale(totalScale);
 
-    _updateDebugOverlay();
+    _refreshCropViewport();
+  }
+
+  void _refreshCropViewport() {
+    if (!mounted) return;
+
+    setState(() {});
   }
 
   _CropRect _currentCropRect() {
@@ -228,20 +225,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       bottom: safeBottom,
       zoom: totalScale / _baseScale(),
     );
-  }
-
-  void _updateDebugOverlay() {
-    if (!mounted) return;
-
-    final crop = _currentCropRect();
-
-    setState(() {
-      debugLeft = crop.left.round();
-      debugRight = crop.right.round();
-      debugTop = crop.top.round();
-      debugBottom = crop.bottom.round();
-      debugZoom = crop.zoom;
-    });
   }
 
   Future<void> _save() async {
@@ -415,29 +398,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
                   onToggleCropGuideShape: _toggleCropGuideShape,
                   onRotateLeft: _rotateLeft,
                   onSave: _save,
-                ),
-              ),
-              Positioned(
-                bottom: 5,
-                left: 5,
-                child: IgnorePointer(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    color: Colors.black.withValues(alpha: 0.7),
-                    child: Text(
-                      'TL:($debugLeft,$debugTop) '
-                      'BR:($debugRight,$debugBottom) '
-                      'ZM:${debugZoom.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ],
