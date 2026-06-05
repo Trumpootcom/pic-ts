@@ -54,6 +54,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
   late List<Map<String, dynamic>> roster;
   late List<LoadedTemplate> templates;
   late Future<List<StoredProject>> _projectsFuture;
+  bool _previewNavigationLocked = false;
 
   @override
   void initState() {
@@ -906,6 +907,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               documentData: documentData,
               roster: roster,
               projectFolderPath: project.folderPath,
+              onZoomNavigationLockChanged: _setPreviewNavigationLocked,
             ),
           ),
         ),
@@ -921,11 +923,14 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
         Expanded(
           child: PageView.builder(
             controller: _pageController,
-            physics: const PageScrollPhysics(),
+            physics: _previewNavigationLocked
+                ? const NeverScrollableScrollPhysics()
+                : const PageScrollPhysics(),
             onPageChanged: (value) {
               setState(() {
                 _currentPage = value;
                 _currentPagePosition = value.toDouble();
+                _previewNavigationLocked = false;
               });
             },
             itemCount: pages.length,
@@ -960,6 +965,16 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           ),
       ],
     );
+  }
+
+  void _setPreviewNavigationLocked(bool locked) {
+    if (_previewNavigationLocked == locked) {
+      return;
+    }
+
+    setState(() {
+      _previewNavigationLocked = locked;
+    });
   }
 
   Widget _buildHistoryBar() {

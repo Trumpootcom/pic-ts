@@ -10,6 +10,7 @@ class TemplatePreviewPage extends StatefulWidget {
   final Map<String, dynamic> documentData;
   final List<Map<String, dynamic>> roster;
   final String projectFolderPath;
+  final ValueChanged<bool>? onZoomNavigationLockChanged;
 
   const TemplatePreviewPage({
     super.key,
@@ -17,6 +18,7 @@ class TemplatePreviewPage extends StatefulWidget {
     required this.documentData,
     required this.roster,
     required this.projectFolderPath,
+    this.onZoomNavigationLockChanged,
   });
 
   @override
@@ -30,6 +32,10 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
   Size _viewportSize = Size.zero;
   Size _documentSize = Size.zero;
   bool _isClampingTransform = false;
+  bool _zoomNavigationLocked = false;
+  bool _multiTouchNavigationLocked = false;
+  bool _notifiedNavigationLocked = false;
+  final Set<int> _activePointerIds = {};
 
   static const double _pageGap = 18;
 
@@ -75,57 +81,90 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
             final pageWidth = constraints.maxWidth > 24
                 ? constraints.maxWidth - 24
                 : constraints.maxWidth;
+            if (pageWidth <= 0) {
+              return const SizedBox.shrink();
+            }
+
             final pageHeight = pageWidth / aspect;
             final pageGapCount = pageStarts.length > 1
                 ? pageStarts.length - 1
                 : 0;
             final documentHeight =
                 pageStarts.length * pageHeight + pageGapCount * _pageGap;
+            final viewerHeight = documentHeight > constraints.maxHeight
+                ? documentHeight
+                : constraints.maxHeight;
 
             _viewportSize = Size(
               constraints.maxWidth,
               constraints.maxHeight,
             );
-            _documentSize = Size(constraints.maxWidth, documentHeight);
+            _documentSize = Size(pageWidth, documentHeight);
 
-            return InteractiveViewer(
-              transformationController: _transformationController,
-              alignment: Alignment.topLeft,
-              constrained: false,
-              minScale: 1,
-              maxScale: 4,
-              boundaryMargin: EdgeInsets.zero,
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: documentHeight,
-                child: Column(
-                  children: [
-                    for (int i = 0; i < pageStarts.length; i++) ...[
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.24),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _clampPreviewTransform();
+              }
+            });
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onDoubleTap: _resetZoom,
+              child: Listener(
+                onPointerDown: _handlePointerDown,
+                onPointerUp: _handlePointerUp,
+                onPointerCancel: _handlePointerCancel,
+                child: InteractiveViewer(
+                  transformationController: _transformationController,
+                  alignment: Alignment.topLeft,
+                  constrained: false,
+                  minScale: 1,
+                  maxScale: 4,
+                  boundaryMargin: EdgeInsets.zero,
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    height: viewerHeight,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: pageWidth,
+                        height: documentHeight,
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < pageStarts.length; i++) ...[
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.24,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: TemplatePreview(
+                                  loadedTemplate: widget.loadedTemplate,
+                                  documentData: widget.documentData,
+                                  rosterRows: isSinglePage
+                                      ? const []
+                                      : widget.roster,
+                                  rosterStartIndex: isSinglePage
+                                      ? 0
+                                      : pageStarts[i],
+                                  projectFolderPath: widget.projectFolderPath,
+                                  previewWidth: pageWidth,
+                                ),
+                              ),
+                              if (i < pageStarts.length - 1)
+                                const SizedBox(height: _pageGap),
+                            ],
                           ],
                         ),
-                        child: TemplatePreview(
-                          loadedTemplate: widget.loadedTemplate,
-                          documentData: widget.documentData,
-                          rosterRows: isSinglePage
-                              ? const []
-                              : widget.roster,
-                          rosterStartIndex: isSinglePage ? 0 : pageStarts[i],
-                          projectFolderPath: widget.projectFolderPath,
-                          previewWidth: pageWidth,
-                        ),
                       ),
-                      if (i < pageStarts.length - 1)
-                        const SizedBox(height: _pageGap),
-                    ],
-                  ],
+                    ),
+                  ),
                 ),
               ),
             );
@@ -157,8 +196,7 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
 
     final matrix = _transformationController.value;
     final scale = matrix.getMaxScaleOnAxis();
-    final scaledWidth = _documentSize.width * scale;
-    final scaledHeight = _documentSize.height * scale;
+    _updateNavigationLock(scale);
 
     final currentX = matrix.storage[12];
     final currentY = matrix.storage[13];
@@ -166,12 +204,17 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
     final nextX = _clampedAxisOffset(
       currentOffset: currentX,
       viewportExtent: _viewportSize.width,
-      scaledContentExtent: scaledWidth,
+      contentExtent: _documentSize.width,
+      scale: scale,
+      contentInset: (_viewportSize.width - _documentSize.width) / 2,
     );
     final nextY = _clampedAxisOffset(
       currentOffset: currentY,
       viewportExtent: _viewportSize.height,
-      scaledContentExtent: scaledHeight,
+      contentExtent: _documentSize.height,
+      scale: scale,
+      contentInset: 0,
+      centerWhenSmaller: false,
     );
 
     if ((nextX - currentX).abs() < 0.5 && (nextY - currentY).abs() < 0.5) {
@@ -190,13 +233,79 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage>
   double _clampedAxisOffset({
     required double currentOffset,
     required double viewportExtent,
-    required double scaledContentExtent,
+    required double contentExtent,
+    required double scale,
+    required double contentInset,
+    bool centerWhenSmaller = true,
   }) {
+    final scaledContentExtent = contentExtent * scale;
+    final scaledInset = contentInset * scale;
+    final currentContentStart = currentOffset + scaledInset;
+
     if (scaledContentExtent <= viewportExtent) {
-      return (viewportExtent - scaledContentExtent) / 2;
+      if (!centerWhenSmaller) {
+        return -scaledInset;
+      }
+
+      final centeredContentStart = (viewportExtent - scaledContentExtent) / 2;
+      return centeredContentStart - scaledInset;
     }
 
-    final minOffset = viewportExtent - scaledContentExtent;
-    return currentOffset.clamp(minOffset, 0).toDouble();
+    final minContentStart = viewportExtent - scaledContentExtent;
+    final clampedContentStart = currentContentStart
+        .clamp(minContentStart, 0)
+        .toDouble();
+
+    return clampedContentStart - scaledInset;
+  }
+
+  void _updateNavigationLock(double scale) {
+    _zoomNavigationLocked = scale > 1.01;
+    _notifyNavigationLockChanged();
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _activePointerIds.add(event.pointer);
+    _updateMultiTouchNavigationLock();
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    _activePointerIds.remove(event.pointer);
+    _updateMultiTouchNavigationLock();
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    _activePointerIds.remove(event.pointer);
+    _updateMultiTouchNavigationLock();
+  }
+
+  void _updateMultiTouchNavigationLock() {
+    _multiTouchNavigationLocked = _activePointerIds.length >= 2;
+    _notifyNavigationLockChanged();
+  }
+
+  void _notifyNavigationLockChanged() {
+    final shouldLock = _zoomNavigationLocked || _multiTouchNavigationLocked;
+
+    if (_notifiedNavigationLocked == shouldLock) {
+      return;
+    }
+
+    _notifiedNavigationLocked = shouldLock;
+    widget.onZoomNavigationLockChanged?.call(shouldLock);
+  }
+
+  void _resetZoom() {
+    _activePointerIds.clear();
+    _multiTouchNavigationLocked = false;
+    _zoomNavigationLocked = false;
+    _transformationController.value = Matrix4.identity();
+    _notifyNavigationLockChanged();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _clampPreviewTransform();
+      }
+    });
   }
 }
