@@ -13,7 +13,7 @@ abstract class HistoryCommand {
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
   });
-  
+
   String undoDescription({
     required List<dynamic> documentSchema,
     required List<dynamic> rosterSchema,
@@ -80,4 +80,20 @@ String historyValueText(dynamic value) {
   final text = value.toString();
   if (text.isEmpty) return 'blank';
   return '"$text"';
+}
+
+dynamic historyTrimTrailingWhitespace(dynamic value) {
+  if (value is String) {
+    return value.trimRight();
+  }
+
+  return value;
+}
+
+Map<String, dynamic> historyTrimTrailingWhitespaceMap(
+  Map<String, dynamic> values,
+) {
+  return values.map(
+    (key, value) => MapEntry(key, historyTrimTrailingWhitespace(value)),
+  );
 }

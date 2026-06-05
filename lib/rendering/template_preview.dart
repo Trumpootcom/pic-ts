@@ -74,6 +74,7 @@ class TemplatePreview extends StatelessWidget {
                     element: Map<String, dynamic>.from(element as Map),
                     scale: scale,
                     sourceData: documentData,
+                    fallbackData: const <String, dynamic>{},
                     offsetXIn: 0,
                     offsetYIn: 0,
                     slotScaleX: 1,
@@ -88,6 +89,7 @@ class TemplatePreview extends StatelessWidget {
                       rosterWidthIn: rosterWidthIn,
                       rosterHeightIn: rosterHeightIn,
                       scale: scale,
+                      fallbackData: documentData,
                     ),
               ],
             ),
@@ -104,6 +106,7 @@ class TemplatePreview extends StatelessWidget {
     required double rosterWidthIn,
     required double rosterHeightIn,
     required double scale,
+    required Map<String, dynamic> fallbackData,
   }) {
     final slotX = (slot['x'] ?? 0).toDouble();
     final slotY = (slot['y'] ?? 0).toDouble();
@@ -119,6 +122,7 @@ class TemplatePreview extends StatelessWidget {
           element: Map<String, dynamic>.from(element as Map),
           scale: scale,
           sourceData: rosterRow,
+          fallbackData: fallbackData,
           offsetXIn: slotX,
           offsetYIn: slotY,
           slotScaleX: slotScaleX,
@@ -131,6 +135,7 @@ class TemplatePreview extends StatelessWidget {
     required Map<String, dynamic> element,
     required double scale,
     required Map<String, dynamic> sourceData,
+    required Map<String, dynamic> fallbackData,
     required double offsetXIn,
     required double offsetYIn,
     required double slotScaleX,
@@ -176,7 +181,7 @@ class TemplatePreview extends StatelessWidget {
     }
 
     if (type == 'image') {
-      final imagePath = _resolveImagePath(element, sourceData);
+      final imagePath = _resolveImagePath(element, sourceData, fallbackData);
       final fit = _resolveBoxFit(element['fit']?.toString());
       final shape = element['shape']?.toString() ?? 'rect';
 
@@ -198,12 +203,17 @@ class TemplatePreview extends StatelessWidget {
 
     if (type == 'text') {
       final source = element['source']?.toString() ?? '';
-      String value = sourceData[source]?.toString() ?? '';
+      String value = sourceData[source]?.toString() ??
+          fallbackData[source]?.toString() ??
+          '';
+      value = value.trimRight();
 
       final transform = element['transform']?.toString();
 
       if (transform == 'firstNameLastInitial') {
         value = _firstNameLastInitial(value);
+      } else if (transform == 'upperCase' || transform == 'uppercase') {
+        value = value.toUpperCase();
       }
 
       final fontSize = (element['fontSize'] ?? 0.25).toDouble() * scale;
@@ -262,9 +272,11 @@ class TemplatePreview extends StatelessWidget {
   String _resolveImagePath(
     Map<String, dynamic> element,
     Map<String, dynamic> sourceData,
+    Map<String, dynamic> fallbackData,
   ) {
     final source = element['source']?.toString() ?? '';
-    final value = sourceData[source]?.toString();
+    final value =
+        sourceData[source]?.toString() ?? fallbackData[source]?.toString();
 
     if (value != null && value.trim().isNotEmpty) {
       if (value.startsWith('assets/')) {

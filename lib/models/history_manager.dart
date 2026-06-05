@@ -38,13 +38,14 @@ class HistoryManager {
     required String key,
     required dynamic newValue,
   }) async {
+    final normalizedNewValue = historyTrimTrailingWhitespace(newValue);
     final documentData = Map<String, dynamic>.from(
       projectData['documentData'] as Map? ?? {},
     );
 
     final oldValue = documentData[key];
 
-    if (oldValue == newValue) {
+    if (oldValue == normalizedNewValue) {
       return;
     }
 
@@ -52,7 +53,7 @@ class HistoryManager {
       command: HistorySetDocument(
         key: key,
         oldValue: oldValue,
-        newValue: newValue,
+        newValue: normalizedNewValue,
       ),
       projectData: projectData,
     );
@@ -64,6 +65,7 @@ class HistoryManager {
     required String key,
     required dynamic newValue,
   }) async {
+    final normalizedNewValue = historyTrimTrailingWhitespace(newValue);
     final roster = List<Map<String, dynamic>>.from(
       (projectData['roster'] as List<dynamic>? ?? []).map(
         (e) => Map<String, dynamic>.from(e as Map),
@@ -76,7 +78,7 @@ class HistoryManager {
 
     final oldValue = roster[index][key];
 
-    if (oldValue == newValue) {
+    if (oldValue == normalizedNewValue) {
       return;
     }
 
@@ -85,7 +87,7 @@ class HistoryManager {
         index: index,
         key: key,
         oldValue: oldValue,
-        newValue: newValue,
+        newValue: normalizedNewValue,
       ),
       projectData: projectData,
     );
@@ -107,7 +109,7 @@ class HistoryManager {
       command: HistoryInsertRoster(
         index: insertIndex,
         displayNumber: roster.length + 1,
-        row: Map<String, dynamic>.from(row),
+        row: historyTrimTrailingWhitespaceMap(row),
       ),
       projectData: projectData,
     );
@@ -242,4 +244,5 @@ class HistoryManager {
       rosterSchema: rosterSchema,
     );
   }
+
 }

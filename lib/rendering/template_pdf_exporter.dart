@@ -86,6 +86,7 @@ class TemplatePdfExporter {
             loadedTemplate: loadedTemplate,
             element: Map<String, dynamic>.from(element as Map),
             sourceData: documentData,
+            fallbackData: const <String, dynamic>{},
             projectFolderPath: projectFolderPath,
             offsetXIn: 0,
             offsetYIn: 0,
@@ -119,6 +120,7 @@ class TemplatePdfExporter {
               loadedTemplate: loadedTemplate,
               element: Map<String, dynamic>.from(element as Map),
               sourceData: rosterRows[rosterIndex],
+              fallbackData: documentData,
               projectFolderPath: projectFolderPath,
               offsetXIn: slotX,
               offsetYIn: slotY,
@@ -147,6 +149,7 @@ class TemplatePdfExporter {
     required LoadedTemplate loadedTemplate,
     required Map<String, dynamic> element,
     required Map<String, dynamic> sourceData,
+    required Map<String, dynamic> fallbackData,
     required String projectFolderPath,
     required double offsetXIn,
     required double offsetYIn,
@@ -197,6 +200,7 @@ class TemplatePdfExporter {
         loadedTemplate: loadedTemplate,
         element: element,
         sourceData: sourceData,
+        fallbackData: fallbackData,
         projectFolderPath: projectFolderPath,
       );
 
@@ -220,10 +224,17 @@ class TemplatePdfExporter {
 
     if (type == 'text') {
       final source = element['source']?.toString() ?? '';
-      String value = sourceData[source]?.toString() ?? '';
+      String value = sourceData[source]?.toString() ??
+          fallbackData[source]?.toString() ??
+          '';
+      value = value.trimRight();
 
-      if (element['transform']?.toString() == 'firstNameLastInitial') {
+      final transform = element['transform']?.toString();
+
+      if (transform == 'firstNameLastInitial') {
         value = _firstNameLastInitial(value);
+      } else if (transform == 'upperCase' || transform == 'uppercase') {
+        value = value.toUpperCase();
       }
 
       final fontSize = (element['fontSize'] ?? 0.25).toDouble();
@@ -268,10 +279,12 @@ class TemplatePdfExporter {
     required LoadedTemplate loadedTemplate,
     required Map<String, dynamic> element,
     required Map<String, dynamic> sourceData,
+    required Map<String, dynamic> fallbackData,
     required String projectFolderPath,
   }) {
     final source = element['source']?.toString() ?? '';
-    final value = sourceData[source]?.toString();
+    final value =
+        sourceData[source]?.toString() ?? fallbackData[source]?.toString();
 
     if (value != null && value.trim().isNotEmpty) {
       if (value.startsWith('assets/')) {

@@ -28,7 +28,7 @@ class HistoryInsertRoster extends HistoryCommand {
     final roster = _rosterFromProject(projectData);
     final insertIndex = index.clamp(0, roster.length).toInt();
 
-    roster.insert(insertIndex, Map<String, dynamic>.from(row));
+    roster.insert(insertIndex, historyTrimTrailingWhitespaceMap(row));
     projectData['roster'] = roster;
   }
 

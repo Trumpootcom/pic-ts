@@ -34,7 +34,7 @@ class HistorySetRoster extends HistoryCommand {
       ),
     );
 
-    roster[index][key] = newValue;
+    roster[index][key] = historyTrimTrailingWhitespace(newValue);
     projectData['roster'] = roster;
   }
 
@@ -46,7 +46,7 @@ class HistorySetRoster extends HistoryCommand {
       ),
     );
 
-    roster[index][key] = oldValue;
+    roster[index][key] = historyTrimTrailingWhitespace(oldValue);
     projectData['roster'] = roster;
   }
 

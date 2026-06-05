@@ -29,7 +29,7 @@ class HistorySetDocument extends HistoryCommand {
       projectData['documentData'] as Map? ?? {},
     );
 
-    documentData[key] = newValue;
+    documentData[key] = historyTrimTrailingWhitespace(newValue);
     projectData['documentData'] = documentData;
   }
 
@@ -39,7 +39,7 @@ class HistorySetDocument extends HistoryCommand {
       projectData['documentData'] as Map? ?? {},
     );
 
-    documentData[key] = oldValue;
+    documentData[key] = historyTrimTrailingWhitespace(oldValue);
     projectData['documentData'] = documentData;
   }
 

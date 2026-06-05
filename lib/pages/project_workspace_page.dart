@@ -165,7 +165,8 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     await historyManager.clear(projectData);
 
     final sortedRoster = _rosterSortedForSave();
-    projectData['documentData'] = documentData;
+    final trimmedDocumentData = _trimTrailingStringValues(documentData);
+    projectData['documentData'] = trimmedDocumentData;
     projectData['roster'] = sortedRoster;
 
     await ProjectStorage().saveProject(
@@ -176,6 +177,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     if (!mounted) return;
 
     setState(() {
+      documentData = trimmedDocumentData;
       roster = sortedRoster;
     });
 
@@ -190,7 +192,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     final originalOrder = <Map<String, dynamic>, int>{};
 
     for (int i = 0; i < roster.length; i++) {
-      final row = Map<String, dynamic>.from(roster[i])..remove('_rowId');
+      final row = _trimTrailingStringValues(roster[i])..remove('_rowId');
       sortedRoster.add(row);
       originalOrder[row] = i;
     }
@@ -221,6 +223,16 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     });
 
     return sortedRoster;
+  }
+
+  Map<String, dynamic> _trimTrailingStringValues(Map<String, dynamic> values) {
+    return values.map((key, value) {
+      if (value is String) {
+        return MapEntry(key, value.trimRight());
+      }
+
+      return MapEntry(key, value);
+    });
   }
 
   String _lastNameSortKey(String fullName) {
