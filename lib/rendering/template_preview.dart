@@ -11,6 +11,7 @@ class TemplatePreview extends StatelessWidget {
   final List<Map<String, dynamic>> rosterRows;
   final int rosterStartIndex;
   final String projectFolderPath;
+  final double? previewWidth;
 
   const TemplatePreview({
     super.key,
@@ -19,6 +20,7 @@ class TemplatePreview extends StatelessWidget {
     required this.rosterRows,
     required this.rosterStartIndex,
     required this.projectFolderPath,
+    this.previewWidth,
   });
 
   @override
@@ -48,54 +50,93 @@ class TemplatePreview extends StatelessWidget {
     );
     final slots = placementVariant['slots'] as List<dynamic>? ?? [];
 
+    final aspect = widthIn / heightIn;
+
+    if (previewWidth != null) {
+      return _buildPreviewSurface(
+        width: previewWidth!,
+        height: previewWidth! / aspect,
+        scale: previewWidth! / widthIn,
+        documentElements: documentElements,
+        rosterElements: rosterElements,
+        rosterRows: rosterRows,
+        rosterWidthIn: rosterWidthIn,
+        rosterHeightIn: rosterHeightIn,
+        slots: slots,
+        pageRosterCount: pageRosterCount,
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final aspect = widthIn / heightIn;
+        double fittedWidth = constraints.maxWidth;
+        double fittedHeight = fittedWidth / aspect;
 
-        double previewWidth = constraints.maxWidth;
-        double previewHeight = previewWidth / aspect;
-
-        if (previewHeight > constraints.maxHeight) {
-          previewHeight = constraints.maxHeight;
-          previewWidth = previewHeight * aspect;
+        if (fittedHeight > constraints.maxHeight) {
+          fittedHeight = constraints.maxHeight;
+          fittedWidth = fittedHeight * aspect;
         }
 
-        final scale = previewWidth / widthIn;
-
         return Center(
-          child: Container(
-            width: previewWidth,
-            height: previewHeight,
-            color: Colors.white,
-            child: Stack(
-              children: [
-                for (final element in documentElements)
-                  _buildElement(
-                    element: Map<String, dynamic>.from(element as Map),
-                    scale: scale,
-                    sourceData: documentData,
-                    fallbackData: const <String, dynamic>{},
-                    offsetXIn: 0,
-                    offsetYIn: 0,
-                    slotScaleX: 1,
-                    slotScaleY: 1,
-                  ),
-                for (int i = 0; i < slots.length && i < pageRosterCount; i++)
-                  if (rosterStartIndex + i < rosterRows.length)
-                    ..._buildRosterSlot(
-                      slot: Map<String, dynamic>.from(slots[i] as Map),
-                      rosterElements: rosterElements,
-                      rosterRow: rosterRows[rosterStartIndex + i],
-                      rosterWidthIn: rosterWidthIn,
-                      rosterHeightIn: rosterHeightIn,
-                      scale: scale,
-                      fallbackData: documentData,
-                    ),
-              ],
-            ),
+          child: _buildPreviewSurface(
+            width: fittedWidth,
+            height: fittedHeight,
+            scale: fittedWidth / widthIn,
+            documentElements: documentElements,
+            rosterElements: rosterElements,
+            rosterRows: rosterRows,
+            rosterWidthIn: rosterWidthIn,
+            rosterHeightIn: rosterHeightIn,
+            slots: slots,
+            pageRosterCount: pageRosterCount,
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPreviewSurface({
+    required double width,
+    required double height,
+    required double scale,
+    required List<dynamic> documentElements,
+    required List<dynamic> rosterElements,
+    required List<Map<String, dynamic>> rosterRows,
+    required double rosterWidthIn,
+    required double rosterHeightIn,
+    required List<dynamic> slots,
+    required int pageRosterCount,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.white,
+      child: Stack(
+        children: [
+          for (final element in documentElements)
+            _buildElement(
+              element: Map<String, dynamic>.from(element as Map),
+              scale: scale,
+              sourceData: documentData,
+              fallbackData: const <String, dynamic>{},
+              offsetXIn: 0,
+              offsetYIn: 0,
+              slotScaleX: 1,
+              slotScaleY: 1,
+            ),
+          for (int i = 0; i < slots.length && i < pageRosterCount; i++)
+            if (rosterStartIndex + i < rosterRows.length)
+              ..._buildRosterSlot(
+                slot: Map<String, dynamic>.from(slots[i] as Map),
+                rosterElements: rosterElements,
+                rosterRow: rosterRows[rosterStartIndex + i],
+                rosterWidthIn: rosterWidthIn,
+                rosterHeightIn: rosterHeightIn,
+                scale: scale,
+                fallbackData: documentData,
+              ),
+        ],
+      ),
     );
   }
 
