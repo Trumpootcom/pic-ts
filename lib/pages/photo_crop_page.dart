@@ -88,6 +88,24 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
 
   double debugZoom = 1.0;
 
+  void _toggleCropGuideShape() {
+    setState(() {
+      cropGuideShape = cropGuideShape == 'oval' ? 'rect' : 'oval';
+    });
+  }
+
+  void _rotateLeft() {
+    setState(() {
+      rotationQuarterTurns = (rotationQuarterTurns + 1) % 4;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _resetTransform();
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -306,38 +324,6 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Position Photo'),
-        actions: [
-          IconButton(
-            tooltip: cropGuideShape == 'oval'
-                ? 'Use rectangular crop guide'
-                : 'Use oval crop guide',
-            icon: Icon(
-              cropGuideShape == 'oval'
-                  ? Icons.crop_portrait
-                  : Icons.circle_outlined,
-            ),
-            onPressed: () {
-              setState(() {
-                cropGuideShape = cropGuideShape == 'oval' ? 'rect' : 'oval';
-              });
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.rotate_left),
-            onPressed: () {
-              setState(() {
-                rotationQuarterTurns = (rotationQuarterTurns + 1) % 4;
-              });
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  _resetTransform();
-                }
-              });
-            },
-          ),
-          TextButton(onPressed: _save, child: const Text('SAVE')),
-        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -421,7 +407,18 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
                 ),
               ),
               Positioned(
-                top: 5,
+                top: 8,
+                left: 8,
+                right: 8,
+                child: _CropFloatingToolbar(
+                  cropGuideShape: cropGuideShape,
+                  onToggleCropGuideShape: _toggleCropGuideShape,
+                  onRotateLeft: _rotateLeft,
+                  onSave: _save,
+                ),
+              ),
+              Positioned(
+                bottom: 5,
                 left: 5,
                 child: IgnorePointer(
                   child: Container(
@@ -429,7 +426,7 @@ class _PhotoCropPageState extends State<PhotoCropPage> {
                       horizontal: 6,
                       vertical: 2,
                     ),
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     child: Text(
                       'TL:($debugLeft,$debugTop) '
                       'BR:($debugRight,$debugBottom) '
@@ -467,6 +464,82 @@ class _CropRect {
   });
 }
 
+class _CropFloatingToolbar extends StatelessWidget {
+  final String cropGuideShape;
+  final VoidCallback onToggleCropGuideShape;
+  final VoidCallback onRotateLeft;
+  final VoidCallback onSave;
+
+  const _CropFloatingToolbar({
+    required this.cropGuideShape,
+    required this.onToggleCropGuideShape,
+    required this.onRotateLeft,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Row(
+        children: [
+          _CropToolbarButton(
+            tooltip: cropGuideShape == 'oval'
+                ? 'Use rectangular crop guide'
+                : 'Use oval crop guide',
+            icon: cropGuideShape == 'oval'
+                ? Icons.crop_portrait
+                : Icons.circle_outlined,
+            onPressed: onToggleCropGuideShape,
+          ),
+          _CropToolbarButton(
+            tooltip: 'Rotate Left',
+            icon: Icons.rotate_left,
+            onPressed: onRotateLeft,
+          ),
+          const Spacer(),
+          _CropToolbarButton(
+            tooltip: 'Use Photo',
+            icon: Icons.check,
+            onPressed: onSave,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CropToolbarButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _CropToolbarButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        tooltip: tooltip,
+        icon: Icon(icon),
+        color: Colors.white,
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.black,
+          iconSize: 30,
+        ),
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
 class _CropGuidePainter extends CustomPainter {
   final double aspectRatio;
   final String shape;
@@ -479,8 +552,8 @@ class _CropGuidePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.red
-      ..strokeWidth = 2
+      ..color = Colors.blue
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke;
 
     final h = size.height;
@@ -492,26 +565,60 @@ class _CropGuidePainter extends CustomPainter {
       height: h,
     );
 
-    final path = Path();
-
     if (shape == 'oval') {
-      path.addOval(rect);
-    } else {
-      path.addRect(rect);
+      _drawOvalMask(canvas, size, rect);
+      //_drawDashedPath(canvas, Path()..addOval(rect), paint);
+//    } else {
+  //    _drawDashedPath(canvas, Path()..addRect(rect), paint);
     }
 
-    _drawDashedPath(canvas, path, paint);
+    _drawFaceGuide(canvas, rect, paint);
+  }
 
-    final diagonal1 = Path()
-      ..moveTo(rect.left, rect.top)
-      ..lineTo(rect.right, rect.bottom);
+  void _drawOvalMask(Canvas canvas, Size size, Rect ovalRect) {
+    final outerPath = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addOval(ovalRect);
 
-    final diagonal2 = Path()
-      ..moveTo(rect.right, rect.top)
-      ..lineTo(rect.left, rect.bottom);
+    final maskPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
 
-    _drawDashedPath(canvas, diagonal1, paint);
-    _drawDashedPath(canvas, diagonal2, paint);
+    canvas.drawPath(outerPath, maskPaint);
+  }
+
+  void _drawFaceGuide(Canvas canvas, Rect rect, Paint paint) {
+    const faceTopY = 0.125;
+    const faceHeight = 0.5;
+    const faceWidth = 0.75;
+
+    final centerX = rect.center.dx;
+    final topY = rect.top + rect.height * faceTopY;
+    final eyeY = rect.top + rect.height * (faceTopY + faceHeight / 2);
+    final bottomY = rect.top + rect.height * (faceTopY + faceHeight);
+
+    final wideBarHalfWidth = rect.width * 0.333 / 2;
+    final eyeBarHalfWidth = rect.width * 0.25 / 2;
+    final faceOvalHeight = (eyeY - topY) * 2;
+    final faceOvalWidth = faceOvalHeight * faceWidth;
+
+    final faceGuide = Path()
+      ..addOval(
+        Rect.fromCenter(
+          center: Offset(centerX, eyeY),
+          width: faceOvalWidth,
+          height: faceOvalHeight,
+        ),
+      )
+      ..moveTo(centerX, topY)
+      ..lineTo(centerX, eyeY)
+      ..moveTo(centerX - faceOvalWidth/2, eyeY)
+      ..lineTo(centerX + faceOvalWidth/2, eyeY)
+      ..moveTo(centerX, eyeY)
+      ..lineTo(centerX, bottomY);
+
+    _drawDashedPath(canvas, faceGuide, paint);
   }
 
   void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
