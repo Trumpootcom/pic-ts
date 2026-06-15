@@ -9,7 +9,7 @@
     "document": [
       {
         "key": "idTitle",
-        "label": "ID Title",
+        "label": "ID: Title",
         "type": "text",
         "default": "Student CNA"
       }

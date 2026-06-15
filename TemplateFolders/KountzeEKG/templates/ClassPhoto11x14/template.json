@@ -1,0 +1,726 @@
+{
+  "id": "class_photo_11x14",
+  "name": "Class Photo 11x14",
+  "productType": "class_photo_11x14",
+  "preview": "preview.jpg",
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-02",
+  "data": {
+    "document": [
+      {
+        "key": "photoTitle",
+        "label": "Photo: Title",
+        "type": "text",
+        "default": "Certified EKG Technician Class"
+      },
+      {
+        "key": "compDate",
+        "label": "Photo: Completion Date",
+        "type": "text",
+        "default": "June 12, 2026"
+      }
+    ],
+    "roster": {
+      "label": "Students",
+      "itemLabel": "Student",
+      "fields": [
+        {
+          "key": "fullName",
+          "label": "Full Name",
+          "type": "text",
+          "default": "First Last"
+        },
+        {
+          "key": "profilePicture",
+          "label": "Profile Picture",
+          "type": "image",
+          "default": "assets/resources/portrait.png"
+        }
+      ]
+    }
+  },
+  "document": {
+    "width": 11,
+    "height": 14,
+    "dpi": 300,
+    "output": "jpg",
+    "elements": [
+      {
+        "type": "image",
+        "source": "background.jpg",
+        "x": 0,
+        "y": 0,
+        "w": 11,
+        "h": 14,
+        "anchor": "topLeft"
+      },
+      {
+        "type": "image",
+        "source": "logo.png",
+        "x": 5.5,
+        "y": 11.3,
+        "w": 2,
+        "h": 2,
+        "anchor": "topCenter"
+      },
+      {
+        "type": "text",
+        "source": "photoTitle",
+        "x": 5.5,
+        "y": 10.1,
+        "w": 7,
+        "h": 0.5,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.5,
+        "fontFamily": "Times New Roman",
+        "fontStyle": "bold",
+        "color": "#000000"
+      },
+      {
+        "type": "text",
+        "source": "compDate",
+        "transform": "schoolYear",
+        "x": 5.5,
+        "y": 10.6,
+        "w": 7,
+        "h": 0.4,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.3,
+        "fontFamily": "Times New Roman",
+        "color": "#000000"
+      }
+    ],
+    "maxRosterPerPage": 11,
+    "placementVariants": {
+      "1": {
+        "slots": [
+          {
+            "x": 4.38,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "2": {
+        "slots": [
+          {
+            "x": 3.17,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "3": {
+        "slots": [
+          {
+            "x": 1.97,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "4": {
+        "slots": [
+          {
+            "x": 0.76,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "5": {
+        "slots": [
+          {
+            "x": 1.97,
+            "y": 2.39,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 2.39,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 2.39,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 5.3,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 5.3,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "6": {
+        "slots": [
+          {
+            "x": 3.17,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "7": {
+        "slots": [
+          {
+            "x": 3.17,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "8": {
+        "slots": [
+          {
+            "x": 1.97,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "9": {
+        "slots": [
+          {
+            "x": 1.97,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.76,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "10": {
+        "slots": [
+          {
+            "x": 1.97,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.76,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "11": {
+        "slots": [
+          {
+            "x": 0.76,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.76,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "default": {
+        "slots": [
+          {
+            "x": 0.76,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 0.94,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.97,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.38,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 6.79,
+            "y": 3.85,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.76,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.17,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.58,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.99,
+            "y": 6.76,
+            "w": 2.25,
+            "h": 2.88,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
+  },
+  "roster": {
+    "width": 2.25,
+    "height": 2.875,
+    "elements": [
+      {
+        "type": "image",
+        "source": "profilePicture",
+        "shape": "oval",
+        "x": 1.125,
+        "y": 0.05,
+        "w": 1.775,
+        "h": 2.4,
+        "anchor": "topCenter",
+        "fit": "cover"
+      },
+      {
+        "type": "image",
+        "source": "oval.png",
+        "x": 1.125,
+        "y": 0,
+        "w": 1.875,
+        "h": 2.5,
+        "anchor": "topCenter",
+        "fit": "fill"
+      },
+      {
+        "type": "text",
+        "source": "fullName",
+        "x": 1.125,
+        "y": 2.4,
+        "w": 2,
+        "h": 0.5,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.22,
+        "fontFamily": "Times New Roman",
+        "color": "#000000"
+      }
+    ]
+  }
+}

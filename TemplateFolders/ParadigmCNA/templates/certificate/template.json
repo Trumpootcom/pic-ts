@@ -9,31 +9,31 @@
     "document": [
       {
         "key": "compDate",
-        "label": "Completion Date",
+        "label": "Certificate: Completion Date",
         "type": "text",
         "default": "June 12, 2026"
       },
       {
         "key": "classroomHours",
-        "label": "Classroom Hours",
+        "label": "Certificate: Classroom Hours",
         "type": "text",
         "default": "60 hrs"
       },
       {
         "key": "skillsHours",
-        "label": "Skills Hours",
+        "label": "Certificate: Skills Hours",
         "type": "text",
         "default": "40 hrs"
       },
       {
         "key": "clinicalHours",
-        "label": "Clinical Hours",
+        "label": "Certificate: Clinical Hours",
         "type": "text",
         "default": "40 hrs"
       },
       {
         "key": "totalHours",
-        "label": "Total Hours",
+        "label": "Certificate: Total Hours",
         "type": "text",
         "default": "140 hrs"
       }

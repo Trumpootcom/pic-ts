@@ -9,6 +9,7 @@ class EditProjectsPage extends StatelessWidget {
   final Future<List<StoredProject>> projectsFuture;
   final Future<void> Function(StoredProject project) onOpenProject;
   final Future<void> Function(StoredProject project) onRenameProject;
+  final Future<void> Function(StoredProject project) onShareProject;
   final Future<void> Function(StoredProject project) onDeleteProject;
 
   const EditProjectsPage({
@@ -16,6 +17,7 @@ class EditProjectsPage extends StatelessWidget {
     required this.projectsFuture,
     required this.onOpenProject,
     required this.onRenameProject,
+    required this.onShareProject,
     required this.onDeleteProject,
   });
 
@@ -49,6 +51,7 @@ class EditProjectsPage extends StatelessWidget {
                 project: project,
                 onOpenProject: onOpenProject,
                 onRenameProject: onRenameProject,
+                onShareProject: onShareProject,
                 onDeleteProject: onDeleteProject,
               ),
           ],
@@ -62,12 +65,14 @@ class _ProjectCard extends StatelessWidget {
   final StoredProject project;
   final Future<void> Function(StoredProject project) onOpenProject;
   final Future<void> Function(StoredProject project) onRenameProject;
+  final Future<void> Function(StoredProject project) onShareProject;
   final Future<void> Function(StoredProject project) onDeleteProject;
 
   const _ProjectCard({
     required this.project,
     required this.onOpenProject,
     required this.onRenameProject,
+    required this.onShareProject,
     required this.onDeleteProject,
   });
 
@@ -132,36 +137,78 @@ class _ProjectCard extends StatelessWidget {
               height: rowHeight,
               color: AppColors.darkUnsat,
             ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(
-                width: 44,
-                height: 44,
-              ),
-              visualDensity: VisualDensity.compact,
-              color: AppColors.darkUnsat,
-              icon: const Icon(Icons.edit_rounded),
-              onPressed: () => onRenameProject(project),
-            ),
-            Container(
-              width: 1,
+            SizedBox(
+              width: 44,
               height: rowHeight,
-              color: AppColors.darkUnsat,
-            ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(
-                width: 44,
-                height: 44,
+              child: PopupMenuButton<_ProjectAction>(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.more_vert_rounded, color: AppColors.darkUnsat),
+                onSelected: (action) async {
+                  switch (action) {
+                    case _ProjectAction.rename:
+                      await onRenameProject(project);
+                      break;
+                    case _ProjectAction.share:
+                      await onShareProject(project);
+                      break;
+                    case _ProjectAction.delete:
+                      await onDeleteProject(project);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: _ProjectAction.rename,
+                    child: _ProjectMenuItem(
+                      icon: Icons.edit_rounded,
+                      label: 'Rename',
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _ProjectAction.share,
+                    child: _ProjectMenuItem(
+                      icon: Icons.share,
+                      label: 'Share',
+                    ),
+                  ),
+                  PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: _ProjectAction.delete,
+                    child: _ProjectMenuItem(
+                      icon: Icons.delete_forever,
+                      label: 'Delete',
+                    ),
+                  ),
+                ],
               ),
-              visualDensity: VisualDensity.compact,
-              color: AppColors.darkUnsat,
-              icon: const Icon(Icons.delete_forever),
-              onPressed: () => onDeleteProject(project),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+enum _ProjectAction { rename, share, delete }
+
+class _ProjectMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ProjectMenuItem({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20, color: AppColors.darkUnsat),
+        const SizedBox(width: 10),
+        Text(label),
+      ],
     );
   }
 }

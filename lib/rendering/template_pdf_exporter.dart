@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import '../util/ts_print.dart';
 import '../services/template_loader.dart';
 import 'template_layout_engine.dart';
@@ -26,7 +28,22 @@ class TemplatePdfExporter {
       projectFolderPath: projectFolderPath,
     );
 
-    await Printing.sharePdf(bytes: bytes, filename: fileName);
+    final exportDir = Directory(
+      p.join((await getTemporaryDirectory()).path, 'pic_ts_exports'),
+    );
+    await exportDir.create(recursive: true);
+
+    final file = File(p.join(exportDir.path, p.basename(fileName)));
+    await file.writeAsBytes(bytes);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/pdf')],
+        fileNameOverrides: [p.basename(file.path)],
+        title: loadedTemplate.template.name,
+        subject: loadedTemplate.template.name,
+      ),
+    );
   }
 
   Future<Uint8List> buildPdfBytes({
@@ -60,7 +77,7 @@ class TemplatePdfExporter {
       final pageWidgets = <pw.Widget>[];
       final page = layoutEngine.buildPage(rosterStartIndex: pageStart);
 
-      tsPrint('ADDING DOCUMENT ELEMENTS TO PAGE: ${pageStart}');
+      tsPrint('ADDING PLANNED ELEMENTS TO PAGE: $pageStart');
 
       for (final element in page.elements) {
         pageWidgets.add(
@@ -70,7 +87,7 @@ class TemplatePdfExporter {
         );
       }
 
-      tsPrint('ADDING PAGE TO PDF: ${pageStart}');
+      tsPrint('ADDING PAGE TO PDF: $pageStart');
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,

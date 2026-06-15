@@ -9,6 +9,7 @@
 * [ ] Add document metadata/version schema for future compatibility
 * [/] Add embedded undo history support to the `.picts` document format
 * [X] Add ZIP-based project/document packaging system
+* [X] Add `.picts` project import flow
 
 ---
 
@@ -42,7 +43,8 @@
 ## Project Browser / Document Workflow
 
 * [ ] Create in-memory document open/import workflow
-* [ ] When deleting the currently selected project, unselect the active project
+* [X] Replace Projects new button with add menu for New from Template / Import Project
+* [X] When deleting the currently selected project, unselect the active project
 * [ ] In the project/document view, add sorting by:
   * Recent modified date
   * Alphabetical order
@@ -79,7 +81,7 @@
 ## PDF / Export System
 
 * [ ] Add PDF editable-field/template investigation
-* [ ] Choose clearer export icon for template preview pages
+* [X] Choose clearer export icon for template preview pages
 * [X] Add JPG template export/share support
 * [X] Continue PDF optimization work to avoid duplicated assets
 * [X] Ensure PDF printing honors landscape orientation by default

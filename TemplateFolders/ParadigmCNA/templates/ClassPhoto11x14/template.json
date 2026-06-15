@@ -9,13 +9,13 @@
     "document": [
       {
         "key": "photoTitle",
-        "label": "Photo Title",
+        "label": "Photo: Title",
         "type": "text",
         "default": "Certified Nurse Assistant Class"
       },
       {
         "key": "compDate",
-        "label": "Completion Date",
+        "label": "Photo: Completion Date",
         "type": "text",
         "default": "June 12, 2026"
       }

@@ -103,8 +103,7 @@ class TemplatePreview extends StatelessWidget {
       final fit = _resolveBoxFit(element.rawElement['fit']?.toString());
       final shape = element.rawElement['shape']?.toString() ?? 'rect';
 
-      final isFileImage =
-          imagePath.startsWith('/') || imagePath.startsWith('file:');
+      final isFileImage = _isFilePath(imagePath);
 
       final imageWidget = isFileImage
           ? Image.file(File(imagePath), fit: fit)
@@ -173,6 +172,12 @@ class TemplatePreview extends StatelessWidget {
     }
 
     return const SizedBox.shrink();
+  }
+
+  bool _isFilePath(String value) {
+    return value.startsWith('/') ||
+        value.startsWith('file:') ||
+        RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(value);
   }
 
   BoxFit _resolveBoxFit(String? value) {

@@ -21,7 +21,11 @@ class TstsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     const bodyColor = Color.fromARGB(255, 218, 201, 156);
     const borderColor = Color(0xFF7A6328);
+    const dialogInset = 24.0;
     final baseTheme = Theme.of(context);
+    final mediaQuery = MediaQuery.of(context);
+    final availableHeight =
+        mediaQuery.size.height - mediaQuery.viewInsets.bottom - dialogInset * 2;
     final dialogTheme = baseTheme.copyWith(
       colorScheme: baseTheme.colorScheme.copyWith(
         primary: AppColors.darkSat,
@@ -61,55 +65,71 @@ class TstsDialog extends StatelessWidget {
       child: Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        insetPadding: const EdgeInsets.all(dialogInset),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(radius),
-          child: Container(
-            decoration: BoxDecoration(
-              color: bodyColor,
-              borderRadius: BorderRadius.circular(radius),
-              border: Border.all(color: borderColor, width: 2),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: availableHeight
+                  .clamp(180.0, double.infinity)
+                  .toDouble(),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: titleHt,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        'assets/backgrounds/trumpoot_titlebar_b.png',
-                        fit: BoxFit.fill,
-                      ),
-                      Center(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: titleHt * 0.45,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
+            child: Container(
+              decoration: BoxDecoration(
+                color: bodyColor,
+                borderRadius: BorderRadius.circular(radius),
+                border: Border.all(color: borderColor, width: 2),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: titleHt,
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          'assets/backgrounds/trumpoot_titlebar_b.png',
+                          fit: BoxFit.fill,
+                        ),
+                        Center(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: titleHt * 0.45,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(radius),
+                      child: child,
+                    ),
+                  ),
+                  if (actions != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        radius,
+                        0,
+                        radius,
+                        radius,
                       ),
-                    ],
-                  ),
-                ),
-                Padding(padding: const EdgeInsets.all(radius), child: child),
-                if (actions != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      radius,
-                      0,
-                      radius,
-                      radius,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: actions!,
+                        ),
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: actions!,
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

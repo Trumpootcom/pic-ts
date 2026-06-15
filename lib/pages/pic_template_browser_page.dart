@@ -58,7 +58,7 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
       context: context,
       builder: (dialogContext) {
         return TstsDialog(
-          title: 'Create New Project',
+          title: 'New from Template',
           actions: [
             OutlinedButton(
               style: OutlinedButton.styleFrom(
@@ -141,7 +141,7 @@ class _PicTemplateBrowserPageState extends State<PicTemplateBrowserPage> {
       backgroundColor: AppColors.lightUnsat,
       appBar: const TstsTitleBar(
         title: 'PIC Tool Suite',
-        subtitle: 'Create New Project',
+        subtitle: 'New from Template',
       ),
       body: FutureBuilder<List<File>>(
         future: _templatesFuture,

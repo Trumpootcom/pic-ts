@@ -558,8 +558,6 @@ class _CropGuidePainter extends CustomPainter {
     final eyeY = rect.top + rect.height * (faceTopY + faceHeight / 2);
     final bottomY = rect.top + rect.height * (faceTopY + faceHeight);
 
-    final wideBarHalfWidth = rect.width * 0.333 / 2;
-    final eyeBarHalfWidth = rect.width * 0.25 / 2;
     final faceOvalHeight = (eyeY - topY) * 2;
     final faceOvalWidth = faceOvalHeight * faceWidth;
 

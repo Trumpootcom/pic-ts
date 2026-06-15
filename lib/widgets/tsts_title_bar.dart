@@ -82,7 +82,7 @@ class TstsTitleBar extends StatelessWidget implements PreferredSizeWidget {
                         children: [
                           const SizedBox(height: 4),
                           Text(
-                            title+' (v$buildTime)',
+                            title, //+' (v$buildTime)',
                             style: TextStyle(
                               fontSize: titleBarHt * 0.42 * 0.6,
                               fontFeatures: [FontFeature.enable('smcp')],

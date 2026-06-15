@@ -1,0 +1,215 @@
+{
+  "id": "id_cards",
+  "name": "ID Cards",
+  "productType": "id_card",
+  "preview": "preview.jpg",
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-04",
+  "data": {
+    "document": [
+      {
+        "key": "compDate",
+        "label": "Certificate: Completion Date",
+        "type": "text",
+        "default": "June 12, 2026"
+      },
+      {
+        "key": "idTitle",
+        "label": "ID: Title",
+        "type": "text",
+        "default": "Student"
+      },
+      {
+        "key": "idTitle2",
+        "label": "ID: Title 2",
+        "type": "text",
+        "default": "EKG Technician"
+      }
+    ],
+    "roster": {
+      "label": "Students",
+      "itemLabel": "Student",
+      "fields": [
+        {
+          "key": "fullName",
+          "label": "Full Name",
+          "type": "text",
+          "default": "First Last"
+        },
+        {
+          "key": "profilePicture",
+          "label": "Profile Picture",
+          "type": "image",
+          "default": "assets/resources/portrait.png"
+        }
+      ]
+    }
+  },
+  "document": {
+    "width": 11,
+    "height": 8.5,
+    "dpi": 200,
+    "output": "pdf",
+    "elements": [],
+    "maxRosterPerPage": 8,
+    "placementVariants": {
+      "default": {
+        "slots": [
+          {
+            "x": 1,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.25,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.5,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.75,
+            "y": 0.625,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.25,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.5,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 7.75,
+            "y": 4.25,
+            "w": 2.25,
+            "h": 3.625,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
+  },
+  "roster": {
+    "width": 2.25,
+    "height": 3.625,
+    "elements": [
+      {
+        "type": "image",
+        "source": "background.png",
+        "x": 0,
+        "y": 0,
+        "w": 2.25,
+        "h": 3.625,
+        "anchor": "topLeft",
+        "fit": "fill"
+      },
+      {
+        "type": "image",
+        "source": "profilePicture",
+        "shape": "rect",
+        "x": 1.125,
+        "y": 0.35,
+        "w": 1.26,
+        "h": 1.69,
+        "anchor": "topCenter",
+        "fit": "cover"
+      },
+      {
+        "type": "image",
+        "source": "mat.png",
+        "x": 0.0,
+        "y": 0.0,
+        "w": 2.25,
+        "h": 3.625,
+        "anchor": "topLeft",
+        "fit": "fill"
+      },
+      {
+        "type": "text",
+        "source": "fullName",
+        "transform": "firstNameLastInitial",
+        "x": 1.125,
+        "y": 2.35,
+        "w": 1.75,
+        "h": 0.5,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.3,
+        "fontFamily": "Arial",
+        "fontStyle": "bold",
+        "color": "#000000"
+      },
+      {
+        "type": "text",
+        "source": "idTitle",
+        "transform": "upperCase",
+        "x": 1.125,
+        "y": 3.04,
+        "w": 1.8,
+        "h": 0.5,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.22,
+        "fontFamily": "Arial",
+        "fontStyle": "bold",
+        "color": "#FFFFFF"
+      },
+      {
+        "type": "text",
+        "source": "idTitle2",
+        "transform": "upperCase",
+        "x": 1.125,
+        "y": 3.24,
+        "w": 1.8,
+        "h": 0.5,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.21,
+        "fontFamily": "Arial",
+        "fontStyle": "bold",
+        "color": "#FFFFFF"
+      },
+      {
+        "type": "text",
+        "source": "compDate",
+        "transform": "schoolYear",
+        "x": 1.125,
+        "y": 0.075,
+        "w": 1.8,
+        "h": 0.3,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.22,
+        "fontFamily": "Arial",
+        "fontStyle": "bold",
+        "color": "#FFFFFF"
+      }
+    ]
+  }
+}

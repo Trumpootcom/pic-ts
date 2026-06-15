@@ -228,6 +228,26 @@ class TemplateLayoutEngine {
       return value.toUpperCase();
     }
 
+    if (transform == 'year') {
+      return _yearTransform(value, yearOffset: 0, shortYear: false);
+    }
+
+    if (transform == 'prevYear') {
+      return _yearTransform(value, yearOffset: -1, shortYear: false);
+    }
+
+    if (transform == 'shortYear') {
+      return _yearTransform(value, yearOffset: 0, shortYear: true);
+    }
+
+    if (transform == 'prevShortYear') {
+      return _yearTransform(value, yearOffset: -1, shortYear: true);
+    }
+
+    if (transform == 'schoolYear') {
+      return _schoolYearTransform(value);
+    }
+
     return value;
   }
 
@@ -245,7 +265,7 @@ class TemplateLayoutEngine {
         return value;
       }
 
-      if (value.startsWith('/')) {
+      if (_isFilePath(value)) {
         return value;
       }
 
@@ -261,6 +281,12 @@ class TemplateLayoutEngine {
     }
 
     return loadedTemplate.assetPath(source);
+  }
+
+  bool _isFilePath(String value) {
+    return value.startsWith('/') ||
+        value.startsWith('file:') ||
+        RegExp(r'^[a-zA-Z]:[\\/]').hasMatch(value);
   }
 
   int _pageRosterCount({
@@ -306,6 +332,58 @@ class TemplateLayoutEngine {
     }
 
     return '${parts.first} ${parts.last[0]}.';
+  }
+
+  String _yearTransform(
+    String value, {
+    required int yearOffset,
+    required bool shortYear,
+  }) {
+    final year = _yearFromText(value);
+
+    if (year == null) {
+      return value;
+    }
+
+    final transformedYear = year + yearOffset;
+
+    if (shortYear) {
+      return (transformedYear % 100).toString().padLeft(2, '0');
+    }
+
+    return transformedYear.toString();
+  }
+
+  String _schoolYearTransform(String value) {
+    final year = _yearFromText(value);
+
+    if (year == null) {
+      return value;
+    }
+
+    return '${year - 1} - $year';
+  }
+
+  int? _yearFromText(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return null;
+    }
+
+    final parsedDate = DateTime.tryParse(trimmedValue);
+
+    if (parsedDate != null) {
+      return parsedDate.year;
+    }
+
+    final yearMatch = RegExp(r'\b(19|20)\d{2}\b').firstMatch(trimmedValue);
+
+    if (yearMatch != null) {
+      return int.tryParse(yearMatch.group(0)!);
+    }
+
+    return null;
   }
 
   Map<String, dynamic> get _document {

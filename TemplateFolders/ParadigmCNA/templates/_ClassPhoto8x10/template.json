@@ -1,0 +1,716 @@
+{
+  "id": "class_photo_8x10",
+  "name": "Class Photo 8x10",
+  "productType": "class_photo_8x10",
+  "preview": "preview.jpg",
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-02",
+  "data": {
+    "document": [
+      {
+        "key": "photoTitle",
+        "label": "Photo: Title",
+        "type": "text",
+        "default": "Certified Nurse Assistant Class"
+      },
+      {
+        "key": "compDate",
+        "label": "Phtoo: Completion Date",
+        "type": "text",
+        "default": "June 12, 2026"
+      }
+    ],
+    "roster": {
+      "label": "Students",
+      "itemLabel": "Student",
+      "fields": [
+        {
+          "key": "fullName",
+          "label": "Full Name",
+          "type": "text",
+          "default": "First Last"
+        },
+        {
+          "key": "profilePicture",
+          "label": "Profile Picture",
+          "type": "image",
+          "default": "assets/resources/portrait.png"
+        }
+      ]
+    }
+  },
+  "document": {
+    "width": 8,
+    "height": 10,
+    "dpi": 300,
+    "output": "jpg",
+    "elements": [
+      {
+        "type": "image",
+        "source": "background.jpg",
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 10,
+        "anchor": "topLeft"
+      },
+      {
+        "type": "text",
+        "source": "photoTitle",
+        "x": 4,
+        "y": 2.1,
+        "w": 5,
+        "h": 0.36,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.36,
+        "fontFamily": "Times New Roman",
+        "fontStyle": "bold",
+        "color": "#000000"
+      },
+      {
+        "type": "text",
+        "source": "compDate",
+        "x": 4,
+        "y": 2.45,
+        "w": 5,
+        "h": 0.29,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.21,
+        "fontFamily": "Times New Roman",
+        "color": "#000000"
+      }
+    ],
+    "maxRosterPerPage": 11,
+    "placementVariants": {
+      "1": {
+        "slots": [
+          {
+            "x": 3.2,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "2": {
+        "slots": [
+          {
+            "x": 2.34,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "3": {
+        "slots": [
+          {
+            "x": 1.48,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "4": {
+        "slots": [
+          {
+            "x": 0.61,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "5": {
+        "slots": [
+          {
+            "x": 1.48,
+            "y": 4.18,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 4.18,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 4.18,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 6.26,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 6.26,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "6": {
+        "slots": [
+          {
+            "x": 2.34,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "7": {
+        "slots": [
+          {
+            "x": 2.34,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "8": {
+        "slots": [
+          {
+            "x": 1.48,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "9": {
+        "slots": [
+          {
+            "x": 1.48,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.61,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "10": {
+        "slots": [
+          {
+            "x": 1.48,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.61,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "11": {
+        "slots": [
+          {
+            "x": 0.61,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.61,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      },
+      "default": {
+        "slots": [
+          {
+            "x": 0.61,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 3.14,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 1.48,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 3.2,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.92,
+            "y": 5.22,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 0.61,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 2.34,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 4.06,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          },
+          {
+            "x": 5.78,
+            "y": 7.3,
+            "w": 1.61,
+            "h": 2.06,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
+  },
+  "roster": {
+    "width": 1.61,
+    "height": 2.05,
+    "elements": [
+      {
+        "type": "image",
+        "source": "profilePicture",
+        "shape": "oval",
+        "x": 0.88,
+        "y": 0.04,
+        "w": 1.27,
+        "h": 1.71,
+        "anchor": "topCenter",
+        "fit": "cover"
+      },
+      {
+        "type": "image",
+        "source": "oval.png",
+        "x": 0.88,
+        "y": 0,
+        "w": 1.34,
+        "h": 1.79,
+        "anchor": "topCenter",
+        "fit": "fill"
+      },
+      {
+        "type": "text",
+        "source": "fullName",
+        "x": 0.88,
+        "y": 1.71,
+        "w": 1.43,
+        "h": 0.36,
+        "anchor": "topCenter",
+        "align": "center",
+        "fontSize": 0.16,
+        "fontFamily": "Times New Roman",
+        "color": "#000000"
+      }
+    ]
+  }
+}

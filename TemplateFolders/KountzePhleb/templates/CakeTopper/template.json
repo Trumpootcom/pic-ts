@@ -1,0 +1,52 @@
+{
+  "id": "CakeTopper",
+  "name": "Cake Topper",
+  "productType": "caketopper",
+  "preview": "preview.jpg",
+  "revision": "1.0.0",
+  "revisionDate": "2026-06-02",
+  "data": {
+    "document": [],
+    "roster": {
+      "label": "Items",
+      "itemLabel": "Item",
+      "fields": []
+    }
+  },
+  "document": {
+    "width": 11,
+    "height": 8.5,
+    "dpi": 200,
+    "output": "pdf",
+    "elements": [
+      {
+        "type": "image",
+        "source": "background.jpg",
+        "x": 0,
+        "y": 0,
+        "w": 11,
+        "h": 8.5,
+        "anchor": "topLeft"
+      }
+    ],
+    "maxRosterPerPage": 0,
+    "placementVariants": {
+      "default": {
+        "slots": [
+          {
+            "x": 0,
+            "y": 0,
+            "w": 11,
+            "h": 8.5,
+            "anchor": "topLeft"
+          }
+        ]
+      }
+    }
+  },
+  "roster": {
+    "width": 11,
+    "height": 8.5,
+    "elements": []
+  }
+}
