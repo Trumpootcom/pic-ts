@@ -1,8 +1,12 @@
 // lib/widgets/workspace_filmstrip.dart
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../theme/app_colors.dart';
+
+enum WorkspaceFilmstripStyle { plain, film, cloud }
 
 class WorkspaceFilmstripItem {
   final String title;
@@ -18,6 +22,7 @@ class WorkspaceFilmstrip extends StatefulWidget {
   final ValueChanged<double>? onPagePositionChanged;
   final ValueChanged<int> onTap;
   final bool filmTheme;
+  final WorkspaceFilmstripStyle? displayStyle;
 
   const WorkspaceFilmstrip({
     super.key,
@@ -27,6 +32,7 @@ class WorkspaceFilmstrip extends StatefulWidget {
     required this.onTap,
     this.onPagePositionChanged,
     this.filmTheme = false,
+    this.displayStyle,
   });
 
   @override
@@ -34,7 +40,12 @@ class WorkspaceFilmstrip extends StatefulWidget {
 }
 
 class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
+  static const String _cloudAssetPath = 'assets/backgrounds/cloud.png';
+
   final ScrollController _scrollController = ScrollController();
+  ImageStream? _cloudImageStream;
+  ImageStreamListener? _cloudImageListener;
+  ui.Image? _cloudImage;
 
   static const double topGap = 3.0;
   static const double bottomGap = 5.0;
@@ -51,22 +62,26 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
   double get _itemStride => thumbWidth + horizontalGap;
 
+  WorkspaceFilmstripStyle get _displayStyle {
+    return widget.displayStyle ??
+        (widget.filmTheme
+            ? WorkspaceFilmstripStyle.film
+            : WorkspaceFilmstripStyle.plain);
+  }
+
   @override
   void initState() {
     super.initState();
-    //_scrollController.addListener(_handleFilmstripScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _syncScrollToPagePosition();
     });
   }
 
-  void _handleFilmstripScroll() {
-    if (_syncingFromPageView) return;
-    if (!_scrollController.hasClients) return;
-
-    final pagePosition = _scrollController.offset / _itemStride;
-    widget.onPagePositionChanged?.call(pagePosition);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolveCloudImage();
   }
 
   @override
@@ -82,9 +97,43 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
   @override
   void dispose() {
-    //_scrollController.removeListener(_handleFilmstripScroll);
+    _removeCloudImageListener();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _resolveCloudImage() {
+    final asset = AssetImage(_cloudAssetPath);
+    final imageStream = asset.resolve(createLocalImageConfiguration(context));
+
+    if (_cloudImageStream?.key == imageStream.key) {
+      return;
+    }
+
+    _removeCloudImageListener();
+
+    _cloudImageStream = imageStream;
+    _cloudImageListener = ImageStreamListener((imageInfo, synchronousCall) {
+      if (!mounted) return;
+
+      setState(() {
+        _cloudImage = imageInfo.image;
+      });
+    });
+
+    imageStream.addListener(_cloudImageListener!);
+  }
+
+  void _removeCloudImageListener() {
+    final imageStream = _cloudImageStream;
+    final imageListener = _cloudImageListener;
+
+    if (imageStream != null && imageListener != null) {
+      imageStream.removeListener(imageListener);
+    }
+
+    _cloudImageStream = null;
+    _cloudImageListener = null;
   }
 
   void _syncScrollToPagePosition() {
@@ -104,7 +153,8 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
 
   @override
   Widget build(BuildContext context) {
-    final stripHeight = widget.filmTheme
+    final displayStyle = _displayStyle;
+    final stripHeight = displayStyle != WorkspaceFilmstripStyle.plain
         ? filmstripHeight
         : thumbHeight + horizontalGap;
 
@@ -113,21 +163,25 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
       child: Container(
         height: stripHeight,
         decoration: BoxDecoration(
-          color: widget.filmTheme ? null : AppColors.lightUnsat,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.darkUnsat.withAlpha(120),
-              blurRadius: 1.5,
-              spreadRadius: 1.5,
-              offset: const Offset(0, -1.5),
-            ),
-            BoxShadow(
-              color: AppColors.darkUnsat.withAlpha(120),
-              blurRadius: 1.5,
-              spreadRadius: 1.5,
-              offset: const Offset(0, 1.5),
-            ),
-          ],
+          color: displayStyle == WorkspaceFilmstripStyle.plain
+              ? AppColors.lightUnsat
+              : null,
+          boxShadow: displayStyle == WorkspaceFilmstripStyle.cloud
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.darkUnsat.withAlpha(120),
+                    blurRadius: 1.5,
+                    spreadRadius: 1.5,
+                    offset: const Offset(0, -1.5),
+                  ),
+                  BoxShadow(
+                    color: AppColors.darkUnsat.withAlpha(120),
+                    blurRadius: 1.5,
+                    spreadRadius: 1.5,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
         ),
         child: CustomPaint(
           painter: _FilmstripFramePainter(
@@ -136,7 +190,10 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
             sprocketColor: AppColors.lightUnsat,
             sprocketBandHeight: sprocketBandHeight,
             scrollController: _scrollController,
-            enabled: widget.filmTheme,
+            displayStyle: displayStyle,
+            cellWidth: _itemStride,
+            contentWidth: thumbWidth,
+            cloudImage: _cloudImage,
           ),
           child: SizedBox(
             height: stripHeight,
@@ -190,8 +247,6 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
                         padding: EdgeInsets.symmetric(horizontal: sideSpacer),
                         itemCount: widget.items.length,
                         itemBuilder: (context, index) {
-                          //final selected = index == widget.currentIndex;
-                          final selected = false;
                           return Center(
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -202,9 +257,7 @@ class _WorkspaceFilmstripState extends State<WorkspaceFilmstrip> {
                                     width: thumbWidth,
                                     height: thumbHeight,
                                     decoration: BoxDecoration(
-                                      color: selected
-                                          ? AppColors.darkUnsat
-                                          : AppColors.medUnsat,
+                                      color: AppColors.medUnsat,
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     clipBehavior: Clip.antiAlias,
@@ -278,7 +331,10 @@ class _FilmstripFramePainter extends CustomPainter {
   final Color sprocketColor;
   final double sprocketBandHeight;
   final ScrollController scrollController;
-  final bool enabled;
+  final WorkspaceFilmstripStyle displayStyle;
+  final double cellWidth;
+  final double contentWidth;
+  final ui.Image? cloudImage;
 
   _FilmstripFramePainter({
     required this.frameColor,
@@ -286,15 +342,27 @@ class _FilmstripFramePainter extends CustomPainter {
     required this.sprocketColor,
     required this.sprocketBandHeight,
     required this.scrollController,
-    required this.enabled,
+    required this.displayStyle,
+    required this.cellWidth,
+    required this.contentWidth,
+    required this.cloudImage,
   }) : super(repaint: scrollController);
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (!enabled) {
-      return;
+    switch (displayStyle) {
+      case WorkspaceFilmstripStyle.plain:
+        return;
+      case WorkspaceFilmstripStyle.film:
+        _paintFilmFrame(canvas, size);
+        return;
+      case WorkspaceFilmstripStyle.cloud:
+        _paintCloudFrame(canvas, size);
+        return;
     }
+  }
 
+  void _paintFilmFrame(Canvas canvas, Size size) {
     final framePaint = Paint()..color = frameColor;
     final lanePaint = Paint()..color = laneColor;
     final sprocketPaint = Paint()..color = sprocketColor;
@@ -343,6 +411,43 @@ class _FilmstripFramePainter extends CustomPainter {
     }
   }
 
+  void _paintCloudFrame(Canvas canvas, Size size) {
+    final image = cloudImage;
+
+    if (image == null) {
+      canvas.drawRect(Offset.zero & size, Paint()..color = laneColor);
+      return;
+    }
+
+    final scrollOffset = scrollController.hasClients
+        ? scrollController.offset
+        : 0.0;
+    final tileWidth = cellWidth;
+    final sideSpacer = ((size.width - contentWidth) / 2).clamp(
+      0.0,
+      double.infinity,
+    );
+    final firstCellX = sideSpacer - scrollOffset;
+    final startX =
+        firstCellX - ((firstCellX / tileWidth).floor() + 1) * tileWidth;
+    final count = (size.width / tileWidth).ceil() + 3;
+    final src = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    final paint = Paint()
+      ..isAntiAlias = true
+      ..filterQuality = FilterQuality.high;
+
+    for (int i = 0; i < count; i++) {
+      final x = startX + i * tileWidth;
+      final dst = Rect.fromLTWH(x - 1, 0, tileWidth + 2, size.height);
+      canvas.drawImageRect(image, src, dst, paint);
+    }
+  }
+
   @override
   bool shouldRepaint(covariant _FilmstripFramePainter oldDelegate) {
     return oldDelegate.frameColor != frameColor ||
@@ -350,6 +455,9 @@ class _FilmstripFramePainter extends CustomPainter {
         oldDelegate.sprocketColor != sprocketColor ||
         oldDelegate.sprocketBandHeight != sprocketBandHeight ||
         oldDelegate.scrollController != scrollController ||
-        oldDelegate.enabled != enabled;
+        oldDelegate.displayStyle != displayStyle ||
+        oldDelegate.cellWidth != cellWidth ||
+        oldDelegate.contentWidth != contentWidth ||
+        oldDelegate.cloudImage != cloudImage;
   }
 }

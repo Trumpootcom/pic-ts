@@ -1,18 +1,23 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
 import '../widgets/edit_document_page.dart';
 import '../widgets/edit_projects_page.dart';
 import '../widgets/edit_roster_page.dart';
-import 'pic_template_browser_page.dart';
 import 'photo_crop_page.dart';
 
 import '../rendering/template_jpg_exporter.dart';
 import '../rendering/template_pdf_exporter.dart';
 import '../widgets/template_preview_page.dart';
+import '../services/project_import_service.dart';
 import '../services/project_storage.dart';
+import '../services/project_share_service.dart';
 import '../services/template_loader.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tsts_dialog.dart';
@@ -617,7 +622,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           documentData: documentData,
           rosterRows: roster,
           projectFolderPath: project.folderPath,
-          fileName: _exportFileName(project.name, 'pdf'),
+          fileName: _exportFileName(
+            templateName: loadedTemplate.template.name,
+            projectName: project.name,
+            extension: 'pdf',
+          ),
         );
         return;
       }
@@ -628,7 +637,11 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           documentData: documentData,
           rosterRows: roster,
           projectFolderPath: project.folderPath,
-          fileName: _exportFileName(project.name, 'jpg'),
+          fileName: _exportFileName(
+            templateName: loadedTemplate.template.name,
+            projectName: project.name,
+            extension: 'jpg',
+          ),
         );
         return;
       }
@@ -647,11 +660,17 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     }
   }
 
-  String _exportFileName(String projectName, String extension) {
-    final safeName = projectName
-        .trim()
-        .replaceAll(RegExp(r'[\\/:*?"<>|]+'), '')
-        .replaceAll(RegExp(r'\s+'), '_');
+  String _exportFileName({
+    required String templateName,
+    required String projectName,
+    required String extension,
+  }) {
+    final safeTemplateName = _safeFileNamePart(templateName);
+    final safeProjectName = _safeFileNamePart(projectName);
+    final safeName = [
+      if (safeTemplateName.isNotEmpty) safeTemplateName,
+      if (safeProjectName.isNotEmpty) safeProjectName,
+    ].join('_');
 
     if (safeName.isEmpty) {
       return 'export.$extension';
@@ -660,18 +679,377 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     return '$safeName.$extension';
   }
 
+  String _safeFileNamePart(String value) {
+    return value
+        .trim()
+        .replaceAll(RegExp(r'[\\/:*?"<>|]+'), '')
+        .replaceAll(RegExp(r'\s+'), '_');
+  }
+
   Future<void> _createProject() async {
-    final created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => PicTemplateBrowserPage(),
+    final templateFile = await _pickTemplateForNewProject();
+
+    if (templateFile == null) {
+      return;
+    }
+
+    final projectName = await _promptForNewProjectName(templateFile);
+    final trimmedName = projectName?.trim() ?? '';
+
+    if (trimmedName.isEmpty) {
+      return;
+    }
+
+    try {
+      await PictsxReader().extractToProject(
+        pictsxFile: templateFile,
+        projectName: trimmedName,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _projectsFuture = ProjectStorage().listProjects();
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
+  Future<File?> _pickTemplateForNewProject() async {
+    return showDialog<File>(
+      context: context,
+      builder: (dialogContext) {
+        return TstsDialog(
+          title: 'New from Template',
+          actions: null,
+          child: SizedBox(
+            width: 420,
+            height: 360,
+            child: FutureBuilder<List<File>>(
+              future: _loadInstalledTemplateFiles(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.darkUnsat,
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textDark),
+                    ),
+                  );
+                }
+
+                final files = snapshot.data ?? [];
+
+                if (files.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No PIC templates found.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textDark),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  itemCount: files.length,
+                  separatorBuilder: (context, index) => Divider(
+                    color: AppColors.darkUnsat.withValues(alpha: 0.2),
+                    height: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final file = files[index];
+
+                    return FutureBuilder<Uint8List?>(
+                      future: PictsxReader().readIconBytes(file),
+                      builder: (context, snapshot) {
+                        final iconBytes = snapshot.data;
+
+                        return ListTile(
+                          leading: iconBytes == null
+                              ? Icon(
+                                  Icons.folder_zip_rounded,
+                                  color: AppColors.darkSat,
+                                )
+                              : Image.memory(
+                                  iconBytes,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.contain,
+                                ),
+                          title: Text(
+                            _templatePackName(file),
+                            style: TextStyle(color: AppColors.textDark),
+                          ),
+                          onTap: () => Navigator.of(dialogContext).pop(file),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String?> _promptForNewProjectName(File templateFile) async {
+    return showDialog<String>(
+      context: context,
+      builder: (_) => _NewProjectDialog(
+        templateName: _templatePackName(templateFile),
+        templateFile: templateFile,
       ),
     );
+  }
 
-    if (!mounted || created != true) return;
+  Future<void> _importProject() async {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
 
-    setState(() {
-      _projectsFuture = ProjectStorage().listProjects();
-    });
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      allowMultiple: false,
+    );
+
+    if (result == null || result.files.single.path == null) {
+      return;
+    }
+
+    final file = File(result.files.single.path!);
+
+    if (p.extension(file.path).toLowerCase() != '.picts') {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose a .picts project file.')),
+      );
+      return;
+    }
+
+    try {
+      final importService = ProjectImportService();
+      final packageInfo = await importService.inspectProjectPackage(file);
+      var projectName = packageInfo.projectName;
+
+      if (packageInfo.hasConflict) {
+        final newName = await showDialog<String>(
+          context: context,
+          builder: (_) => _ImportProjectConflictDialog(
+            initialName: packageInfo.projectName,
+          ),
+        );
+
+        projectName = newName?.trim() ?? '';
+
+        if (projectName.isEmpty) {
+          return;
+        }
+      }
+
+      final importedProject = await importService.importProjectPackage(
+        packageInfo: packageInfo,
+        projectName: projectName,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _projectsFuture = ProjectStorage().listProjects();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Imported ${importedProject.name}')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
+  Future<String> _importedTemplatePackageName(File file) async {
+    final bytes = await file.readAsBytes();
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final wrapperName = _archiveWrapperFolderName(archive);
+
+    if (wrapperName != null) {
+      return wrapperName;
+    }
+
+    final dataFile = archive.findFile('data/data.json');
+
+    if (dataFile != null) {
+      final data = jsonDecode(
+        utf8.decode(dataFile.content as List<int>),
+      ) as Map<String, dynamic>;
+      final name = data['name']?.toString().trim();
+      final id = data['id']?.toString().trim();
+
+      if (name != null && name.isNotEmpty) {
+        return name;
+      }
+
+      if (id != null && id.isNotEmpty) {
+        return id;
+      }
+    }
+
+    return p.basenameWithoutExtension(
+      file.path,
+    ).replaceFirst(RegExp(r'\s+\(\d+\)$'), '');
+  }
+
+  String? _archiveWrapperFolderName(Archive archive) {
+    final rootNames = <String>{};
+
+    for (final file in archive.files) {
+      final safeName = file.name.replaceAll('\\', '/');
+
+      if (safeName.isEmpty ||
+          safeName.startsWith('/') ||
+          safeName.split('/').contains('..')) {
+        continue;
+      }
+
+      final parts = safeName.split('/').where((part) => part.isNotEmpty);
+      final rootName = parts.isEmpty ? null : parts.first;
+
+      if (rootName == null || rootName == '__MACOSX') {
+        continue;
+      }
+
+      rootNames.add(rootName);
+    }
+
+    if (rootNames.length != 1) {
+      return null;
+    }
+
+    final rootName = rootNames.single;
+
+    if (rootName == 'data' ||
+        rootName == 'templates' ||
+        rootName == 'icon.png') {
+      return null;
+    }
+
+    return rootName;
+  }
+
+  String _safeTemplateFileName(String value) {
+    return value
+        .trim()
+        .replaceAll(RegExp(r'\.pictsx$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'[\\/:*?"<>|]+'), '')
+        .replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  Future<void> _importNewTemplate() async {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      allowMultiple: false,
+    );
+
+    if (result == null || result.files.single.path == null) {
+      return;
+    }
+
+    final file = File(result.files.single.path!);
+
+    if (p.extension(file.path).toLowerCase() != '.pictsx') {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose a .pictsx template file.')),
+      );
+      return;
+    }
+
+    try {
+      final templatesRoot = await PicTemplateInstaller().templatesRoot();
+      final packageName = _safeTemplateFileName(
+        await _importedTemplatePackageName(file),
+      );
+
+      if (packageName.isEmpty) {
+        throw Exception('Template package name could not be found.');
+      }
+
+      var destination = File(p.join(templatesRoot.path, '$packageName.pictsx'));
+      final selectedPath = p.normalize(p.absolute(file.path)).toLowerCase();
+      final destinationPath =
+          p.normalize(p.absolute(destination.path)).toLowerCase();
+
+      if (selectedPath == destinationPath) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Template is already installed.')),
+        );
+        return;
+      }
+
+      if (await destination.exists()) {
+        if (!mounted) return;
+
+        final choice = await showDialog<_ImportTemplateConflictChoice>(
+          context: context,
+          builder: (_) => _ImportTemplateConflictDialog(
+            templateName: packageName,
+          ),
+        );
+
+        if (choice == null) {
+          return;
+        }
+
+        if (!choice.replaceExisting) {
+          final newName = _safeTemplateFileName(choice.templateName ?? '');
+
+          if (newName.isEmpty) {
+            return;
+          }
+
+          destination = File(p.join(templatesRoot.path, '$newName.pictsx'));
+
+          if (await destination.exists()) {
+            throw Exception('Template already exists: $newName');
+          }
+        }
+      }
+
+      await file.copy(destination.path);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Imported ${_templatePackName(destination)}')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
   }
 
   Future<void> _openProject(StoredProject project) async {
@@ -735,6 +1113,15 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
 
     if (!mounted) return;
 
+    if (widget.project?.id == project.id) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const ProjectWorkspacePage(),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _projectsFuture = ProjectStorage().listProjects();
     });
@@ -761,6 +1148,18 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
     });
   }
 
+  Future<void> _shareProject(StoredProject project) async {
+    try {
+      await ProjectShareService().shareProject(project);
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
   List<WorkspaceCarouselItem> _buildCarouselItems() {
     final project = widget.project;
 
@@ -771,7 +1170,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           width: 110,
           height: 85,
           child: Container(
-            color: AppColors.lightUnsat,
+            color: const Color(0xFFB79852),
             alignment: Alignment.center,
             child: Icon(
               Icons.folder_rounded,
@@ -785,9 +1184,46 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
           actions: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              WorkspaceIconButton(
-                icon: Icons.create_new_folder_rounded,
-                onPressed: _createProject,
+              PopupMenuButton<_ProjectsAction>(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.add_rounded, color: AppColors.textLight),
+                tooltip: 'Add Project',
+                onSelected: (action) async {
+                  switch (action) {
+                    case _ProjectsAction.newFromTemplate:
+                      await _createProject();
+                      break;
+                    case _ProjectsAction.importProject:
+                      await _importProject();
+                      break;
+                    case _ProjectsAction.importNewTemplate:
+                      await _importNewTemplate();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: _ProjectsAction.newFromTemplate,
+                    child: _ProjectActionMenuItem(
+                      icon: Icons.create_new_folder_rounded,
+                      label: 'New from Template',
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _ProjectsAction.importProject,
+                    child: _ProjectActionMenuItem(
+                      icon: Icons.drive_folder_upload_rounded,
+                      label: 'Import Project',
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _ProjectsAction.importNewTemplate,
+                    child: _ProjectActionMenuItem(
+                      icon: Icons.upload_file_rounded,
+                      label: 'Import New Template',
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -795,6 +1231,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             projectsFuture: _projectsFuture,
             onOpenProject: _openProject,
             onRenameProject: _renameProject,
+            onShareProject: _shareProject,
             onDeleteProject: _confirmDeleteProject,
           ),
         ),
@@ -894,7 +1331,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 WorkspaceIconButton(
-                  icon: Icons.file_present,
+                  icon: Icons.share,
                   onPressed: () => _exportTemplate(loadedTemplate),
                 ),
               ],
@@ -944,7 +1381,7 @@ class _ProjectWorkspacePageState extends State<ProjectWorkspacePage> {
             items: pages.map((page) => page.filmstripItem).toList(),
             currentIndex: _currentPage,
             currentPagePosition: _currentPagePosition,
-            filmTheme: true,
+            displayStyle: WorkspaceFilmstripStyle.cloud,
             onPagePositionChanged: (pagePosition) {
               if (!_pageController.hasClients) return;
 
@@ -1129,6 +1566,306 @@ class _RenameProjectDialogState extends State<_RenameProjectDialog> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NewProjectDialog extends StatefulWidget {
+  final String templateName;
+  final File templateFile;
+
+  const _NewProjectDialog({
+    required this.templateName,
+    required this.templateFile,
+  });
+
+  @override
+  State<_NewProjectDialog> createState() => _NewProjectDialogState();
+}
+
+class _NewProjectDialogState extends State<_NewProjectDialog> {
+  final _controller = TextEditingController();
+  late final Future<Uint8List?> _iconBytesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _iconBytesFuture = PictsxReader().readIconBytes(widget.templateFile);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context).pop(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TstsDialog(
+      title: 'New from Template',
+      actions: null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FutureBuilder<Uint8List?>(
+            future: _iconBytesFuture,
+            builder: (context, snapshot) {
+              final iconBytes = snapshot.data;
+
+              if (iconBytes == null) {
+                return Icon(
+                  Icons.folder_zip_rounded,
+                  size: 64,
+                  color: AppColors.medSat,
+                );
+              }
+
+              return Image.memory(
+                iconBytes,
+                width: 64,
+                height: 64,
+                fit: BoxFit.contain,
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.templateName,
+            style: TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Project Name'),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('CANCEL'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submit,
+              child: const Text('CREATE'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportProjectConflictDialog extends StatefulWidget {
+  final String initialName;
+
+  const _ImportProjectConflictDialog({
+    required this.initialName,
+  });
+
+  @override
+  State<_ImportProjectConflictDialog> createState() =>
+      _ImportProjectConflictDialogState();
+}
+
+class _ImportProjectConflictDialogState
+    extends State<_ImportProjectConflictDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.initialName} Copy');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context).pop(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TstsDialog(
+      title: 'Project Exists',
+      actions: null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Enter a new project name to continue importing.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textDark),
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Project Name'),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('CANCEL IMPORT'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submit,
+              child: const Text('IMPORT'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportTemplateConflictChoice {
+  final bool replaceExisting;
+  final String? templateName;
+
+  const _ImportTemplateConflictChoice({
+    required this.replaceExisting,
+    this.templateName,
+  });
+}
+
+class _ImportTemplateConflictDialog extends StatefulWidget {
+  final String templateName;
+
+  const _ImportTemplateConflictDialog({
+    required this.templateName,
+  });
+
+  @override
+  State<_ImportTemplateConflictDialog> createState() =>
+      _ImportTemplateConflictDialogState();
+}
+
+class _ImportTemplateConflictDialogState
+    extends State<_ImportTemplateConflictDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.templateName} Copy');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _rename() {
+    Navigator.of(context).pop(
+      _ImportTemplateConflictChoice(
+        replaceExisting: false,
+        templateName: _controller.text,
+      ),
+    );
+  }
+
+  void _replace() {
+    Navigator.of(context).pop(
+      const _ImportTemplateConflictChoice(replaceExisting: true),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TstsDialog(
+      title: 'Template Exists',
+      actions: null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '"${widget.templateName}" is already installed.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textDark),
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Template Name'),
+            onSubmitted: (_) => _rename(),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('CANCEL IMPORT'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: _replace,
+              child: const Text('REPLACE EXISTING'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _rename,
+              child: const Text('IMPORT WITH NEW NAME'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _ProjectsAction { newFromTemplate, importProject, importNewTemplate }
+
+class _ProjectActionMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ProjectActionMenuItem({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20, color: AppColors.darkUnsat),
+        const SizedBox(width: 10),
+        Text(label),
+      ],
     );
   }
 }
